@@ -20,10 +20,20 @@ Data: 2026-02-22
 - 54cfae2 test(auth): cover password reset flow and openapi parity
 - b860ad6 docs(tasks): link b4 b5 b6 to implementation commits
 
+## Platform Setup (PLT1.2) — concluído nesta rodada
+- `CLAUDE.md` criado na raiz do `auraxis-platform` (directive de orquestração).
+- `scripts/check-health.sh` — diagnóstico de saúde pré-sessão para qualquer agente.
+- `scripts/bootstrap-repo.sh` — criação automatizada de novos repos com governance.
+- `scripts/agent-lock.sh` — mutex de coordenação entre agentes concorrentes.
+- `.context/agent_lock.schema.json` — schema JSON formal do protocolo de lock.
+- `workflows/` populado: agent-session, feature-delivery, repo-bootstrap.
+- `ai_integration-claude.md`, `ai_integration-gemini.md`, `ai_integration-gpt.md` na raiz.
+- `.context/06_context_index.md` atualizado com novos artefatos.
+
 ## Próximo foco
-- Concluir `PLT1.1` (migração física do backend para `repos/auraxis-api` + validações pós-migração).
-- Concluir `PLT1.2` (arranjo operacional multi-repo com governança/CI basal).
+- Concluir `PLT1.1`: resolver submodule do backend (remote do auraxis-api ainda aponta para flask-expenses-manager).
 - Iniciar execução técnica de `X4` e, depois, `X3` fase 0.
+- Iniciar `B10` (questionário indicativo de perfil investidor).
 
 ## Discovery J1..J5 (rodada atual)
 - Pacote de discovery consolidado em `.context/discovery/`.

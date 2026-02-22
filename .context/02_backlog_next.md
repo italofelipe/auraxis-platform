@@ -1,8 +1,8 @@
 # Próximas Prioridades
 
 ## Em aberto imediato
-1. PLT1.1: migrar backend para `repos/auraxis-api` e validar checklist pós-migração (`.context/22_workspace_migration_checklist.md`)
-2. PLT1.2: concluir estratégia operacional de multi-repo (submodules vs pastas locais) com governança/CI basal
+1. PLT1.1: resolver submodule do backend — remote ainda aponta para `flask-expenses-manager`; renomear repo GitHub para `auraxis-api` e registrar como submodule. Ver `22_workspace_migration_checklist.md`.
+2. PLT1.2: ✅ CONCLUÍDO — CLAUDE.md platform, scripts (check-health, bootstrap-repo, agent-lock), workflows/, ai_integration docs criados.
 3. X4: iniciar plano de adoção do Ruff (fase advisory -> substituição de flake8/black/isort), mantendo `mypy`
 4. X3: preparar fase 0 de desacoplamento para coexistência Flask/FastAPI (auth/context/error adapters)
 5. B10: questionário indicativo de perfil investidor

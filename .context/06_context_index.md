@@ -36,6 +36,24 @@ Este índice organiza a leitura mínima para qualquer pessoa/agente retomar o pr
 - `templates/PRODUCT_TEMPLATE.md`
 - `templates/RELEASE_NOTES_TEMPLATE.md`
 
+## Scripts de automação (platform)
+- `../scripts/check-health.sh`   — diagnóstico de saúde pré-sessão
+- `../scripts/bootstrap-repo.sh` — criação de novo repo com governance
+- `../scripts/agent-lock.sh`     — mutex de coordenação entre agentes
+
+## Workflows de orquestração
+- `../workflows/agent-session.md`     — protocolo completo de sessão
+- `../workflows/feature-delivery.md`  — ciclo SDD de entrega de feature
+- `../workflows/repo-bootstrap.md`    — criação de novo repo de produto
+
+## Guias de integração por agente (platform)
+- `../ai_integration-claude.md`  — Claude: governança e orquestração
+- `../ai_integration-gemini.md`  — Gemini: revisão arquitetural
+- `../ai_integration-gpt.md`     — GPT: implementação e code gen
+
+## Schema de coordenação
+- `agent_lock.schema.json` — contrato JSON do mutex entre agentes
+
 ## Pacote de discovery atual
 - `discovery/J1_exportacao_csv_xlsx.md`
 - `discovery/J2_importacao_relatorios_bancarios.md`
