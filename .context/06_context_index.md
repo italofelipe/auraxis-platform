@@ -47,6 +47,7 @@ Este índice organiza a leitura mínima para qualquer pessoa/agente retomar o pr
 - `tech_debt/X3_fastapi_migration_coexistence.md`
 - `tech_debt/X4_ruff_adoption_strategy.md`
 - `tech_debt/tech_debt_execution_sequence.md`
+- `tech_debt/X3_X4_executive_snapshot.md`
 
 ## Regra de atualização
 Sempre que houver decisão de produto/arquitetura/processo:
