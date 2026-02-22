@@ -24,6 +24,7 @@ Este índice organiza a leitura mínima para qualquer pessoa/agente retomar o pr
 18. `02_backlog_next.md`
 19. `05_handoff.md`
 20. `discovery/README.md`
+21. `tech_debt/README.md`
 
 ## Templates para novos repositórios
 - `templates/REPO_STEERING_TEMPLATE.md`
@@ -41,6 +42,11 @@ Este índice organiza a leitura mínima para qualquer pessoa/agente retomar o pr
 - `discovery/J4_aba_ferramentas_conveniencia.md`
 - `discovery/J5_open_finance_open_banking.md`
 - `discovery/discovery_execucao_roadmap.md`
+
+## Pacote de débito técnico atual
+- `tech_debt/X3_fastapi_migration_coexistence.md`
+- `tech_debt/X4_ruff_adoption_strategy.md`
+- `tech_debt/tech_debt_execution_sequence.md`
 
 ## Regra de atualização
 Sempre que houver decisão de produto/arquitetura/processo:

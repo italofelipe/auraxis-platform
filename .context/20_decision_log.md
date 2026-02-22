@@ -8,6 +8,9 @@
 - Preferência atual de stack (a formalizar por ADR):
   - web: Nuxt
   - mobile: React Native + Expo
+- Decidido tratar X4 antes de X3 na execução técnica:
+  - X4: adoção faseada de Ruff preservando `mypy`.
+  - X3: migração Flask -> FastAPI por coexistência faseada, sem big-bang.
 
 ## Próximas decisões pendentes
 - formalização de ADR de stack web/mobile

@@ -25,3 +25,9 @@ Data: 2026-02-22
 - Pacote de discovery consolidado em `.context/discovery/`.
 - Ordem validada: J1 -> J2 -> J3 -> J4 -> J5.
 - J5 mantido como blocked até fechamento de gates regulatórios/compliance.
+
+## Tech Debt X3/X4 (rodada atual)
+- Análise e ideação formalizadas em `.context/tech_debt/`.
+- Estratégia proposta:
+  - X4 (Ruff) primeiro, em migração faseada, mantendo `mypy`.
+  - X3 (FastAPI) por coexistência faseada com Flask, sem migração big-bang.

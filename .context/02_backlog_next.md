@@ -2,11 +2,13 @@
 
 ## Em aberto imediato
 1. PLT1: configurar repositório auraxis-platform como orquestrador oficial (remote, submodules/repos, branch protection e baseline de CI/docs)
-2. B10: questionário indicativo de perfil investidor
-3. B11: persistir/expor perfil sugerido + taxonomy_version
-4. F1..F4: entidades auxiliares e integração em transações
-5. G5: seed de dados local
-6. B7: discovery OTP (bloqueado por provedor/compliance)
+2. X4: iniciar plano de adoção do Ruff (fase advisory -> substituição)
+3. X3: preparar fase 0 de desacoplamento para coexistência Flask/FastAPI
+4. B10: questionário indicativo de perfil investidor
+5. B11: persistir/expor perfil sugerido + taxonomy_version
+6. F1..F4: entidades auxiliares e integração em transações
+7. G5: seed de dados local
+8. B7: discovery OTP (bloqueado por provedor/compliance)
 
 ## Discovery (ideias)
 - Exportação CSV/XLSX por período
