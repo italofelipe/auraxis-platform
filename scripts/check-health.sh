@@ -100,13 +100,19 @@ check_repo() {
   fi
 
   # Mandatory governance files
-  for f in README.md AGENTS.md tasks.md steering.md; do
+  # AGENTS.md and CLAUDE.md are interchangeable (repo may use either convention)
+  for f in README.md tasks.md steering.md; do
     if [[ -f "$repo_path/$f" ]]; then
       ok "$f present"
     else
       warn "Missing: $f"
     fi
   done
+  if [[ -f "$repo_path/AGENTS.md" ]] || [[ -f "$repo_path/CLAUDE.md" ]]; then
+    ok "Agent directive present (AGENTS.md or CLAUDE.md)"
+  else
+    warn "Missing agent directive: create AGENTS.md or CLAUDE.md"
+  fi
 
   # Git status
   if [[ ! -d "$repo_path/.git" ]]; then
