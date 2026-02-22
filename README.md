@@ -5,6 +5,10 @@ Repositório orquestrador para contexto, governança e automações do ecossiste
 ## Objetivo
 Centralizar regras de execução e contexto compartilhado para trabalho humano + IA (Agentic Workflows), evitando perda de histórico decisório entre repositórios.
 
+## Branch principal
+- Branch principal oficial: `master`.
+- Branches de trabalho: seguir conventional branching (`feat/...`, `fix/...`, `docs/...`, etc.).
+
 ## Estrutura
 ```text
 auraxis-platform/
