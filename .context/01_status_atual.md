@@ -18,5 +18,5 @@ Data: 2026-02-22
 - b860ad6 docs(tasks): link b4 b5 b6 to implementation commits
 
 ## Próximo foco
-- Estruturar auraxis-platform (repo orquestrador)
-- Iniciar decisão formal de stack frontend/mobile
+- Configurar auraxis-platform como repositório orquestrador oficial (PLT1)
+- Concluir rodada de discovery antes da migração definitiva dos repositórios
