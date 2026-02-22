@@ -1,0 +1,3 @@
+[submodule "repos/auraxis-api"]
+	path = repos/auraxis-api
+	url = git@github.com:italofelipe/auraxis-api.git
