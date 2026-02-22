@@ -20,11 +20,12 @@ Este índice organiza a leitura mínima para qualquer pessoa/agente retomar o pr
 14. `19_context_maintenance.md`
 15. `20_decision_log.md`
 16. `21_repo_init_runbook.md`
-17. `01_status_atual.md`
-18. `02_backlog_next.md`
-19. `05_handoff.md`
-20. `discovery/README.md`
-21. `tech_debt/README.md`
+17. `22_workspace_migration_checklist.md`
+18. `01_status_atual.md`
+19. `02_backlog_next.md`
+20. `05_handoff.md`
+21. `discovery/README.md`
+22. `tech_debt/README.md`
 
 ## Templates para novos repositórios
 - `templates/REPO_STEERING_TEMPLATE.md`

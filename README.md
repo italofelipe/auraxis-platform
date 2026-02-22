@@ -31,6 +31,7 @@ Complementares (obrigatórios para setup completo):
 - `.context/19_context_maintenance.md`
 - `.context/20_decision_log.md`
 - `.context/21_repo_init_runbook.md`
+- `.context/22_workspace_migration_checklist.md`
 
 ## Bootstrap dos repositórios
 

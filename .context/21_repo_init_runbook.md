@@ -25,6 +25,19 @@ git add .
 git commit -m "docs: bootstrap repository governance and templates"
 ```
 
+## Migração de repo existente (caso atual do backend)
+Quando o repositório já existe fora do `auraxis-platform`, migrar primeiro a pasta e só depois abrir novo bloco de trabalho:
+
+```bash
+cd /Users/italochagas/Desktop/projetos/auraxis-platform/repos
+mv /Users/italochagas/Desktop/projetos/flask-expenses-manager ./auraxis-api
+```
+
+Após mover:
+- validar `git status`, branch e remotes em `repos/auraxis-api`
+- revalidar scripts/rotinas locais que possam depender de caminho absoluto
+- seguir checklist de `.context/22_workspace_migration_checklist.md`
+
 ## Ajustes obrigatórios após bootstrap
 - adaptar `steering.md` para o domínio do repo
 - preencher backlog inicial em `tasks.md`
