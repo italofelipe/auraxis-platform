@@ -20,3 +20,8 @@ Data: 2026-02-22
 ## Próximo foco
 - Configurar auraxis-platform como repositório orquestrador oficial (PLT1)
 - Concluir rodada de discovery antes da migração definitiva dos repositórios
+
+## Discovery J1..J5 (rodada atual)
+- Pacote de discovery consolidado em `.context/discovery/`.
+- Ordem validada: J1 -> J2 -> J3 -> J4 -> J5.
+- J5 mantido como blocked até fechamento de gates regulatórios/compliance.

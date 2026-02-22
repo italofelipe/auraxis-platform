@@ -14,3 +14,7 @@
 - Insights com LLM
 - Aba de ferramentas financeiras
 - Open Finance (fase posterior)
+
+## Discovery (materializado)
+- J1..J5 detalhados em `.context/discovery/`.
+- Roadmap consolidado em `.context/discovery/discovery_execucao_roadmap.md`.
