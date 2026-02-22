@@ -8,20 +8,24 @@ Data: 2026-02-22
 - Discovery `J1..J5` formalizado em `.context/discovery/` com roadmap de execução.
 - Análise de débitos técnicos `X3` e `X4` formalizada em `.context/tech_debt/`.
 - Rodada atual encerrada em modo análise/ideação (sem implementação de código de produção).
+- Handoff pre-migração registrado no backend e checklist de migração de workspace publicado no platform.
 
 ## O que está em andamento
 - Preparação de transição para operação multi-repo guiada por `auraxis-platform`.
-- Aguardando execução técnica de `PLT1`, depois `X4`, depois `X3 fase 0`.
+- `PLT1` em progresso com foco imediato na migração do backend para `repos/auraxis-api`.
+- Aguardando execução técnica de `X4`, depois `X3 fase 0`.
 
 ## Próximo passo recomendado
-1. Executar `PLT1` (configuração formal do repo platform: governança/CI/submodules/repos).
-2. Iniciar `X4` em fase advisory (Ruff sem substituir gates ainda).
-3. Planejar `X3 fase 0` (desacoplamentos de auth/context/erro para coexistência Flask/FastAPI).
+1. Executar `PLT1.1`: migrar backend para `repos/auraxis-api` e validar `.context/22_workspace_migration_checklist.md`.
+2. Executar `PLT1.2`: formalizar arranjo operacional multi-repo (submodules ou pastas locais) com baseline de governança/CI.
+3. Iniciar `X4` em fase advisory (Ruff sem substituir gates ainda).
+4. Planejar `X3 fase 0` (desacoplamentos de auth/context/erro para coexistência Flask/FastAPI).
 
 ## Riscos/atenções
 - Iniciar migração para FastAPI antes da fase 0 aumenta risco de regressão transversal.
 - Adotar Ruff sem rollout faseado pode gerar ruído de estilo e perda de confiança no gate.
 - Drift de contexto entre repos caso `PLT1` não seja concluído antes da migração definitiva.
+- Mudança física de diretórios pode quebrar scripts/automações com paths hardcoded.
 
 ## Commits/PRs relacionados
 - Backend:
@@ -35,3 +39,4 @@ Data: 2026-02-22
   - `5204ea2` docs(context): prioritize platform repository setup before migration
   - `3b5d68e` docs(discovery): formalize j1-j5 with execution roadmap
   - `18ef2f5` docs(tech-debt): analyze fastapi coexistence and ruff adoption
+  - `f9bd018` docs(context): record analysis-only cycle decision for x3 x4

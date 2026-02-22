@@ -12,6 +12,7 @@
   - X4: adoção faseada de Ruff preservando `mypy`.
   - X3: migração Flask -> FastAPI por coexistência faseada, sem big-bang.
 - Decidido manter a rodada atual apenas em análise/ideação de X3/X4, sem implementação imediata.
+- Decidido executar migração física do backend para `repos/auraxis-api` usando checklist dedicado antes de abrir novo bloco técnico.
 
 ## Próximas decisões pendentes
 - formalização de ADR de stack web/mobile

@@ -4,11 +4,14 @@ Data: 2026-02-22
 
 ## Backend
 - Bloco B4/B5/B6 concluído (recuperação de senha por link).
+- Bloco de perfil V1 concluído em produção de código (`B1/B2/B3/B8/B9`).
 - REST: /auth/password/forgot e /auth/password/reset.
 - GraphQL: forgotPassword e resetPassword.
 - Token de reset com hash + expiração + uso único.
 - Reset revoga sessão ativa (current_jti).
 - Testes REST/GraphQL/paridade OpenAPI atualizados.
+- `TASKS.md` sincronizado na rodada atual com prioridades `PLT1 -> X4 -> X3`.
+- Handoff pre-migração do backend publicado em `.context/handoffs/2026-02-22_pre-migracao-auraxis-platform.md`.
 
 ## Commits recentes (backend)
 - 5d092c1 feat(auth): add password reset domain state and service
@@ -18,8 +21,9 @@ Data: 2026-02-22
 - b860ad6 docs(tasks): link b4 b5 b6 to implementation commits
 
 ## Próximo foco
-- Configurar auraxis-platform como repositório orquestrador oficial (PLT1)
-- Concluir rodada de discovery antes da migração definitiva dos repositórios
+- Concluir `PLT1.1` (migração física do backend para `repos/auraxis-api` + validações pós-migração).
+- Concluir `PLT1.2` (arranjo operacional multi-repo com governança/CI basal).
+- Iniciar execução técnica de `X4` e, depois, `X3` fase 0.
 
 ## Discovery J1..J5 (rodada atual)
 - Pacote de discovery consolidado em `.context/discovery/`.

@@ -1,14 +1,15 @@
 # Próximas Prioridades
 
 ## Em aberto imediato
-1. PLT1: configurar repositório auraxis-platform como orquestrador oficial (remote, submodules/repos, branch protection e baseline de CI/docs)
-2. X4: iniciar plano de adoção do Ruff (fase advisory -> substituição)
-3. X3: preparar fase 0 de desacoplamento para coexistência Flask/FastAPI
-4. B10: questionário indicativo de perfil investidor
-5. B11: persistir/expor perfil sugerido + taxonomy_version
-6. F1..F4: entidades auxiliares e integração em transações
-7. G5: seed de dados local
-8. B7: discovery OTP (bloqueado por provedor/compliance)
+1. PLT1.1: migrar backend para `repos/auraxis-api` e validar checklist pós-migração (`.context/22_workspace_migration_checklist.md`)
+2. PLT1.2: concluir estratégia operacional de multi-repo (submodules vs pastas locais) com governança/CI basal
+3. X4: iniciar plano de adoção do Ruff (fase advisory -> substituição de flake8/black/isort), mantendo `mypy`
+4. X3: preparar fase 0 de desacoplamento para coexistência Flask/FastAPI (auth/context/error adapters)
+5. B10: questionário indicativo de perfil investidor
+6. B11: persistir/expor perfil sugerido + taxonomy_version
+7. F1..F4: entidades auxiliares e integração em transações
+8. G5: seed de dados local
+9. B7: discovery OTP (bloqueado por provedor/compliance)
 
 ## Discovery (ideias)
 - Exportação CSV/XLSX por período
