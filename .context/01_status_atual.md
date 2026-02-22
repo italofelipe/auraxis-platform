@@ -30,10 +30,22 @@ Data: 2026-02-22
 - `ai_integration-claude.md`, `ai_integration-gemini.md`, `ai_integration-gpt.md` na raiz.
 - `.context/06_context_index.md` atualizado com novos artefatos.
 
+## Platform Setup (PLT1.1) — concluído nesta rodada
+- Repo GitHub renomeado de `flask-expenses-manager` → `auraxis-api`.
+- Remote local atualizado: `git@github.com:italofelipe/auraxis-api.git`.
+- `auraxis-api` registrado como git submodule em `auraxis-platform` (`.gitmodules`).
+- `scripts/aws_iam_audit_i8.py`: OIDC subject hints atualizados para `auraxis-api`.
+- `docs/RUNBOOK.md`: procedimento de recovery atualizado para layout de submodule.
+- `docs/STABILIZATION_01_TRACEABILITY.md`: task de renomeação marcada como concluída.
+- `.claude/settings.local.json`: paths obsoletos do `flask-expenses-manager` removidos.
+- `.mypy_cache` limpo (cache tinha paths absolutos do diretório antigo).
+- IAM trust policy (AWS): atualizar manualmente subject hints nos roles dev/prod.
+- SonarCloud: renomear project key de `italofelipe_flask-expenses-manager` → `italofelipe_auraxis-api` (pendente ação do usuário).
+
 ## Próximo foco
-- Concluir `PLT1.1`: resolver submodule do backend (remote do auraxis-api ainda aponta para flask-expenses-manager).
-- Iniciar execução técnica de `X4` e, depois, `X3` fase 0.
+- Iniciar execução técnica de `X4` (Ruff, fase advisory).
 - Iniciar `B10` (questionário indicativo de perfil investidor).
+- Atualizar IAM trust policy e SonarCloud project key (ação manual do usuário).
 
 ## Discovery J1..J5 (rodada atual)
 - Pacote de discovery consolidado em `.context/discovery/`.

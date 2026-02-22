@@ -1,38 +1,52 @@
 # Handoff (Atual)
 
-Data: 2026-02-22 (atualizado — PLT1.2 concluído)
+Data: 2026-02-22 (atualizado — PLT1.1 + PLT1.2 concluídos)
 
-## O que foi feito (rodada PLT1.2)
-- `CLAUDE.md` criado na raiz do `auraxis-platform` com directive de orquestração completa.
-- `scripts/check-health.sh` — diagnóstico de saúde pré-sessão (platform + repos + lock + submodules).
-- `scripts/bootstrap-repo.sh` — scaffold automatizado de novos repos com governance baseline.
-- `scripts/agent-lock.sh` — mutex acquire/release/status para coordenação entre agentes.
-- `.context/agent_lock.schema.json` — schema JSON formal do protocolo de lock.
-- `workflows/` populado com 3 documentos executáveis: agent-session, feature-delivery, repo-bootstrap.
-- `ai_integration-claude.md`, `ai_integration-gemini.md`, `ai_integration-gpt.md` na raiz da platform.
-- `.context/06_context_index.md` atualizado com referências a todos os novos artefatos.
-- `.context/01_status_atual.md` e `.context/02_backlog_next.md` sincronizados.
+## O que foi feito (rodada PLT1.1 — renomeação e submodule)
+- Repo GitHub renomeado de `flask-expenses-manager` → `auraxis-api`.
+- Remote local atualizado para `git@github.com:italofelipe/auraxis-api.git`.
+- `auraxis-api` registrado como submodule oficial em `auraxis-platform` (`.gitmodules`).
+- `scripts/aws_iam_audit_i8.py`: OIDC subject hints corrigidos para `auraxis-api`.
+- `docs/RUNBOOK.md`: procedimento de recovery atualizado para layout de submodule.
+- `docs/STABILIZATION_01_TRACEABILITY.md`: task de renomeação marcada como concluída.
+- `.claude/settings.local.json`: paths obsoletos do diretório antigo removidos (arquivo local, não versionado).
+- `.mypy_cache` limpo (tinha paths absolutos do diretório antigo, causava crash no pre-commit).
+- Pointer do submodule na platform avançado para incluir todos os commits de cleanup.
+
+## O que foi feito (rodada PLT1.2 — setup de orquestração)
+- `CLAUDE.md` criado na raiz do `auraxis-platform`.
+- `scripts/check-health.sh`, `bootstrap-repo.sh`, `agent-lock.sh` criados.
+- `.context/agent_lock.schema.json` — schema JSON do protocolo de lock.
+- `workflows/` populado com 3 documentos executáveis.
+- `ai_integration-claude.md`, `ai_integration-gemini.md`, `ai_integration-gpt.md` na raiz.
 
 ## O que foi validado
-- `check-health.sh` executado: plataforma com 9 ✅, 1 ⚠️ esperado (submodule não configurado).
-- `agent-lock.sh` testado: acquire/status/release funcionando com JSON correto.
-- `bootstrap-repo.sh` criado e com permissão de execução.
+- `check-health.sh`: plataforma com todos os ✅ (submodule agora reconhecido).
+- `agent-lock.sh`: acquire/status/release testados e funcionando.
+- Pre-commit do `auraxis-api` passando (black, flake8, isort, bandit, gitleaks, mypy).
+- Submodule apontando para `b138d11` (último commit de cleanup).
+
+## Pendências manuais (ação do usuário)
+- **AWS IAM**: atualizar trust policy dos roles dev/prod — subject hint mudou de
+  `repo:italofelipe/flask-expenses-manager:environment:*` para
+  `repo:italofelipe/auraxis-api:environment:*`.
+- **SonarCloud**: renomear project key de `italofelipe_flask-expenses-manager`
+  para `italofelipe_auraxis-api` e atualizar variável `SONAR_PROJECT_KEY` no GitHub.
 
 ## Próximo passo recomendado
-1. **PLT1.1** (blocker parcial): decidir sobre renomeação do repo GitHub `flask-expenses-manager` → `auraxis-api`, e registrar como submodule. Ver `workflows/repo-bootstrap.md` + `22_workspace_migration_checklist.md`.
-2. **X4**: iniciar execução da adoção faseada de Ruff (advisory → substituição de flake8/black/isort).
-3. **B10**: questionário indicativo de perfil investidor (próxima feature de produto).
+1. **X4**: iniciar execução da adoção faseada de Ruff (advisory → substituição de flake8/black/isort).
+2. **B10**: questionário indicativo de perfil investidor (próxima feature de produto).
 
 ## Riscos/atenções
-- `repos/auraxis-api` ainda é pasta local (não submodule) — PLT1.1 pendente.
-- Iniciar migração para FastAPI antes da fase 0 aumenta risco de regressão transversal.
+- Deploy CI/CD falhará até que a trust policy do IAM seja atualizada (subject hint antigo não casa mais).
+- SonarCloud vai criar um novo projeto com nome errado se o key não for atualizado antes do próximo push.
 - Adotar Ruff sem rollout faseado pode gerar ruído de estilo.
 
 ## Commits desta rodada (platform)
-- `f120dbb` docs(claude): add platform-level operational directive for Claude
-- `65c1fad` feat(scripts): add bootstrap-repo.sh for automated repo scaffolding
-- `0ecf4ea` feat(scripts): add check-health.sh for pre-session platform diagnostics
-- `9094085` fix(scripts): accept CLAUDE.md as equivalent to AGENTS.md in health check
-- `b456305` feat(scripts): add agent-lock.sh mutex for multi-agent coordination
-- `bb4f364` docs(ai-integration): add platform-level agent integration guides
-- `ba3d45c` docs(workflows): add orchestration workflow documents
+- `aa003b4` chore(submodule): register auraxis-api as git submodule
+- `b548bd7` chore(submodule): advance auraxis-api pointer after rename cleanup
+
+## Commits desta rodada (auraxis-api)
+- `d6f03fe` fix(aws): update OIDC subject hints to auraxis-api repo name
+- `33f28b0` docs(runbook): update workspace recovery procedure for auraxis-api rename
+- `b138d11` docs(traceability): mark path/name update task as done after rename
