@@ -73,3 +73,53 @@ Próximas tasks de produto:
 ## Tech Debt X3/X4
 - Análise e ideação formalizadas em `.context/tech_debt/`.
 - Estratégia: X4 (Ruff) primeiro, em migração faseada, mantendo `mypy`. X3 (FastAPI) por coexistência faseada.
+
+## PLT1.4 — Governança e calibragem de agentes (concluído nesta rodada)
+
+**Objetivo:** deixar Claude, Gemini e GPT completamente autônomos, com guardrails que impeçam regressão, vazamento e desvio de padrão.
+
+### O que foi feito
+
+| Item | Arquivo(s) | Descrição |
+|:-----|:-----------|:----------|
+| Quality gates web | `repos/auraxis-web/steering.md` | Biome + nuxi typecheck + vitest — comandos concretos e thresholds |
+| Quality gates mobile | `repos/auraxis-app/steering.md` | ESLint + tsc --noEmit + jest — comandos concretos e thresholds |
+| Contexto local web | `repos/auraxis-web/.context/` | README, architecture.md, quality_gates.md |
+| Contexto local mobile | `repos/auraxis-app/.context/` | README, architecture.md, quality_gates.md |
+| Lock obrigatório | `workflows/agent-session.md` | Tabela explícita: quando acquire é obrigatório vs. opcional |
+| Gates por repo no workflow | `workflows/agent-session.md` | Comandos de gate por stack embutidos no passo de commit |
+| Script de prereqs | `scripts/verify-agent-session.sh` | Valida git, SSH, Python, submodules, .context antes de começar |
+| Handoffs históricos | `.context/handoffs/` | Diretório criado + protocolo documentado |
+| Interop CrewAI | `repos/auraxis-api/ai_squad/CLAUDE.md` | Protocolo de lock e handoff para o squad automatizado |
+
+### Commits desta rodada (platform)
+
+- `docs/agent-autonomy-baseline` — branch com todos os itens acima
+
+---
+
+## Próxima task para agentes autônomos
+
+> **Esta seção deve ser atualizada ao final de cada sessão.** É o ponto de entrada para qualquer agente que começa uma nova sessão sem contexto anterior.
+
+### Agora — tarefa imediata
+
+| Campo | Valor |
+|:------|:------|
+| **Task ID** | `X4` |
+| **Repo** | `auraxis-api` |
+| **Descrição** | Adoção faseada de Ruff — fase advisory (adicionar Ruff sem remover black/isort/flake8 ainda) |
+| **Branch** | `refactor/x4-ruff-advisory` |
+| **Entrada** | `master` de `auraxis-api` — commits recentes em `d6f03fe`, `33f28b0`, `b138d11` |
+| **Critério de saída** | Ruff instalado, configurado em `pyproject.toml`, rodando sem erros em modo advisory, resultado documentado em TASKS.md |
+| **Risco** | Baixo — advisory não substitui nada, apenas adiciona |
+
+### Fila (ordem de prioridade)
+
+| # | Task | Repo | Descrição curta |
+|:--|:-----|:-----|:----------------|
+| 1 | `X4` | `auraxis-api` | Ruff advisory |
+| 2 | `X3` | `auraxis-api` | Flask/FastAPI coexistence fase 0 |
+| 3 | `B10` | `auraxis-api` | Questionário de perfil investidor (5-10 perguntas) |
+| 4 | `APP1` | `auraxis-app` | Setup lint/TS + CI básico |
+| 5 | `WEB1` | `auraxis-web` | Inicialização do projeto Nuxt 3 |

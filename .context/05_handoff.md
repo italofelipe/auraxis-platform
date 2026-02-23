@@ -1,78 +1,69 @@
 # Handoff (Atual)
 
-Data: 2026-02-22 (atualizado — PLT1.3 concluído)
+Data: 2026-02-23 (PLT1.4 — agent autonomy baseline)
 
-## O que foi feito (rodada PLT1.3 — setup multi-repo para agentes)
+## O que foi feito (rodada PLT1.4)
 
-### Submodules registrados
-- `auraxis-app` (React Native + Expo SDK 54) — git inicializado, remote configurado, commits iniciais, registrado em `.gitmodules`.
-- `auraxis-web` (Nuxt 3) — git inicializado, remote configurado, commits iniciais, registrado em `.gitmodules`.
-- `.git/modules/repos/{auraxis-app,auraxis-web}` — git dirs absorvidos pelo submodule system da platform.
+### Objetivo da rodada
+Configurar o ambiente para que Claude, Gemini e GPT consigam operar completamente autônomos, seguindo padrões, guardrails e entregando código robusto e confiável.
 
-### Governance baseline em auraxis-app e auraxis-web
-- `CLAUDE.md` — diretiva de identidade, session bootstrap, limites operacionais.
-- `.gitignore` — adequado para cada stack (Expo / Nuxt).
-- `tasks.md` — backlog inicial com estado atual e próximas tasks.
-- `steering.md` — princípios técnicos, convenções e integrações externas.
+### Itens executados
 
-### Scripts de plataforma atualizados
-- `scripts/setup-submodules.sh` (NOVO) — setup one-shot para qualquer agente ou dev que clonar a platform. Verifica pré-requisitos, inicializa todos os submodules, roda o health check.
-- `scripts/check-health.sh` (ATUALIZADO):
-  - Detecção de `.git` file (submodule absorvido) além de `.git/` dir.
-  - Stack check dedicado para `auraxis-app` (Mobile — Expo) e `auraxis-web` (Web — Nuxt).
-  - Correção do nome `auraxis-app` (era `auraxis-mobile` no roteamento).
-- `.context/11_repo_map.md` (ATUALIZADO) — mapa completo dos 3 submodules com remote URLs, stack e status.
+| Item | Arquivo(s) criados/modificados | Descrição |
+|:-----|:-------------------------------|:----------|
+| Quality gates web | `repos/auraxis-web/steering.md` | Biome + nuxi typecheck + vitest com thresholds explícitos |
+| Quality gates mobile | `repos/auraxis-app/steering.md` | ESLint + tsc --noEmit + jest com thresholds explícitos |
+| Contexto local web | `repos/auraxis-web/.context/README.md`, `architecture.md`, `quality_gates.md` | Stack, estrutura, decisões, gates para agentes no repo web |
+| Contexto local mobile | `repos/auraxis-app/.context/README.md`, `architecture.md`, `quality_gates.md` | Stack, estrutura, decisões, gates para agentes no repo mobile |
+| Lock sem ambiguidade | `workflows/agent-session.md` | Reescrito: tabela de "quando acquire é obrigatório", gates por repo no passo de commit |
+| Script de prereqs | `scripts/verify-agent-session.sh` | Novo script: valida git, SSH, Python, scripts, submodules, .context, CLAUDE.md, agent lock |
+| Handoffs históricos | `.context/handoffs/README.md` | Diretório criado + protocolo de nomenclatura e campos obrigatórios |
+| CrewAI interop | `repos/auraxis-api/ai_squad/CLAUDE.md` | Protocolo de lock, handoff e bootstrap de contexto para o squad automatizado |
+| Next Task estruturada | `.context/01_status_atual.md` | Seção "Próxima task para agentes autônomos" com fila estruturada |
 
 ## O que foi validado
-- `check-health.sh`: todos os ✅ nos 3 repos. Só warnings esperados (platform uncommitted antes do commit, auraxis-web sem package.json por estar em bootstrap).
-- `setup-submodules.sh --check`: detecta corretamente os 3 submodules e seu estado.
-- Submodule pointers atualizados para os commits de governance baseline.
+
+- `scripts/verify-agent-session.sh` rodado: ✅ 0 failures, 1 warning esperado (SSH agent)
+- `scripts/check-health.sh`: todos os repos passando
+- Estrutura `.context/` completa em auraxis-web e auraxis-app
+- ai_squad/CLAUDE.md criado e integrado com protocolo de lock
 
 ## Pendências manuais (ação do usuário)
 
-### Ainda pendente de rodadas anteriores
-- **AWS IAM**: atualizar trust policy dos roles dev/prod — subject hint mudou de
-  `repo:italofelipe/flask-expenses-manager:environment:*` para
-  `repo:italofelipe/auraxis-api:environment:*`.
-- **SonarCloud**: renomear project key de `italofelipe_flask-expenses-manager`
-  para `italofelipe_auraxis-api` e atualizar variável `SONAR_PROJECT_KEY` no GitHub.
-
-### Novos — push dos repos para o GitHub
-- **auraxis-app**: criar repo em github.com/italofelipe/auraxis-app e fazer push.
-- **auraxis-web**: criar repo em github.com/italofelipe/auraxis-web e fazer push.
-
-Comandos prontos para executar no terminal:
-```bash
-# Criar repos no GitHub (requer gh CLI ou acesso à web)
-gh repo create italofelipe/auraxis-app --public --description "Auraxis mobile app — React Native + Expo"
-gh repo create italofelipe/auraxis-web --public --description "Auraxis web app — Nuxt 3 + TypeScript"
-
-# Push auraxis-app
-cd repos/auraxis-app
-git push -u origin main
-
-# Push auraxis-web
-cd ../auraxis-web
-git push -u origin main
-```
-
-Após o push, os submodules deixarão de aparecer como `-SHA` (não inicializado) no `git submodule status`.
+| Pendência | Status | Detalhe |
+|:----------|:-------|:--------|
+| AWS IAM trust policy | ⚠️ Pendente | Subject hint: `repo:italofelipe/auraxis-api:environment:*` |
+| SonarCloud project key | ⚠️ Pendente | Renomear de `italofelipe_flask-expenses-manager` para `italofelipe_auraxis-api` |
+| Push auraxis-app ao GitHub | ✅ Feito pelo usuário | Confirmado na sessão anterior |
+| Push auraxis-web ao GitHub | ✅ Feito pelo usuário | Confirmado na sessão anterior |
 
 ## Próximo passo recomendado
-1. Usuário faz o push de `auraxis-app` e `auraxis-web` para o GitHub.
-2. Usuário atualiza AWS IAM trust policy e SonarCloud project key.
-3. Próxima sessão de agente pode iniciar **X4** (Ruff advisory em auraxis-api) ou **B10** (feature de produto).
 
-## Commits desta rodada (platform)
-- `fb96fd7` chore(submodules): register auraxis-app and auraxis-web as git submodules
-- `6bd231a` chore(platform): update repo map and health check for 3-submodule layout
-- `4f1420a` chore(submodules): advance auraxis-app and auraxis-web pointers to governance baseline commits
+**Task X4 — Ruff advisory em `auraxis-api`**
 
-## Commits desta rodada (auraxis-app)
-- `4f5aed7` chore(platform): add governance baseline (CLAUDE.md + .gitignore)
-- `9d3b6a3` feat(app): initial expo project scaffold (SDK 54 + RN 0.81)
-- `05ca2ff` chore(governance): add tasks.md and steering.md baseline
+```bash
+# Início de sessão:
+cd /path/to/auraxis-platform
+./scripts/verify-agent-session.sh
+./scripts/agent-lock.sh acquire claude auraxis-api "X4 — Ruff advisory setup"
+cd repos/auraxis-api
+git checkout master && git pull
+git checkout -b refactor/x4-ruff-advisory
+```
 
-## Commits desta rodada (auraxis-web)
-- `4817df7` chore(platform): add governance baseline (CLAUDE.md + .gitignore) and initial README
-- `2b138fa` chore(governance): add tasks.md and steering.md baseline
+O que fazer:
+1. Adicionar `ruff` em `requirements-dev.txt`
+2. Adicionar `[tool.ruff]` em `pyproject.toml` com regras advisory (sem substituir black/isort/flake8 ainda)
+3. Rodar `ruff check .` e registrar resultado (número de issues por categoria)
+4. Atualizar TASKS.md com resultado e commit
+5. Documentar decisão: substituição faseada ou direta
+
+## Commits desta rodada (platform — branch docs/agent-autonomy-baseline)
+
+A commitar:
+- `docs(autonomy): add quality gates and local context to auraxis-web and auraxis-app`
+- `docs(autonomy): rewrite agent-session workflow with unambiguous lock protocol`
+- `feat(scripts): add verify-agent-session.sh prereq checker`
+- `docs(autonomy): create handoffs/ directory with protocol`
+- `docs(autonomy): add CLAUDE.md to ai_squad with CrewAI interop protocol`
+- `docs(context): sync PLT1.4 status and handoff`
