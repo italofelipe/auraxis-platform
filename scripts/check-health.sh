@@ -114,10 +114,8 @@ check_repo() {
     warn "Missing agent directive: create AGENTS.md or CLAUDE.md"
   fi
 
-  # Git status
-  if [[ ! -d "$repo_path/.git" ]]; then
-    warn "No .git directory — not a git repo or is a submodule (check .gitmodules)"
-  else
+  # Git status — submodules have a .git file (not dir) pointing to .git/modules/
+  if [[ -d "$repo_path/.git" ]] || [[ -f "$repo_path/.git" ]]; then
     cd "$repo_path"
     UNCOMMITTED=$(git status --porcelain | grep -v "^??" || true)
     if [[ -z "$UNCOMMITTED" ]]; then
@@ -130,12 +128,14 @@ check_repo() {
     BRANCH=$(git rev-parse --abbrev-ref HEAD)
     ok "Branch: $BRANCH"
 
-    REMOTE=$(git remote -v 2>/dev/null | head -1 || echo "none")
-    if [[ "$REMOTE" == "none" ]]; then
+    REMOTE=$(git remote get-url origin 2>/dev/null || echo "")
+    if [[ -z "$REMOTE" ]]; then
       warn "No remote configured"
     else
-      ok "Remote: $(git remote get-url origin 2>/dev/null || echo 'n/a')"
+      ok "Remote: $REMOTE"
     fi
+  else
+    fail "No .git found — not a git repo"
   fi
 
   # Stack-specific checks
@@ -146,7 +146,7 @@ check_repo() {
     auraxis-web)
       check_web "$repo_path"
       ;;
-    auraxis-mobile)
+    auraxis-app)
       check_mobile "$repo_path"
       ;;
   esac
@@ -200,24 +200,46 @@ check_backend() {
 
 check_web() {
   local path="$1"
+  section "Web health (auraxis-web)"
   if [[ -f "$path/package.json" ]]; then
     ok "package.json present"
     if command -v node &>/dev/null; then
       ok "Node: $(node --version)"
     else
-      warn "node not found"
+      warn "node not found in PATH"
+    fi
+    if [[ -f "$path/nuxt.config.ts" ]] || [[ -f "$path/nuxt.config.js" ]]; then
+      ok "nuxt.config present"
+    else
+      warn "nuxt.config not found (Nuxt not initialized yet)"
     fi
   else
-    warn "package.json not found (Nuxt.js not initialized yet)"
+    warn "package.json not found (Nuxt not initialized yet — bootstrap pending)"
   fi
 }
 
 check_mobile() {
   local path="$1"
+  section "Mobile health (auraxis-app)"
   if [[ -f "$path/package.json" ]]; then
     ok "package.json present"
+    if command -v node &>/dev/null; then
+      ok "Node: $(node --version)"
+    else
+      warn "node not found in PATH"
+    fi
+    if [[ -f "$path/app.json" ]]; then
+      ok "app.json present (Expo config)"
+    else
+      warn "app.json not found"
+    fi
+    if [[ -f "$path/tsconfig.json" ]]; then
+      ok "tsconfig.json present"
+    else
+      warn "tsconfig.json not found"
+    fi
   else
-    warn "package.json not found (React Native not initialized yet)"
+    warn "package.json not found (Expo not initialized yet)"
   fi
 }
 
@@ -230,9 +252,7 @@ check_submodules() {
   if [[ -f ".gitmodules" ]]; then
     SUBMODULE_COUNT=$(grep -c "\[submodule" .gitmodules 2>/dev/null || echo 0)
     ok ".gitmodules present ($SUBMODULE_COUNT submodule(s) registered)"
-    git submodule status 2>/dev/null | while read -r line; do
-      echo "       $line"
-    done
+    git submodule status 2>/dev/null | sed 's/^/       /'
   else
     warn ".gitmodules not found — repos are local directories, not submodules"
     echo "       See README.md > Bootstrap for instructions on adding submodules."
