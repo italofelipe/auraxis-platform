@@ -19,11 +19,9 @@ Entregar o produto Auraxis com previsibilidade, segurança e qualidade, usando f
   - risco residual
 
 ## Definição de pronto (DoD)
-- Implementação funcional concluída.
-- Testes automatizados cobrindo cenário principal e regressões críticas.
-- Lint/type-check/security gates aplicáveis sem falha.
-- `tasks.md` atualizado com status e rastreabilidade.
-- Handoff registrado para continuidade.
+
+Ver `23_definition_of_done.md` — documento canônico e autoritativo.
+Não duplicar critérios aqui.
 
 ## Política de rollback
 - Toda entrega deve permitir rollback por commit.
