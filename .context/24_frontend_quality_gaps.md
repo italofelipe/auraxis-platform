@@ -1,7 +1,7 @@
 # Frontend Quality Gaps & Roadmap
 
-**Data:** 2026-02-23
-**Escopo:** auraxis-web (Nuxt 3) + auraxis-app (React Native/Expo)
+**Data:** 2026-02-23 (atualizado: WEB1 concluído)
+**Escopo:** auraxis-web (Nuxt 4) + auraxis-app (React Native/Expo)
 **Referência:** `.context/23_definition_of_done.md`, `repos/*/CODING_STANDARDS.md`
 
 ---
@@ -23,19 +23,23 @@
 | quality_gates.md | ✅ criado | `.context/quality_gates.md` |
 | Jest config (scaffold) | ⚠️ pendente | Precisa `jest-expo` + config real |
 
-### auraxis-web ✅ (scaffold — aguarda WEB1)
+### auraxis-web ✅ (WEB1 concluído — projeto Nuxt 4 inicializado)
 
 | Item | Estado | Arquivo |
 |:-----|:-------|:--------|
-| package.json scaffold | ✅ criado | `package.json` |
-| Husky v9 (pre-commit, commit-msg, pre-push) | ✅ scaffold | `.husky/` |
-| lint-staged (Biome em staged files) | ✅ scaffold | `package.json#lint-staged` |
-| commitlint | ✅ scaffold | `.commitlintrc.json` |
-| GitHub Actions CI (7 jobs) | ✅ criado | `.github/workflows/ci.yml` |
-| CODING_STANDARDS.md | ✅ criado | `CODING_STANDARDS.md` |
-| FRONTEND_GUIDE.md | ✅ criado | `FRONTEND_GUIDE.md` |
-| Biome | ⚠️ pendente instalação real | Aguarda `npx nuxi init` (WEB1) |
-| Vitest + coverage | ⚠️ pendente instalação real | Aguarda WEB1 |
+| Projeto Nuxt 4 inicializado | ✅ ativo | `nuxt.config.ts`, `app/app.vue` |
+| package.json (pnpm) | ✅ ativo | `package.json` (packageManager: pnpm@10.30.1) |
+| @nuxt/eslint | ✅ instalado | `package.json#devDependencies` + `nuxt.config.ts#modules` |
+| Prettier | ✅ instalado | `package.json#devDependencies` |
+| Husky v9 (pre-commit, commit-msg, pre-push) | ✅ configurado | `.husky/` |
+| lint-staged (ESLint fix em staged files) | ✅ configurado | `package.json#lint-staged` |
+| commitlint | ✅ configurado | `.commitlintrc.json` |
+| GitHub Actions CI (7 jobs, pnpm) | ✅ atualizado | `.github/workflows/ci.yml` |
+| CODING_STANDARDS.md | ✅ atualizado | `CODING_STANDARDS.md` |
+| FRONTEND_GUIDE.md | ✅ atualizado | `FRONTEND_GUIDE.md` |
+| nuxt.config.ts com módulos registrados | ✅ configurado | `nuxt.config.ts` |
+| Vitest + @nuxt/test-utils | ⚠️ instalado, config pendente | Precisa de `vitest.config.ts` (WEB2) |
+| Coverage thresholds enforcement | ⚠️ pendente | Depende de `vitest.config.ts` (WEB2) |
 
 ---
 
@@ -46,8 +50,8 @@
 | Gap | Descrição | Bloqueador | Task sugerida |
 |:----|:----------|:-----------|:--------------|
 | **Jest setup real** (app) | `jest-expo` não está instalado + `jest.config.js` não existe | Precisa inicializar suite de testes | APP2 |
-| **Vitest setup real** (web) | Vitest não instalado até WEB1 | Aguarda `npx nuxi init` | WEB1 |
-| **Coverage thresholds enforcement** | Sem configuração de threshold real no Jest/Vitest ainda | Depende de Jest/Vitest setup | APP2/WEB2 |
+| **vitest.config.ts** (web) | Vitest instalado mas sem config de coverage thresholds | Criar `vitest.config.ts` com `defineVitestConfig` | WEB2 |
+| **Coverage thresholds enforcement** | Jest/Vitest instalados, sem config de threshold real | Depende de config files | APP2/WEB2 |
 | **@testing-library/react-native** | Não está nas devDeps do app | Precisa instalar + configurar | APP2 |
 | **expo-secure-store** | Não está nas deps — necessário para auth segura | Instalar antes de qualquer tela de auth | APP2 |
 
@@ -82,16 +86,16 @@
 
 | Capacidade | auraxis-api | auraxis-web | auraxis-app |
 |:-----------|:-----------:|:-----------:|:-----------:|
-| Lint | ✅ Flake8 | ✅ Biome (scaffold) | ✅ ESLint |
-| Format | ✅ Black | ✅ Biome (scaffold) | ⚠️ Prettier (instalado) |
-| Type check | ✅ Mypy strict | ⚠️ nuxi typecheck (scaffold) | ✅ tsc --noEmit |
-| Pre-commit hooks | ✅ 7 hooks | ✅ 3 hooks (scaffold) | ✅ 3 hooks |
-| Commit lint | ✅ commitlint | ✅ commitlint (scaffold) | ✅ commitlint |
-| Tests | ✅ Pytest | ⚠️ Vitest (scaffold) | ⚠️ Jest (não configurado) |
-| Coverage | ✅ 85% enforced | ⚠️ 85% (scaffold) | ⚠️ 80% (configuração pendente) |
-| CI pipeline | ✅ 11 jobs | ✅ 7 jobs | ✅ 7 jobs |
+| Lint | ✅ Flake8 | ✅ @nuxt/eslint (ativo) | ✅ ESLint |
+| Format | ✅ Black | ✅ Prettier (instalado) | ✅ Prettier (instalado) |
+| Type check | ✅ Mypy strict | ✅ nuxi typecheck (ativo) | ✅ tsc --noEmit |
+| Pre-commit hooks | ✅ 7 hooks | ✅ 3 hooks | ✅ 3 hooks |
+| Commit lint | ✅ commitlint | ✅ commitlint | ✅ commitlint |
+| Tests | ✅ Pytest | ⚠️ Vitest instalado, config pendente (WEB2) | ⚠️ Jest (não configurado, APP2) |
+| Coverage | ✅ 85% enforced | ⚠️ 85% (vitest.config.ts pendente) | ⚠️ 80% (jest.config.js pendente) |
+| CI pipeline | ✅ 11 jobs | ✅ 7 jobs (pnpm) | ✅ 7 jobs |
 | Secret scan | ✅ Gitleaks + detect-private-key | ✅ Gitleaks | ✅ Gitleaks |
-| Dep audit | ✅ pip-audit | ✅ npm audit | ✅ npm audit |
+| Dep audit | ✅ pip-audit | ✅ pnpm audit | ✅ npm audit |
 | SAST | ✅ Bandit | ❌ gap | ❌ gap |
 | Mutation testing | ✅ Cosmic Ray (0% survival) | ❌ gap | ❌ gap |
 | SonarCloud | ✅ ratings A | ❌ gap | ❌ gap |
@@ -118,23 +122,17 @@ npx expo install expo-secure-store
 # 5. Escrever testes iniciais para hooks e utilitários existentes
 ```
 
-### WEB1 (inicialização do projeto Nuxt)
+### WEB2 (próxima task web — config de testes)
 ```bash
-# 1. Inicializar projeto Nuxt
-npx nuxi init . --force
-
-# 2. Instalar devDeps do package.json scaffold
-npm install
-
-# 3. Configurar Biome
-npx biome init
-
-# 4. Verificar que hooks já funcionam (estão em .husky/)
-npm run prepare
-
-# 5. Rodar quality-check completo
-npm run quality-check
+# 1. Criar vitest.config.ts com defineVitestConfig + coverage thresholds
+# 2. Instalar @testing-library/vue + happy-dom (já no package.json)
+pnpm install
+# 3. Escrever primeiros testes de composables e utils
+# 4. Verificar que pnpm test:coverage passa com threshold 85%
 ```
+
+> WEB1 ✅ concluído: projeto Nuxt 4 inicializado com pnpm, módulos registrados,
+> @nuxt/eslint + Prettier configurados, husky hooks e CI atualizados.
 
 ---
 

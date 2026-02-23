@@ -1,6 +1,6 @@
 # Status Atual (snapshot)
 
-Data: 2026-02-22
+Data: 2026-02-23
 
 ## Backend (auraxis-api)
 - Bloco B4/B5/B6 concluído (recuperação de senha por link).
@@ -114,6 +114,8 @@ Próximas tasks de produto:
 | **Critério de saída** | Ruff instalado, configurado em `pyproject.toml`, rodando sem erros em modo advisory, resultado documentado em TASKS.md |
 | **Risco** | Baixo — advisory não substitui nada, apenas adiciona |
 
+> ⚠️ **WEB1 concluído** (2026-02-23): Nuxt 4.3.1 inicializado com pnpm@10.30.1, @nuxt/eslint substituiu Biome, quality-check verde. Próxima task web: **WEB2** (vitest.config.ts + coverage ≥ 85%).
+
 ### Fila (ordem de prioridade)
 
 | # | Task | Repo | Descrição curta |
@@ -122,7 +124,7 @@ Próximas tasks de produto:
 | 2 | `X3` | `auraxis-api` | Flask/FastAPI coexistence fase 0 |
 | 3 | `B10` | `auraxis-api` | Questionário de perfil investidor (5-10 perguntas) |
 | 4 | `APP2` | `auraxis-app` | Jest setup real (jest-expo + coverage thresholds + @testing-library/react-native) |
-| 5 | `WEB1` | `auraxis-web` | Inicialização do projeto Nuxt 3 (`npx nuxi init`) |
+| 5 | `WEB2` | `auraxis-web` | vitest.config.ts com defineVitestConfig + coverage ≥ 85% |
 
 ---
 
@@ -148,9 +150,30 @@ Próximas tasks de produto:
 
 ### Gaps documentados (não implementáveis agora)
 Ver `.context/24_frontend_quality_gaps.md` para roadmap completo.
-Principais gaps: Jest setup real (APP2), Vitest real (WEB1), SonarCloud (APP4/WEB4), Stryker (APP5/WEB5), Detox E2E (Beta).
+Principais gaps: Jest setup real (APP2), Vitest config (WEB2), SonarCloud (APP4/WEB4), Stryker (APP5/WEB5), Detox E2E (Beta).
 
 ### Commits desta rodada
 - `auraxis-app`: `3eaa519`, `6cd59d1` (quality baseline + hook syntax fix)
 - `auraxis-web`: `38df2ba` (quality baseline scaffold)
 - `auraxis-platform`: `4237cc9` (gap doc + submodule pointers)
+
+---
+
+## WEB1 — Inicialização Nuxt 4 + quality stack (concluído 2026-02-23)
+
+**Objetivo:** Inicializar o projeto auraxis-web com Nuxt 4, substituir Biome por @nuxt/eslint e validar quality-check completo.
+
+### O que foi feito
+
+| Item | Arquivo(s) | Descrição |
+|:-----|:-----------|:----------|
+| Nuxt 4 init | `nuxt.config.ts`, `app/app.vue`, `tsconfig.json`, `pnpm-lock.yaml` | `nuxi init . --force` com pnpm@10.30.1 |
+| 21 módulos registrados | `nuxt.config.ts` | @nuxt/eslint, @nuxt/image, @nuxt/content, @pinia/nuxt, @pinia/colada-nuxt, @nuxtjs/i18n, @nuxtjs/seo, @nuxt/ui, e mais |
+| Apollo comentado | `nuxt.config.ts` | `@nuxtjs/apollo@4.0.1-rc.5` incompatível com Nuxt 4 — aguarda versão compatível |
+| Biome → @nuxt/eslint | `lint-staged.config.js`, `eslint.config.mjs`, `package.json` | Migração completa — ESLint é o linter oficial Nuxt |
+| Docs atualizadas | `steering.md`, `CODING_STANDARDS.md`, `FRONTEND_GUIDE.md`, `.context/quality_gates.md` | Todas as referências a Biome substituídas por @nuxt/eslint + Prettier |
+| quality-check validado | `package.json` scripts | `pnpm lint ✅ pnpm typecheck ✅ pnpm test ✅` |
+| better-sqlite3 adicionado | `package.json` | Peer dep obrigatória de @nuxt/content |
+
+### Commits desta rodada
+- `auraxis-web` `cd807f3`: `feat(web): initialize Nuxt 4 project with pnpm and full quality stack`

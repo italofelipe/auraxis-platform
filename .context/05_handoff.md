@@ -1,38 +1,33 @@
 # Handoff (Atual)
 
-Data: 2026-02-23 (PLT1.5 — frontend quality baseline)
+Data: 2026-02-23 (WEB1 — Nuxt 4 init + quality stack)
 
-## O que foi feito (rodada PLT1.5 — frontend quality baseline)
+## O que foi feito (rodada WEB1 — inicialização auraxis-web)
 
 ### Objetivo da rodada
-Estabelecer base de qualidade de código nos repos frontend (auraxis-web e auraxis-app) equivalente ao rigor do backend (auraxis-api): manuais de codificação, pre-commit hooks, CI pipelines e documentação de gaps.
+Inicializar o projeto Nuxt 4 em `auraxis-web`, substituir Biome por `@nuxt/eslint`, validar `pnpm quality-check` completo e sincronizar contexto.
 
 ### Itens executados
 
 | Item | Arquivo(s) criados/modificados | Descrição |
 |:-----|:-------------------------------|:----------|
-| CODING_STANDARDS web | `repos/auraxis-web/CODING_STANDARDS.md` | Manual canônico: TypeScript strict, Vue components (script setup), Pinia, serviços, testes Vitest, segurança, performance, naming |
-| CODING_STANDARDS mobile | `repos/auraxis-app/CODING_STANDARDS.md` | Manual canônico: TypeScript strict, RN components (StyleSheet.create), hooks, Expo Router, expo-secure-store, FlatList, testes Jest, segurança |
-| Pre-commit hooks app | `repos/auraxis-app/.husky/` | pre-commit (lint-staged ESLint), commit-msg (commitlint), pre-push (tsc + jest) — sintaxe husky v9 |
-| Pre-commit hooks web | `repos/auraxis-web/.husky/` | pre-commit (lint-staged Biome), commit-msg (commitlint), pre-push (nuxi typecheck + vitest) — scaffold para WEB1 |
-| lint-staged app | `repos/auraxis-app/package.json` | ESLint --fix em staged .ts/.tsx |
-| lint-staged web | `repos/auraxis-web/package.json` | Biome check --write em staged .ts/.tsx/.vue/.json |
-| commitlint app | `repos/auraxis-app/.commitlintrc.json` | Conventional Commits: 9 types, scope kebab-case, max 120 chars |
-| commitlint web | `repos/auraxis-web/.commitlintrc.json` | Idêntico ao app |
-| CI pipeline app | `repos/auraxis-app/.github/workflows/ci.yml` | 7 jobs: lint, typecheck, test+coverage, secret-scan (Gitleaks), dep-audit, commitlint, expo-export |
-| CI pipeline web | `repos/auraxis-web/.github/workflows/ci.yml` | 7 jobs: lint (Biome), typecheck, test+coverage, build, secret-scan, dep-audit, commitlint |
-| package.json scaffold web | `repos/auraxis-web/package.json` | Scripts quality-check, prepare, test:coverage prontos para WEB1 |
-| Scripts app | `repos/auraxis-app/package.json` | Scripts typecheck, test:coverage, quality-check, lint:fix adicionados |
-| DevDeps app | `repos/auraxis-app/package.json` | husky, lint-staged, commitlint, prettier instalados |
-| Quality gaps doc | `.context/24_frontend_quality_gaps.md` | Comparativo completo backend vs frontend, gaps por prioridade (alta/média/baixa), roadmap por task |
-| Status atual | `.context/01_status_atual.md` | PLT1.5 documentado, fila atualizada (APP1 → APP2) |
+| Nuxt 4.3.1 init | `app/app.vue`, `tsconfig.json`, `pnpm-lock.yaml`, `public/` | `npx nuxi@latest init . --force --package-manager pnpm` |
+| package.json restaurado | `repos/auraxis-web/package.json` | Scripts quality-check, prepare, lint, typecheck, test, test:coverage; devDeps corretas; packageManager definido |
+| nuxt.config.ts criado | `repos/auraxis-web/nuxt.config.ts` | 21 módulos registrados; apollo comentado (incompatível Nuxt 4); typescript.strict=true |
+| Biome removido | `lint-staged.config.js` | Migrado para `eslint --fix` (staged .ts/.tsx/.vue) + `prettier --write` (.json/.md) |
+| CI atualizado | `.github/workflows/ci.yml` | npm → pnpm/action-setup; Biome → eslint; pnpm audit |
+| Docs migradas | `CODING_STANDARDS.md`, `FRONTEND_GUIDE.md`, `steering.md`, `.context/quality_gates.md` | Todas as referências Biome → @nuxt/eslint + Prettier |
+| 24_frontend_quality_gaps | `.context/24_frontend_quality_gaps.md` | WEB1 marcado concluído; WEB2 como próximo passo |
+| better-sqlite3 | `package.json` dependencies | Peer dep obrigatória de @nuxt/content |
+| eslint.config.mjs | `eslint.config.mjs` | Auto-gerado por `nuxt prepare` via @nuxt/eslint |
+| quality-check verde | — | `pnpm lint ✅ pnpm typecheck ✅ pnpm test ✅` |
 
 ## O que foi validado
 
-- `git commit` no auraxis-app: husky executou lint-staged + commitlint ✅
-- Sintaxe dos hooks corrigida para husky v9 (sem shebang deprecado) ✅
-- Commits em ambos os repos e no platform ✅
-- `24_frontend_quality_gaps.md` criado com comparativo completo ✅
+- `pnpm quality-check` passa com exit 0 (lint + typecheck + test) ✅
+- `nuxt prepare` executa sem erros — todos os módulos compatíveis (apollo exceto) ✅
+- Commit `feat(web): ...` aceito por husky + commitlint + lint-staged ✅
+- Prettier reformatou .md/.json staged corretamente ✅
 
 ## Pendências manuais (ação do usuário)
 
@@ -40,18 +35,16 @@ Estabelecer base de qualidade de código nos repos frontend (auraxis-web e aurax
 |:----------|:-------|:--------|
 | AWS IAM trust policy | ⚠️ Pendente | Subject hint: `repo:italofelipe/auraxis-api:environment:*` |
 | SonarCloud project key | ⚠️ Pendente | Renomear de `italofelipe_flask-expenses-manager` para `italofelipe_auraxis-api` |
-| Push auraxis-app ao GitHub | ⚠️ Pendente nesta rodada | Push dos commits `3eaa519`, `6cd59d1` |
-| Push auraxis-web ao GitHub | ⚠️ Pendente nesta rodada | Push do commit `38df2ba` |
-| Push platform ao GitHub | ⚠️ Pendente nesta rodada | Push dos commits na branch `docs/agent-autonomy-baseline` |
-| Jest setup real (app) | ⚠️ Próxima task | APP2 — instalar jest-expo, @testing-library/react-native, coverage 80% |
-| Vitest setup real (web) | ⚠️ Próxima task | WEB1 — após `npx nuxi init` |
+| Push auraxis-web ao GitHub | ⚠️ Pendente | Push dos commits `38df2ba`, `cd807f3` |
+| Push auraxis-app ao GitHub | ⚠️ Pendente | Push dos commits `3eaa519`, `6cd59d1` |
+| Push platform ao GitHub | ⚠️ Pendente | Push da branch `docs/agent-autonomy-baseline` |
+| @nuxtjs/apollo Nuxt 4 compat | ⚠️ Bloqueado | Aguardar versão compatível; tracking em nuxt.config.ts |
 
 ## Próximo passo recomendado
 
 **Task X4 — Ruff advisory em `auraxis-api`** (maior prioridade de produto)
 
 ```bash
-# Início de sessão:
 cd /path/to/auraxis-platform
 ./scripts/verify-agent-session.sh
 ./scripts/agent-lock.sh acquire claude auraxis-api "X4 — Ruff advisory setup"
@@ -67,19 +60,16 @@ O que fazer:
 4. Atualizar TASKS.md com resultado e commit
 5. Documentar decisão: substituição faseada ou direta
 
-**Alternativa — Task APP2** (se preferir continuar no frontend):
+**Alternativa — Task WEB2** (se continuar no frontend):
 ```bash
-./scripts/agent-lock.sh acquire claude auraxis-app "APP2 — Jest setup + testing-library"
-cd repos/auraxis-app
-git checkout master && git pull
-git checkout -b feat/app2-jest-setup
-npm install --save-dev jest-expo @testing-library/react-native @types/jest
-# criar jest.config.js + testes iniciais para hooks existentes
+cd repos/auraxis-web
+git checkout -b feat/web2-vitest-config
+# criar vitest.config.ts com defineVitestConfig de @nuxt/test-utils/config
+# configurar coverage: threshold: { lines: 85, functions: 85, branches: 85, statements: 85 }
+# criar primeiro teste de componente
 ```
 
-## Commits desta rodada (branch docs/agent-autonomy-baseline)
+## Commits desta rodada
 
-- `auraxis-app` `3eaa519`: `chore(quality): add pre-commit hooks, CI pipeline, and coding standards`
-- `auraxis-app` `6cd59d1`: `chore(hooks): update husky hooks to v9 syntax`
-- `auraxis-web` `38df2ba`: `chore(quality): add pre-commit hooks, CI pipeline, and coding standards`
-- `auraxis-platform` `4237cc9`: `docs(quality): add frontend quality gaps roadmap and advance submodule pointers`
+- `auraxis-web` `cd807f3`: `feat(web): initialize Nuxt 4 project with pnpm and full quality stack`
+- `auraxis-platform` — **pendente commit** (atualização de submodule pointer + context sync)
