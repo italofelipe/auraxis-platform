@@ -213,3 +213,49 @@ Principais gaps: Jest setup real (APP2), Vitest config (WEB2), SonarCloud (APP4/
 
 ### Commits desta rodada
 - `auraxis-web` `cd807f3`: `feat(web): initialize Nuxt 4 project with pnpm and full quality stack`
+- `auraxis-platform` `494dc25`: `docs(context): mark SETUP-1/2/3/4 done, reprioritize SETUP-5, sync submodule pointers`
+
+---
+
+## PLT1.6 — Arquitetura Frontend + Governance Backend + Push Fixes (concluído 2026-02-23)
+
+**Objetivo:** Formalizar diretrizes de arquitetura frontend em todos os layers (platform + app + web), completar governance do `auraxis-api`, e corrigir hooks de push para que ambos os repos frontend subam limpos ao remote.
+
+### O que foi feito
+
+| Item | Arquivo(s) | Descrição |
+|:-----|:-----------|:----------|
+| Arquitetura frontend canonical | `.context/26_frontend_architecture.md` | Doc de plataforma: mobile-first, PWA, feature-based + `shared/`, zero `any`, design tokens, 250 linhas, E2E como gate, performance budgets, a11y WCAG AA |
+| CODING_STANDARDS app | `repos/auraxis-app/CODING_STANDARDS.md` | Seções 14-17: feature-based arch, design tokens (StyleSheet), 250-line limit, zero `any` RN patterns |
+| CODING_STANDARDS web | `repos/auraxis-web/CODING_STANDARDS.md` | Seções 14-18: feature-based arch, design tokens (CSS vars), 250-line limit, zero `any` Vue, PWA |
+| Context index | `.context/06_context_index.md` | `26_frontend_architecture.md` adicionado como leitura obrigatória antes de qualquer trabalho em app ou web |
+| Governance auraxis-api | `repos/auraxis-api/steering.md` | Reescrita completa: stack, 11-job CI pipeline, quality gates, security rules, DoD |
+| Governance auraxis-api | `repos/auraxis-api/.context/quality_gates.md` | Novo: 11 jobs com bloqueia merge?, dependency graph, Sonar/Schemathesis/Cosmic Ray/Trivy |
+| Governance auraxis-api | `repos/auraxis-api/CODING_STANDARDS.md` | Novo ~400 linhas: Black/isort/flake8, mypy strict, SQLAlchemy 2.x, Marshmallow, service/controller patterns, pytest, Alembic |
+| Fix tsconfig app | `repos/auraxis-app/tsconfig.json` | `"exclude": ["node_modules", "e2e"]` — Detox E2E excluído da compilação TS principal |
+| Fix pnpm native web | `repos/auraxis-web/package.json` | `pnpm.onlyBuiltDependencies` — corrige bindings nativos do `better-sqlite3` (Node v25 / ABI 141) |
+| Fix coverage dep web | `repos/auraxis-web/package.json` | `@vitest/coverage-v8` adicionado como devDependency |
+| Push auraxis-app | — | `origin/main` atualizado — pre-push (`tsc + jest`) passando |
+| Push auraxis-web | — | `origin/main` atualizado — pre-push (`nuxt typecheck + vitest`) passando |
+| Submodule pointers | `auraxis-platform` | Commit `1b66214` — pointers avançados para novos commits nos repos |
+
+### Decisões técnicas desta rodada
+
+- **Zero `any` é princípio imutável** — tratado como Java que desconhece `any`: discriminated unions, `unknown` com narrowing, `satisfies`, generics com constraints.
+- **250 linhas por arquivo de componente** — signal de extração, não regra burocrática.
+- **E2E (Playwright/Detox) como critério de aceite** — feature não está pronta sem E2E cobrindo o fluxo.
+- **Feature-based com `shared/` explícito** — features nunca importam de outras features.
+- **Detox E2E excluído do tsconfig principal** — `e2e/` tem seu próprio tsconfig; main tsc não compila arquivos Detox.
+
+### Variáveis de ambiente Sonar (confirmadas pelo usuário)
+
+| Repo | Secret GitHub / `.env` local |
+|:-----|:------------------------------|
+| `auraxis-app` | `SONAR_AURAXIS_APP_TOKEN` |
+| `auraxis-web` | `SONAR_AURAXIS_WEB_TOKEN` |
+
+### Commits desta rodada
+
+- `auraxis-app` → `origin/main`: commits de frontend arch docs + tsconfig fix
+- `auraxis-web` → `origin/main`: commits de frontend arch docs + package.json fixes
+- `auraxis-platform` `1b66214`: submodule pointers (branch `docs/agent-autonomy-baseline`)

@@ -1,8 +1,75 @@
 # Handoff (Atual)
 
+Data: 2026-02-23 (Arquitetura Frontend + Governance Backend + Push Fixes)
+
+## O que foi feito (rodada atual)
+
+### Objetivo da rodada
+
+Formalizar diretrizes de arquitetura frontend em todos os layers (platform + app + web), completar documentação de governance do `auraxis-api`, e corrigir hooks de push pré-existentes para garantir que ambos os repos frontend subam limpos ao remote.
+
+### Itens executados
+
+| Item | Arquivo(s) | Descrição |
+|:-----|:-----------|:----------|
+| Doc arquitetura frontend | `.context/26_frontend_architecture.md` | Canônico de plataforma: mobile-first, PWA, feature-based + `shared/`, zero `any`, design tokens, 250 linhas, E2E como gate, performance budgets, a11y WCAG AA |
+| CODING_STANDARDS app | `repos/auraxis-app/CODING_STANDARDS.md` | Seções 14-17: feature-based arch, design tokens (StyleSheet), 250-line limit, zero `any` patterns para React Native |
+| CODING_STANDARDS web | `repos/auraxis-web/CODING_STANDARDS.md` | Seções 14-18: feature-based arch, design tokens (CSS vars), 250-line limit, zero `any` Vue, PWA com @vite-pwa/nuxt |
+| Context index | `.context/06_context_index.md` | `26_frontend_architecture.md` adicionado como leitura complementar obrigatória antes de qualquer trabalho em app ou web |
+| Governance auraxis-api | `repos/auraxis-api/steering.md` | Reescrita completa: stack table, CI pipeline 11 jobs, quality gates com thresholds, security rules, DoD, branching |
+| Governance auraxis-api | `repos/auraxis-api/.context/quality_gates.md` | Novo arquivo: 11 jobs + bloqueia merge?, dependency graph, docs de Schemathesis/Cosmic Ray/Trivy/Sonar, troubleshooting |
+| Governance auraxis-api | `repos/auraxis-api/CODING_STANDARDS.md` | Novo arquivo ~400 linhas: Black/isort/flake8, mypy strict, SQLAlchemy 2.x, Marshmallow, service pattern, REST/GraphQL controllers, pytest, Alembic, Google docstrings |
+| Fix tsconfig app | `repos/auraxis-app/tsconfig.json` | `"exclude": ["node_modules", "e2e"]` — Detox e2e excluído da compilação TS principal |
+| Fix pnpm native web | `repos/auraxis-web/package.json` | `pnpm.onlyBuiltDependencies` adicionado — corrige erro de bindings nativos do `better-sqlite3` (Node v25 / darwin arm64) |
+| Fix coverage dep web | `repos/auraxis-web/package.json` | `@vitest/coverage-v8` adicionado como devDependency |
+| Push auraxis-app | — | `origin/main` atualizado — pre-push (`tsc + jest`) passando |
+| Push auraxis-web | — | `origin/main` atualizado — pre-push (`nuxt typecheck + vitest`) passando |
+| Submodule pointers | `auraxis-platform` | Commit `1b66214` — pointers avançados |
+
+### Variáveis Sonar confirmadas (pelo usuário)
+
+| Repo | Secret GitHub / `.env` local | Arquivo local |
+|:-----|:-----------------------------|:--------------|
+| `auraxis-app` | `SONAR_AURAXIS_APP_TOKEN` | `repos/auraxis-app/.env` |
+| `auraxis-web` | `SONAR_AURAXIS_WEB_TOKEN` | `repos/auraxis-web/.env` |
+
+### Commits desta rodada
+
+- `auraxis-app` → `origin/main`: múltiplos commits — frontend arch docs, tsconfig fix
+- `auraxis-web` → `origin/main`: múltiplos commits — frontend arch docs, package.json fixes
+- `auraxis-platform` branch `docs/agent-autonomy-baseline`: `1b66214` (submodule pointers + context sync)
+
+## O que foi validado
+
+- Pre-push hooks passando em `auraxis-app` (`tsc + jest`) ✅
+- Pre-push hooks passando em `auraxis-web` (`nuxt typecheck + vitest`) ✅
+- `26_frontend_architecture.md` criado e referenciado no context index ✅
+- `auraxis-api` governance completo (steering + quality_gates + CODING_STANDARDS) ✅
+- Platform context index atualizado ✅
+
+## Riscos pendentes
+
+- SonarCloud: tokens confirmados (`SONAR_AURAXIS_APP_TOKEN`, `SONAR_AURAXIS_WEB_TOKEN`) mas GitHub Secrets ainda precisam ser configurados manualmente nos repos
+- Lighthouse CI GitHub App: requer instalação manual + `LHCI_GITHUB_APP_TOKEN`
+- GitHub settings: auto-merge precisa ser habilitado manualmente (Settings → General → Allow auto-merge)
+- Detox E2E: scaffold pronto, requer macOS self-hosted runner no CI
+- @nuxtjs/apollo: incompatível com Nuxt 4 — comentado em `nuxt.config.ts`, aguardando versão compatível
+
+## Próximo passo sugerido
+
+| Opção | Repo | Descrição |
+|:------|:-----|:----------|
+| **X4** | `auraxis-api` | Adoção faseada de Ruff — fase advisory (maior prioridade) |
+| **WEB3/APP3** | ambos | Primeiros testes reais (componentes, hooks, composables) |
+| **B10** | `auraxis-api` | Questionário de perfil investidor |
+
+---
+
+## Handoff anterior (quality + security docs)
+
 Data: 2026-02-23 (Documentação de qualidade + segurança — documentação completa para agentes)
 
-## O que foi feito (rodada atual — quality + security docs)
+## O que foi feito (rodada quality + security docs)
 
 ### Objetivo da rodada
 

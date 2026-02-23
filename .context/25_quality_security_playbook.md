@@ -341,9 +341,12 @@ jest.mock('expo-secure-store', () => ({
 2. Criar organização vinculada ao GitHub (`italofelipe`)
 3. Importar `auraxis-web` e `auraxis-app`
 4. Em cada repo, copiar o `SONAR_TOKEN` gerado
-5. Adicionar o token como secret no GitHub:
-   - `auraxis-web` → Settings → Secrets → `SONAR_TOKEN`
-   - `auraxis-app` → Settings → Secrets → `SONAR_TOKEN`
+5. Adicionar o token como secret no GitHub com o nome correto para cada repo:
+   - `auraxis-web` → Settings → Secrets → **`SONAR_AURAXIS_WEB_TOKEN`**
+   - `auraxis-app` → Settings → Secrets → **`SONAR_AURAXIS_APP_TOKEN`**
+6. Adicionar também no `.env` local de cada repo (para uso do Sonar CLI em desenvolvimento):
+   - `repos/auraxis-web/.env` → `SONAR_AURAXIS_WEB_TOKEN=<token>`
+   - `repos/auraxis-app/.env` → `SONAR_AURAXIS_APP_TOKEN=<token>`
 
 Os arquivos `sonar-project.properties` já estão configurados nos repos.
 
