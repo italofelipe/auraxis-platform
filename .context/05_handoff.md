@@ -2,6 +2,33 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-23 (sonar-local-check auraxis-api)
+
+### O que foi feito
+
+- `repos/auraxis-api/sonar-project.properties`: defaults alinhados para `sonar.projectKey=italofelipe_auraxis-api` e `sonar.organization=italofelipe`.
+- `repos/auraxis-api/scripts/sonar_local_check.sh`: fallback para valores de `sonar-project.properties`, suporte a `SONAR_AURAXIS_API_TOKEN` e bloqueio explícito de key legada (`*flask-expenses-manager*`).
+- `repos/auraxis-api/scripts/sonar_enforce_ci.sh`: mesma estratégia de fallback/validação para CI.
+- `repos/auraxis-api/.pre-commit-config.yaml`: hook `pip-audit` endurecido para usar `.venv/bin/pip-audit` e fallback `python -m pip_audit`.
+
+### O que foi validado
+
+- Guard de key legada no `sonar_local_check.sh` retornando erro explícito e determinístico.
+- Branch e commits publicados sem merge direto em `main/master`:
+  - `auraxis-api`: `3e8da64`
+  - `auraxis-platform` (submodule pointer): `71a4212`
+
+### Riscos pendentes
+
+- Push com verificação de Sonar continua dependente do estado real do Quality Gate no SonarCloud.
+- `pip-audit` pode exigir ambiente de rede/venv válido para passar em todas as máquinas.
+
+### Próximo passo sugerido
+
+1. Executar `X4` (Ruff advisory) no `auraxis-api` mantendo handoff por bloco.
+
+---
+
 ## O que foi feito (rodada atual)
 
 ### Objetivo da rodada

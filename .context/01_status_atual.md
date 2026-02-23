@@ -14,6 +14,7 @@ Data: 2026-02-23
 - Handoff pre-migração do backend publicado em `.context/handoffs/2026-02-22_pre-migracao-auraxis-platform.md`.
 
 ## Commits recentes (auraxis-api)
+- 3e8da64 fix(ci): harden local Sonar and pip-audit hooks for auraxis-api
 - d6f03fe fix(aws): update OIDC subject hints to auraxis-api repo name
 - 33f28b0 docs(runbook): update workspace recovery procedure for auraxis-api rename
 - b138d11 docs(traceability): mark path/name update task as done after rename
@@ -50,7 +51,7 @@ Data: 2026-02-23
 - `docs/STABILIZATION_01_TRACEABILITY.md`: task de renomeação marcada como concluída.
 - `.mypy_cache` limpo (cache tinha paths absolutos do diretório antigo).
 - IAM trust policy (AWS): atualizar manualmente subject hints nos roles dev/prod. ⚠️ pendente usuário
-- SonarCloud: renomear project key. ⚠️ pendente usuário
+- SonarCloud (local gates): key canônica aplicada em `sonar-project.properties` e scripts de enforcement/local check atualizados. ✅
 
 ## Próximo foco
 
