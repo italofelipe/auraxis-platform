@@ -114,7 +114,9 @@ Próximas tasks de produto:
 | **Critério de saída** | Ruff instalado, configurado em `pyproject.toml`, rodando sem erros em modo advisory, resultado documentado em TASKS.md |
 | **Risco** | Baixo — advisory não substitui nada, apenas adiciona |
 
-> ⚠️ **WEB1 concluído** (2026-02-23): Nuxt 4.3.1 inicializado com pnpm@10.30.1, @nuxt/eslint substituiu Biome, quality-check verde. Próxima task web: **WEB2** (vitest.config.ts + coverage ≥ 85%).
+> ✅ **WEB1 concluído** (2026-02-23): Nuxt 4.3.1 + @nuxt/eslint.
+> ✅ **APP2 + Security tooling** (2026-02-23): jest-expo + testing-library/react-native + Gitleaks + TruffleHog + Dependabot + SonarCloud + Lighthouse CI + Playwright + bundle analysis em ambos os repos.
+> Próximas tasks: **X4** (Ruff advisory, auraxis-api) ou **WEB3/APP3** (Sentry + primeiros testes reais).
 
 ### Fila (ordem de prioridade)
 

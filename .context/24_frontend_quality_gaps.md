@@ -1,12 +1,12 @@
 # Frontend Quality Gaps & Roadmap
 
-**Data:** 2026-02-23 (atualizado: WEB1 concluído)
+**Data:** 2026-02-23 (atualizado: WEB1 + APP2 + security tooling concluídos)
 **Escopo:** auraxis-web (Nuxt 4) + auraxis-app (React Native/Expo)
 **Referência:** `.context/23_definition_of_done.md`, `repos/*/CODING_STANDARDS.md`
 
 ---
 
-## O que foi implementado (baseline)
+## O que foi implementado (baseline completo)
 
 ### auraxis-app ✅
 
@@ -15,91 +15,90 @@
 | ESLint (eslint-config-expo) | ✅ ativo | `eslint.config.js` |
 | TypeScript strict | ✅ configurado | `tsconfig.json` |
 | Husky v9 (pre-commit, commit-msg, pre-push) | ✅ configurado | `.husky/` |
-| lint-staged (ESLint fix em staged files) | ✅ configurado | `package.json#lint-staged` |
+| lint-staged (ESLint fix em staged files) | ✅ configurado | `lint-staged.config.js` |
 | commitlint (Conventional Commits) | ✅ configurado | `.commitlintrc.json` |
-| GitHub Actions CI (7 jobs) | ✅ criado | `.github/workflows/ci.yml` |
+| jest-expo + @testing-library/react-native | ✅ instalado | `package.json#devDependencies` |
+| jest.config.js (coverage ≥ 80%) | ✅ criado | `jest.config.js` |
+| jest.setup.ts + mocks | ✅ criado | `jest.setup.ts`, `__mocks__/` |
 | CODING_STANDARDS.md | ✅ criado | `CODING_STANDARDS.md` |
-| FRONTEND_GUIDE.md | ✅ criado | `FRONTEND_GUIDE.md` |
-| quality_gates.md | ✅ criado | `.context/quality_gates.md` |
-| Jest config (scaffold) | ⚠️ pendente | Precisa `jest-expo` + config real |
+| SonarCloud config | ✅ criado | `sonar-project.properties` |
+| Gitleaks secret scan | ✅ ativo | CI job `secret-scan-gitleaks` |
+| TruffleHog secret scan | ✅ ativo | CI job `secret-scan-trufflehog` |
+| Dependency Review (CVE block) | ✅ ativo | `.github/workflows/dependency-review.yml` |
+| Dependabot (auto-update + auto-merge) | ✅ ativo | `.github/dependabot.yml` |
+| Bundle size analysis (Metro) | ✅ ativo | CI job `bundle-analysis` (Android/iOS ≤ 6 MB) |
+| Detox scaffold (E2E mobile) | ✅ scaffold | `.detoxrc.js`, `e2e/` |
+| GitHub Actions CI (10 jobs) | ✅ atualizado | `.github/workflows/ci.yml` |
 
-### auraxis-web ✅ (WEB1 concluído — projeto Nuxt 4 inicializado)
+### auraxis-web ✅
 
 | Item | Estado | Arquivo |
 |:-----|:-------|:--------|
 | Projeto Nuxt 4 inicializado | ✅ ativo | `nuxt.config.ts`, `app/app.vue` |
-| package.json (pnpm) | ✅ ativo | `package.json` (packageManager: pnpm@10.30.1) |
-| @nuxt/eslint | ✅ instalado | `package.json#devDependencies` + `nuxt.config.ts#modules` |
-| Prettier | ✅ instalado | `package.json#devDependencies` |
+| @nuxt/eslint + Prettier | ✅ ativo | `package.json`, `eslint.config.mjs` |
 | Husky v9 (pre-commit, commit-msg, pre-push) | ✅ configurado | `.husky/` |
-| lint-staged (ESLint fix em staged files) | ✅ configurado | `package.json#lint-staged` |
+| lint-staged | ✅ configurado | `lint-staged.config.js` |
 | commitlint | ✅ configurado | `.commitlintrc.json` |
-| GitHub Actions CI (7 jobs, pnpm) | ✅ atualizado | `.github/workflows/ci.yml` |
+| Vitest + vitest.config.ts (coverage ≥ 85%) | ✅ criado | `vitest.config.ts` |
+| Playwright (E2E) | ✅ configurado | `playwright.config.ts`, `e2e/` |
+| SonarCloud config | ✅ criado | `sonar-project.properties` |
+| Lighthouse CI | ✅ configurado | `.lighthouserc.yml` (perf ≥ 80, a11y ≥ 90, SEO ≥ 90) |
+| Gitleaks secret scan | ✅ ativo | CI job `secret-scan-gitleaks` |
+| TruffleHog secret scan | ✅ ativo | CI job `secret-scan-trufflehog` |
+| Dependency Review (CVE block) | ✅ ativo | `.github/workflows/dependency-review.yml` |
+| Dependabot (auto-update + auto-merge) | ✅ ativo | `.github/dependabot.yml` |
+| Bundle size analysis (Nuxt) | ✅ ativo | CI job `bundle-analysis` (public ≤ 3 MB hard) |
 | CODING_STANDARDS.md | ✅ atualizado | `CODING_STANDARDS.md` |
-| FRONTEND_GUIDE.md | ✅ atualizado | `FRONTEND_GUIDE.md` |
-| nuxt.config.ts com módulos registrados | ✅ configurado | `nuxt.config.ts` |
-| Vitest + @nuxt/test-utils | ⚠️ instalado, config pendente | Precisa de `vitest.config.ts` (WEB2) |
-| Coverage thresholds enforcement | ⚠️ pendente | Depende de `vitest.config.ts` (WEB2) |
+| GitHub Actions CI (12 jobs) | ✅ atualizado | `.github/workflows/ci.yml` |
 
 ---
 
-## Gaps identificados — não implementáveis agora
+## Gaps restantes
 
-### 🔴 Alta prioridade (implementar em APP3/WEB3)
+### 🟡 Média prioridade
 
-| Gap | Descrição | Bloqueador | Task sugerida |
-|:----|:----------|:-----------|:--------------|
-| **Jest setup real** (app) | `jest-expo` não está instalado + `jest.config.js` não existe | Precisa inicializar suite de testes | APP2 |
-| **vitest.config.ts** (web) | Vitest instalado mas sem config de coverage thresholds | Criar `vitest.config.ts` com `defineVitestConfig` | WEB2 |
-| **Coverage thresholds enforcement** | Jest/Vitest instalados, sem config de threshold real | Depende de config files | APP2/WEB2 |
-| **@testing-library/react-native** | Não está nas devDeps do app | Precisa instalar + configurar | APP2 |
-| **expo-secure-store** | Não está nas deps — necessário para auth segura | Instalar antes de qualquer tela de auth | APP2 |
-
-### 🟡 Média prioridade (implementar em APP4/WEB4+)
-
-| Gap | Descrição | Quando implementar |
-|:----|:----------|:------------------|
-| **SonarCloud** | Análise estática cloud (ratings A obrigatório no backend) | APP4/WEB4 — requer conta SonarCloud + token |
-| **Stryker** (mutation testing) | Mutation testing para verificar qualidade dos testes | APP5/WEB5 |
-| **Detox** (E2E mobile) | Testes end-to-end em device/emulator | Beta — exige emuladores no CI |
-| **Playwright** (E2E web) | Testes end-to-end no browser | WEB4 |
-| **Sentry** (error tracking) | Monitoramento de erros em produção | APP3/WEB3 |
-| **Bundle size budget** | Bloquear CI se bundle exceder threshold | APP3/WEB3 — definir threshold primeiro |
-| **React Native Performance** (Flipper/Profiler) | Gate automatizado de performance | APP5 |
-| **Lighthouse CI** (web) | Performance, accessibility, SEO automatizados | WEB3 |
-| **Trivy** (container scan) | Scan de imagem Docker (se houver containerização) | N/A por enquanto |
+| Gap | Descrição | Task | Quando |
+|:----|:----------|:-----|:-------|
+| **SonarCloud ativação** | Arquivo `.properties` criado, mas conta + token precisam ser configurados | Manual (usuário) | Antes do primeiro PR público |
+| **Lighthouse CI GitHub App** | Token `LHCI_GITHUB_APP_TOKEN` opcional — sem ele usa `temporaryPublicStorage` | Manual (usuário) | Opcional |
+| **Stryker** (mutation testing) | Mutation testing para verificar qualidade dos testes | APP5/WEB5 | Maturidade de testes |
+| **Detox real** (E2E mobile) | Scaffold criado — precisa de self-hosted macOS runner + Xcode | Manual (infra) | Beta |
+| **expo-secure-store** | Não está nas deps — necessário para auth segura | `npx expo install expo-secure-store` | Antes de auth screen |
+| **Sentry** (error tracking) | Monitoramento de erros em produção | APP3/WEB3 | Pré-launch |
 
 ### 🟢 Baixa prioridade (fase Beta+)
 
-| Gap | Descrição | Quando implementar |
-|:----|:----------|:------------------|
-| **OWASP Mobile Top 10** | Checklist de segurança mobile (equivalente ao OWASP S3 do backend) | Pré-launch |
-| **EAS Build CI** | Build nativo iOS/Android no CI (caro — requer EAS paid plan) | APP5 |
-| **EAS Update (OTA)** | Deploy over-the-air sem nova build | APP5 |
-| **Certificate pinning** | Pinning de certificado SSL em produção | Pré-launch |
-| **React Native Hermes profiling** | Gate de startup time < 2s | Beta |
-| **Accessibility audit** | `@testing-library` + automated a11y checks | Beta |
+| Gap | Descrição |
+|:----|:----------|
+| **EAS Build CI** | Build nativo iOS/Android no CI (requer EAS paid plan) |
+| **EAS Update (OTA)** | Deploy over-the-air sem nova build |
+| **Certificate pinning** | Pinning de certificado SSL em produção |
+| **OWASP Mobile Top 10** | Checklist mobile (equivalente ao backend OWASP S3) |
+| **React Native Hermes profiling** | Gate de startup time < 2s |
 
 ---
 
-## Comparativo backend vs frontend
+## Comparativo backend vs frontend (estado atual)
 
 | Capacidade | auraxis-api | auraxis-web | auraxis-app |
 |:-----------|:-----------:|:-----------:|:-----------:|
-| Lint | ✅ Flake8 | ✅ @nuxt/eslint (ativo) | ✅ ESLint |
-| Format | ✅ Black | ✅ Prettier (instalado) | ✅ Prettier (instalado) |
-| Type check | ✅ Mypy strict | ✅ nuxi typecheck (ativo) | ✅ tsc --noEmit |
+| Lint | ✅ Flake8 | ✅ @nuxt/eslint | ✅ ESLint |
+| Format | ✅ Black | ✅ Prettier | ✅ Prettier |
+| Type check | ✅ Mypy strict | ✅ nuxi typecheck | ✅ tsc --noEmit |
 | Pre-commit hooks | ✅ 7 hooks | ✅ 3 hooks | ✅ 3 hooks |
 | Commit lint | ✅ commitlint | ✅ commitlint | ✅ commitlint |
-| Tests | ✅ Pytest | ⚠️ Vitest instalado, config pendente (WEB2) | ⚠️ Jest (não configurado, APP2) |
-| Coverage | ✅ 85% enforced | ⚠️ 85% (vitest.config.ts pendente) | ⚠️ 80% (jest.config.js pendente) |
-| CI pipeline | ✅ 11 jobs | ✅ 7 jobs (pnpm) | ✅ 7 jobs |
-| Secret scan | ✅ Gitleaks + detect-private-key | ✅ Gitleaks | ✅ Gitleaks |
-| Dep audit | ✅ pip-audit | ✅ pnpm audit | ✅ npm audit |
-| SAST | ✅ Bandit | ❌ gap | ❌ gap |
-| Mutation testing | ✅ Cosmic Ray (0% survival) | ❌ gap | ❌ gap |
-| SonarCloud | ✅ ratings A | ❌ gap | ❌ gap |
-| E2E tests | ✅ Schemathesis | ❌ gap | ❌ gap |
+| Tests | ✅ Pytest | ✅ Vitest (config) | ✅ Jest (jest-expo) |
+| Coverage threshold | ✅ 85% enforced | ✅ 85% (vitest.config.ts) | ✅ 80% (jest.config.js) |
+| CI pipeline | ✅ 11 jobs | ✅ 12 jobs | ✅ 10 jobs |
+| Secret scan | ✅ Gitleaks + detect-private-key | ✅ Gitleaks + TruffleHog | ✅ Gitleaks + TruffleHog |
+| Dep audit | ✅ pip-audit | ✅ pnpm audit + dep-review | ✅ npm audit + dep-review |
+| SAST (análise estática) | ✅ Bandit | ✅ SonarCloud (config) | ✅ SonarCloud (config) |
+| E2E tests | ✅ Schemathesis | ✅ Playwright (scaffold) | ✅ Detox (scaffold) |
+| Performance | N/A | ✅ Lighthouse CI | ⚠️ Metro bundle analysis |
+| Bundle analysis | N/A | ✅ Nuxt bundle (≤ 3 MB) | ✅ Metro bundle (≤ 6 MB) |
+| Dependabot | ❌ gap | ✅ auto-merge patch/minor | ✅ auto-merge (exceto RN major) |
+| Dep Review (CVE) | ❌ gap | ✅ bloqueia CVE high | ✅ bloqueia CVE high |
+| Mutation testing | ✅ Cosmic Ray | ❌ Stryker (pendente) | ❌ Stryker (pendente) |
 | Container scan | ✅ Trivy | N/A | N/A |
 | OWASP checks | ✅ 17 evidências | ❌ gap | ❌ gap |
 
@@ -107,32 +106,23 @@
 
 ---
 
-## Próximas ações prioritárias
+## Setup manual necessário (ação do usuário)
 
-### APP2 (próxima task app)
-```bash
-# 1. Instalar suite de testes
-npm install --save-dev jest-expo @testing-library/react-native @types/jest
+### SonarCloud (ambos os repos)
+1. Acesse [sonarcloud.io](https://sonarcloud.io) → "+" → "Analyze new project"
+2. Selecione `auraxis-web` e `auraxis-app`
+3. Gere um token: My Account → Security → Generate Token
+4. Adicione `SONAR_TOKEN` em cada repo: Settings → Secrets and variables → Actions
 
-# 2. Criar jest.config.js
-# 3. Configurar coverage thresholds (80%)
-# 4. Instalar expo-secure-store
-npx expo install expo-secure-store
+### Dependabot auto-merge (ambos os repos)
+1. Habilite auto-merge: Settings → General → "Allow auto-merge" = ✅
+2. Configure branch protection em `master`:
+   - Require status checks: `ci-passed`
+   - Require branches to be up to date: ✅
 
-# 5. Escrever testes iniciais para hooks e utilitários existentes
-```
-
-### WEB2 (próxima task web — config de testes)
-```bash
-# 1. Criar vitest.config.ts com defineVitestConfig + coverage thresholds
-# 2. Instalar @testing-library/vue + happy-dom (já no package.json)
-pnpm install
-# 3. Escrever primeiros testes de composables e utils
-# 4. Verificar que pnpm test:coverage passa com threshold 85%
-```
-
-> WEB1 ✅ concluído: projeto Nuxt 4 inicializado com pnpm, módulos registrados,
-> @nuxt/eslint + Prettier configurados, husky hooks e CI atualizados.
+### Lighthouse CI GitHub App (auraxis-web, opcional)
+1. Instale: [github.com/apps/lighthouse-ci](https://github.com/apps/lighthouse-ci)
+2. Copie o token gerado → adicione como `LHCI_GITHUB_APP_TOKEN` nos secrets
 
 ---
 
