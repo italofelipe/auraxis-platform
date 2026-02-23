@@ -1,31 +1,30 @@
 # Próximas Prioridades
 
-## ⚠️ SETUP MANUAL — fazer ANTES das próximas tarefas de produto
+## ✅ SETUP MANUAL — concluído
 
-> Estes itens requerem ação humana. Sem eles, os agents terão CI quebrado ou ambiguidade de contexto.
+> Todos os itens abaixo foram realizados pelo usuário. CI, secrets e configurações de repo estão prontos.
 
-### SETUP-1 — SonarCloud (CRÍTICO para CI não ficar vermelho)
-- [ ] Acessar sonarcloud.io → criar organização vinculada ao GitHub (`italofelipe`)
-- [ ] Importar `auraxis-web` → copiar `SONAR_TOKEN` → adicionar em Settings > Secrets do repo
-- [ ] Importar `auraxis-app` → copiar `SONAR_TOKEN` → adicionar em Settings > Secrets do repo
-- [ ] Verificar que `auraxis-api` já tem `SONAR_TOKEN` configurado (era do setup antigo)
-- Referência: `.context/25_quality_security_playbook.md` seção 9
+### SETUP-1 — SonarCloud ✅
+- [x] Token criado para `auraxis-web` → secret configurado no repo
+- [x] Token criado para `auraxis-app` → secret configurado no repo
+- [x] Token de `auraxis-api` confirmado funcional (setup antigo)
 
-### SETUP-2 — GitHub: habilitar auto-merge (CRÍTICO para Dependabot funcionar)
-- [ ] `auraxis-web` → Settings → General → Pull Requests → habilitar "Allow auto-merge"
-- [ ] `auraxis-app` → Settings → General → Pull Requests → habilitar "Allow auto-merge"
-- [ ] Habilitar "Automatically delete head branches" em ambos
+### SETUP-2 — GitHub: auto-merge ✅
+- [x] `auraxis-web` → Allow auto-merge habilitado
+- [x] `auraxis-app` → Allow auto-merge habilitado
+- [x] "Automatically delete head branches" habilitado em ambos
 
-### SETUP-3 — Branch protection: status gate obrigatório
-- [ ] `auraxis-web` → Settings → Branches → Add rule para `master` → Required status: `ci-passed`
-- [ ] `auraxis-app` → Settings → Branches → Add rule para `master` → Required status: `ci-passed`
-- [ ] Habilitar "Require branches to be up to date before merging"
+### SETUP-3 — Branch protection: status gate ✅
+- [x] `auraxis-web` → Required status: `ci-passed` no master
+- [x] `auraxis-app` → Required status: `ci-passed` no master
+- [x] "Require branches to be up to date before merging" habilitado
 
-### SETUP-4 — Lighthouse CI (opcional — melhora visibilidade de performance)
-- [ ] Instalar GitHub App: github.com/apps/lighthouse-ci
-- [ ] Adicionar `LHCI_GITHUB_APP_TOKEN` como secret em `auraxis-web`
+### SETUP-4 — Lighthouse CI ✅
+- [x] GitHub App instalado
+- [x] `LHCI_GITHUB_APP_TOKEN` configurado como secret em `auraxis-web`
 
-### SETUP-5 — IAM trust policy AWS (legado, ainda pendente)
+### SETUP-5 — IAM trust policy AWS (débito técnico — não bloqueante)
+> Reclassificado: não é crítico para operação dos agentes. Deve ser feito oportunisticamente.
 - [ ] Atualizar subject hints nos roles dev/prod para `auraxis-api` (renomeado antes)
 - Referência: `.context/01_status_atual.md` seção PLT1.1
 
@@ -40,11 +39,11 @@
 5. PLT1.5: ✅ CONCLUÍDO
 6. WEB1: ✅ CONCLUÍDO — Nuxt 4.3.1 + @nuxt/eslint + quality stack
 7. APP2 + Security tooling: ✅ CONCLUÍDO — jest-expo + Playwright + Dependabot + SonarCloud + Lighthouse + bundle analysis
-8. **X4** — adoção faseada do Ruff em `auraxis-api` (fase advisory → substituição de flake8/black/isort, manter mypy)
-9. **X3** — preparar fase 0 de desacoplamento Flask/FastAPI (auth/context/error adapters)
-10. **B10** — questionário indicativo de perfil investidor
-11. **B11** — persistir/expor perfil sugerido + taxonomy_version
-12. **PLT-BACKEND-DOCS** — criar `steering.md` + `.context/quality_gates.md` em `auraxis-api` (ver relatório de autonomia)
+8. PLT-BACKEND-DOCS: ✅ CONCLUÍDO — `steering.md` atualizado + `.context/quality_gates.md` criado + `CODING_STANDARDS.md` criado em `auraxis-api`
+9. **X4** — adoção faseada do Ruff em `auraxis-api` (fase advisory → substituição de flake8/black/isort, manter mypy)
+10. **X3** — preparar fase 0 de desacoplamento Flask/FastAPI (auth/context/error adapters)
+11. **B10** — questionário indicativo de perfil investidor
+12. **B11** — persistir/expor perfil sugerido + taxonomy_version
 13. F1..F4 — entidades auxiliares e integração em transações
 14. G5 — seed de dados local
 15. B7 — discovery OTP (bloqueado por provedor/compliance)
