@@ -121,5 +121,36 @@ Próximas tasks de produto:
 | 1 | `X4` | `auraxis-api` | Ruff advisory |
 | 2 | `X3` | `auraxis-api` | Flask/FastAPI coexistence fase 0 |
 | 3 | `B10` | `auraxis-api` | Questionário de perfil investidor (5-10 perguntas) |
-| 4 | `APP1` | `auraxis-app` | Setup lint/TS + CI básico |
-| 5 | `WEB1` | `auraxis-web` | Inicialização do projeto Nuxt 3 |
+| 4 | `APP2` | `auraxis-app` | Jest setup real (jest-expo + coverage thresholds + @testing-library/react-native) |
+| 5 | `WEB1` | `auraxis-web` | Inicialização do projeto Nuxt 3 (`npx nuxi init`) |
+
+---
+
+## PLT1.5 — Frontend quality baseline (concluído nesta rodada)
+
+**Objetivo:** estabelecer base de qualidade nos repos frontend equivalente ao rigor do backend.
+
+### O que foi feito
+
+| Item | Arquivo(s) | Descrição |
+|:-----|:-----------|:----------|
+| CODING_STANDARDS.md web | `repos/auraxis-web/CODING_STANDARDS.md` | Manual canônico: TypeScript, Vue components, Pinia, serviços, testes, segurança |
+| CODING_STANDARDS.md mobile | `repos/auraxis-app/CODING_STANDARDS.md` | Manual canônico: TypeScript, RN components, hooks, Expo Router, segurança |
+| Pre-commit hooks app | `repos/auraxis-app/.husky/` | pre-commit (lint-staged), commit-msg (commitlint), pre-push (tsc+jest) |
+| Pre-commit hooks web | `repos/auraxis-web/.husky/` | pre-commit (lint-staged), commit-msg (commitlint), pre-push (nuxi+vitest) |
+| lint-staged config | ambos repos | ESLint fix (app) / Biome check (web) em staged files |
+| commitlint config | ambos repos | Conventional Commits com types explícitos |
+| CI pipeline app | `repos/auraxis-app/.github/workflows/ci.yml` | 7 jobs: lint, typecheck, test+coverage, secret-scan, dep-audit, commitlint, expo-export |
+| CI pipeline web | `repos/auraxis-web/.github/workflows/ci.yml` | 7 jobs: lint, typecheck, test+coverage, build, secret-scan, dep-audit, commitlint |
+| Quality gaps doc | `.context/24_frontend_quality_gaps.md` | Comparativo completo backend vs frontend, gaps por prioridade, roadmap de implementação |
+| package.json scaffold web | `repos/auraxis-web/package.json` | Scripts prontos para WEB1 (prepare, quality-check, typecheck, test:coverage) |
+| Scripts app | `repos/auraxis-app/package.json` | typecheck, test:coverage, quality-check, lint:fix adicionados |
+
+### Gaps documentados (não implementáveis agora)
+Ver `.context/24_frontend_quality_gaps.md` para roadmap completo.
+Principais gaps: Jest setup real (APP2), Vitest real (WEB1), SonarCloud (APP4/WEB4), Stryker (APP5/WEB5), Detox E2E (Beta).
+
+### Commits desta rodada
+- `auraxis-app`: `3eaa519`, `6cd59d1` (quality baseline + hook syntax fix)
+- `auraxis-web`: `38df2ba` (quality baseline scaffold)
+- `auraxis-platform`: `4237cc9` (gap doc + submodule pointers)
