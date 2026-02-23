@@ -17,6 +17,14 @@
 5. Aprovação manual para deploy PROD.
 6. Smoke PROD e monitoramento inicial.
 
+## Rollback
+
+Em caso de incidente após deploy: **reverter primeiro, investigar depois**.
+
+Procedimentos detalhados por cenário (commit revert, tag rollback, Alembic downgrade, submodule pointer):
+→ `24_rollback_runbook.md`
+
 ## Incidentes
 - Toda falha de deploy deve gerar registro em backlog técnico.
 - Documentar causa raiz, mitigação e ação preventiva.
+- Formato de entrada de incidente: ver `24_rollback_runbook.md` seção "Após qualquer rollback".
