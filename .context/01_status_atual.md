@@ -161,6 +161,40 @@ Principais gaps: Jest setup real (APP2), Vitest config (WEB2), SonarCloud (APP4/
 
 ---
 
+## Documentação de Qualidade + Segurança (concluído 2026-02-23)
+
+**Objetivo:** Agentes devem pensar em qualidade, segurança e testes como parte do processo — não apenas entregar código.
+
+### O que foi feito
+
+| Item | Arquivo(s) | Descrição |
+|:-----|:-----------|:----------|
+| Governança global atualizada | `.context/07_steering_global.md` | Quality e security elevados a princípios imutáveis de plataforma. Coverage não regride. Secret scan e CVE blocking são universais. |
+| Contrato de agente reescrito | `.context/08_agent_contract.md` | Agentes DEVEM executar `quality-check` antes de commitar. Checklist de segurança obrigatório. Gates por repo documentados com comandos e thresholds. Jest-expo obrigatório para RN (Vitest incompatível). |
+| Playbook unificado criado | `.context/25_quality_security_playbook.md` | Manual operacional: stack completa por repo, como rodar gates, thresholds, o que testar, diagramas CI, segurança ferramenta a ferramenta, mocks disponíveis, checklist pré-commit, setup manual (SonarCloud, GitHub), troubleshooting. |
+| CODING_STANDARDS web expandido | `repos/auraxis-web/CODING_STANDARDS.md` | Seção 10 (Testes) reescrita: tabela "o que testar + obrigatório", estrutura co-localizada, exemplos Vitest + mountSuspended, exemplos Playwright E2E, vitest.config.ts completo. Referências para 25_quality_security_playbook.md. |
+| CODING_STANDARDS app expandido | `repos/auraxis-app/CODING_STANDARDS.md` | Seção 9 (Testes) reescrita: bloco de rationale jest-expo vs Vitest, tabela "o que testar", jest.config.js com transformIgnorePatterns correto, tabela de mocks do jest.setup.ts, exemplos RNTL + renderHook. Seção 12 (Quality Gates) reescrita: quality-check command, diagrama 10 jobs CI, lint-staged com --no-warn-ignored, roadmap pendente. |
+| steering.md web | `repos/auraxis-web/steering.md` | Diagrama CI 12 jobs, thresholds completos, exemplos Vitest + Playwright, tabela "o que testar" |
+| steering.md app | `repos/auraxis-app/steering.md` | Diagrama CI 10 jobs, rationale jest-expo, exemplos RNTL + renderHook, tabela "o que testar" |
+| quality_gates.md web | `repos/auraxis-web/.context/quality_gates.md` | 12 jobs com "bloqueia merge?", Lighthouse thresholds, bundle limits, troubleshooting |
+| quality_gates.md app | `repos/auraxis-app/.context/quality_gates.md` | 10 jobs com "bloqueia merge?", jest-expo rationale, mocks table, Detox info, troubleshooting |
+
+### Decisão registrada: Vitest não é compatível com React Native
+
+- `vitest-react-native`: abandonado, 2 anos sem manutenção, 0 dependentes
+- `@testing-library/react-native`: incompatível com runtime Vitest
+- Expo/RN requerem `jest-expo` para resolução de módulos por plataforma
+- Conclusão: jest-expo é obrigatório no `auraxis-app`. Irreversível até suporte oficial.
+- Documentado em: `08_agent_contract.md`, `25_quality_security_playbook.md`, `CODING_STANDARDS.md` do app
+
+### Commits desta rodada
+
+- `auraxis-web`: `f5e59e0` — docs(quality): expand agent docs
+- `auraxis-app`: `52f9528` — docs(quality): expand agent docs
+- `auraxis-platform`: `9ea7641` — docs(context): enforce quality + security as platform-wide principles
+
+---
+
 ## WEB1 — Inicialização Nuxt 4 + quality stack (concluído 2026-02-23)
 
 **Objetivo:** Inicializar o projeto auraxis-web com Nuxt 4, substituir Biome por @nuxt/eslint e validar quality-check completo.

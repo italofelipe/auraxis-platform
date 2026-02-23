@@ -32,6 +32,7 @@ Este índice organiza a leitura mínima para qualquer pessoa ou agente retomar o
 
 | Arquivo | Quando ler |
 |:--------|:-----------|
+| `25_quality_security_playbook.md` | **Ao trabalhar em qualquer repo frontend** — manual completo de quality + security |
 | `17_discovery_framework.md` | Ao avaliar novas features/ideias |
 | `18_feedback_loop.md` | Ao encerrar um ciclo de trabalho |
 | `19_context_maintenance.md` | Ao atualizar arquivos de `.context/` |
