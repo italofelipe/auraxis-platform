@@ -112,7 +112,9 @@
 1. Acesse [sonarcloud.io](https://sonarcloud.io) → "+" → "Analyze new project"
 2. Selecione `auraxis-web` e `auraxis-app`
 3. Gere um token: My Account → Security → Generate Token
-4. Adicione `SONAR_TOKEN` em cada repo: Settings → Secrets and variables → Actions
+4. Adicione os secrets por repo: Settings → Secrets and variables → Actions
+   - `auraxis-web` → `SONAR_AURAXIS_WEB_TOKEN`
+   - `auraxis-app` → `SONAR_AURAXIS_APP_TOKEN`
 
 ### Dependabot auto-merge (ambos os repos)
 1. Habilite auto-merge: Settings → General → "Allow auto-merge" = ✅

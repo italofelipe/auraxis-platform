@@ -1,8 +1,54 @@
 # Handoff (Atual)
 
-Data: 2026-02-23 (Arquitetura Frontend + Governance Backend + Push Fixes)
+Data: 2026-02-23 (Remediação de maturidade agentic)
 
 ## O que foi feito (rodada atual)
+
+### Objetivo da rodada
+
+Eliminar deficiências de governança e operação que impediam autonomia confiável de agentes (CrewAI + workflows + SDD) em ambiente multi-repo.
+
+### Itens executados
+
+| Item | Arquivo(s) | Resultado |
+|:-----|:-----------|:----------|
+| Plano de remediação | `.context/27_agentic_maturity_remediation_plan.md` | Deficiências, severidade, estratégia e critérios de conclusão formalizados |
+| Confiabilidade do health check | `scripts/check-health.sh` | Removido abort prematuro sob warning; execução agora percorre todas as seções |
+| Lock com expiração real | `scripts/agent-lock.sh`, `.context/agent_lock.schema.json` | `expires_at` implementado + auto-liberação de lock expirado |
+| Sessão silenciosa | `scripts/verify-agent-session.sh` | Modo `--quiet` corrigido (não falha mais por retorno espúrio) |
+| Workflow de sessão | `workflows/agent-session.md` | Gates do web/app atualizados para comandos reais |
+| Workflow SDD | `workflows/feature-delivery.md` | Escopo atualizado para `auraxis-app` + gates por repo |
+| Bootstrap repo | `scripts/bootstrap-repo.sh`, `workflows/repo-bootstrap.md` | Referência a script inexistente removida; instruções executáveis |
+| Nomenclatura canônica | `AGENTS.md`, `README.md`, `CLAUDE.md`, `.context/00_overview.md`, `ai_integration-claude.md` | Drift `auraxis-mobile` eliminado dos docs operacionais |
+| Drift backend GraphQL | `repos/auraxis-api/steering.md`, `repos/auraxis-api/CLAUDE.md`, `repos/auraxis-api/CODING_STANDARDS.md` | Documentação alinhada para Graphene |
+| Handoff no ai_squad | `repos/auraxis-api/ai_squad/tools/tool_security.py` | Escrita permitida em `.context/handoffs` e `.context/reports` |
+| Secrets Sonar alinhados | `repos/auraxis-web/.github/workflows/ci.yml`, `repos/auraxis-app/.github/workflows/ci.yml` | CI padronizado com `SONAR_AURAXIS_WEB_TOKEN` e `SONAR_AURAXIS_APP_TOKEN` |
+| Higiene de artefatos | `repos/auraxis-web/.gitignore`, `repos/auraxis-app/.gitignore` | Ignore de `coverage/` e `.nuxtrc`; limpeza de ruído local executada |
+| Sync de backlog | `repos/auraxis-app/tasks.md`, `repos/auraxis-web/tasks.md`, `.context/01_status_atual.md` | Tasks e status global alinhados ao estado atual |
+
+## O que foi validado
+
+- `./scripts/agent-lock.sh`: smoke test com `AGENT_LOCK_TTL_SECONDS=1` validou expiração automática.
+- `./scripts/check-health.sh`: execução completa sem interrupção prematura.
+- `./scripts/verify-agent-session.sh --quiet`: execução com código de saída correto.
+- Busca de drift crítico em docs operacionais: `auraxis-mobile` removido.
+- Busca de drift backend: `Ariadne` removido de artefatos canônicos.
+
+## Riscos pendentes
+
+- Existem mudanças locais em 3 submodules (`auraxis-api`, `auraxis-app`, `auraxis-web`) e na platform aguardando commit/push organizado por repo.
+- `.context/20_decision_log.md` mantém entradas históricas sobre Nuxt 3/Biome; não bloqueia execução, mas recomenda-se ADR de supersession.
+- `check-health.sh` continua sinalizando branch diferente de `master` como warning (esperado em branches de trabalho).
+
+## Próximo passo sugerido
+
+1. Commitar e subir as correções por repo (`auraxis-api`, `auraxis-app`, `auraxis-web`, `auraxis-platform`) com mensagens convencionais.
+2. Atualizar `.context/20_decision_log.md` com decisão de supersession da stack web (Nuxt 4 + @nuxt/eslint).
+3. Executar bloco funcional prioritário `X4` no `auraxis-api` com lock ativo e ritual de handoff completo.
+
+---
+
+## Histórico anterior — 2026-02-23 (Arquitetura Frontend + Governance Backend + Push Fixes)
 
 ### Objetivo da rodada
 
@@ -113,7 +159,7 @@ Garantir que todos os agentes entendam e executem o processo completo de qualida
 
 ## Riscos pendentes
 
-- SonarCloud: requer setup manual (conta + SONAR_TOKEN em cada repo)
+- SonarCloud: requer setup manual (conta + secrets SONAR_AURAXIS_WEB_TOKEN e SONAR_AURAXIS_APP_TOKEN)
 - Lighthouse CI GitHub App: requer instalação manual + LHCI_GITHUB_APP_TOKEN
 - GitHub settings: auto-merge precisa ser habilitado manualmente nas configurações do repo
 - Detox E2E: scaffold pronto, mas requer macOS self-hosted runner para rodar no CI

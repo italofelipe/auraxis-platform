@@ -5,8 +5,8 @@ Centralizar contexto de produto, engenharia e execução para trabalho humano + 
 
 ## Repositórios
 - repos/auraxis-api (backend atual)
-- repos/auraxis-web (futuro)
-- repos/auraxis-mobile (futuro)
+- repos/auraxis-web (web atual)
+- repos/auraxis-app (app mobile atual)
 
 ## Fonte de verdade
 - Status global e handoff da plataforma: `.context/01_status_atual.md` e `.context/05_handoff.md`

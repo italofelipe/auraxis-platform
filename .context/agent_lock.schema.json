@@ -3,7 +3,7 @@
   "title": "AgentLock",
   "description": "Mutex protocol for concurrent agent coordination in Auraxis Platform. Written to .context/agent_lock.json when an agent session starts. Cleared on session end. Prevents two agents from working on the same repo simultaneously.",
   "type": "object",
-  "required": ["agent", "repo", "since", "task", "pid"],
+  "required": ["agent", "repo", "since", "expires_at", "task", "pid"],
   "properties": {
     "agent": {
       "type": "string",
@@ -13,12 +13,17 @@
     "repo": {
       "type": "string",
       "description": "Repo scope of the lock. Use 'platform' for platform-level work.",
-      "examples": ["auraxis-api", "auraxis-web", "auraxis-mobile", "platform"]
+      "examples": ["auraxis-api", "auraxis-web", "auraxis-app", "platform"]
     },
     "since": {
       "type": "string",
       "format": "date-time",
       "description": "ISO 8601 timestamp when the lock was acquired"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the lock expires (default TTL: 4h)"
     },
     "task": {
       "type": "string",

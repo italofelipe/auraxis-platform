@@ -1,7 +1,7 @@
 # Workflow: Feature Delivery
 
 **Gatilho:** Início de implementação de uma feature do backlog.
-**Escopo:** Qualquer repo de produto (`auraxis-api`, `auraxis-web`, `auraxis-mobile`).
+**Escopo:** Qualquer repo de produto (`auraxis-api`, `auraxis-web`, `auraxis-app`).
 
 Este workflow implementa o ciclo SDD (Spec-Driven Development) para entregas
 controladas por agentes.
@@ -61,20 +61,27 @@ controladas por agentes.
 
 ```bash
 # Branch de feature
-git checkout master && git pull
+git checkout master || git checkout main
+git pull
 git checkout -b feat/<escopo-curto>
 
 # Implementar em incrementos
 # A cada incremento lógico:
 git add <arquivos específicos>
 git commit -m "feat(<escopo>): <descrição imperativa>"
+```
 
-# Quality gates antes de cada commit
-black .
-isort .
-flake8 .
-mypy app   # ou equivalente
-pytest -q  # ou equivalente
+Quality gates antes de cada commit (por repo):
+
+```bash
+# auraxis-api
+black . && isort app tests config run.py run_without_db.py && flake8 app tests config run.py run_without_db.py && mypy app && pytest -m "not schemathesis" --cov=app --cov-fail-under=85
+
+# auraxis-web
+pnpm lint && pnpm typecheck && pnpm test:coverage
+
+# auraxis-app
+npm run lint && npm run typecheck && npm run test:coverage
 ```
 
 Regras:

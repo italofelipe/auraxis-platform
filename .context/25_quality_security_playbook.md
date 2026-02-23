@@ -276,7 +276,9 @@ Workflows adicionais:
 - **Requer setup manual:**
   1. Criar organização em sonarcloud.io
   2. Importar repositório
-  3. Adicionar `SONAR_TOKEN` como secret no GitHub
+  3. Adicionar o secret Sonar correto no GitHub:
+     - `auraxis-web` → `SONAR_AURAXIS_WEB_TOKEN`
+     - `auraxis-app` → `SONAR_AURAXIS_APP_TOKEN`
 - **Arquivos de config:** `sonar-project.properties` em cada repo
 
 ### Dependabot
@@ -340,7 +342,7 @@ jest.mock('expo-secure-store', () => ({
 1. Acessar [sonarcloud.io](https://sonarcloud.io)
 2. Criar organização vinculada ao GitHub (`italofelipe`)
 3. Importar `auraxis-web` e `auraxis-app`
-4. Em cada repo, copiar o `SONAR_TOKEN` gerado
+4. Em cada repo, copiar o token Sonar gerado
 5. Adicionar o token como secret no GitHub com o nome correto para cada repo:
    - `auraxis-web` → Settings → Secrets → **`SONAR_AURAXIS_WEB_TOKEN`**
    - `auraxis-app` → Settings → Secrets → **`SONAR_AURAXIS_APP_TOKEN`**

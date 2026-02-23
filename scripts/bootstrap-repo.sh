@@ -68,8 +68,9 @@ if [[ -n "$SUBMODULE_URL" ]]; then
   git add .gitmodules "repos/$REPO_NAME"
   git commit -m "chore(submodule): add $REPO_NAME as git submodule"
   echo ""
-  echo "✅  Submodule registered. Navigate to repos/$REPO_NAME to apply templates."
-  echo "    Run: cd repos/$REPO_NAME && ../../scripts/apply-templates.sh"
+  echo "✅  Submodule registered."
+  echo "    Next: adapt governance files directly in repos/$REPO_NAME"
+  echo "    (README.md, steering.md, tasks.md, CLAUDE.md/AGENTS.md, docs/adr/)."
   exit 0
 fi
 

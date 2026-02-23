@@ -79,7 +79,7 @@ Exemplos:
 
 Agentes válidos: `claude`, `gemini`, `gpt`, `crewai`
 
-> O lock expira automaticamente após 4 horas (configurado no schema). Se a sessão ultrapassar esse tempo, renovar com `acquire` novamente antes de expirar.
+> O lock expira automaticamente após 4 horas (TTL padrão no script). Se a sessão ultrapassar esse tempo, renovar com `acquire` novamente antes de expirar.
 
 ---
 
@@ -87,10 +87,13 @@ Agentes válidos: `claude`, `gemini`, `gpt`, `crewai`
 
 Ler em ordem (versão mínima):
 
-1. `.context/01_status_atual.md` — onde estamos e **qual a próxima task**
-2. `.context/02_backlog_next.md` — prioridades globais
-3. `repos/<repo-alvo>/tasks.md` — status local do repo
-4. `repos/<repo-alvo>/.context/README.md` — contexto local do repo (se existir)
+1. `.context/06_context_index.md` — índice e ordem de leitura
+2. `.context/07_steering_global.md` — governança imutável
+3. `.context/08_agent_contract.md` — contrato de comportamento do agente
+4. `.context/01_status_atual.md` — onde estamos e **qual a próxima task**
+5. `.context/02_backlog_next.md` — prioridades globais
+6. `repos/<repo-alvo>/tasks.md` — status local do repo
+7. `repos/<repo-alvo>/.context/README.md` — contexto local do repo (se existir)
 
 Para sessões longas ou início de ciclo, ler a sequência completa em `CLAUDE.md` (raiz da platform).
 
@@ -129,14 +132,14 @@ docs/context-update-plt14
 black . && isort app tests config && flake8 app tests && mypy app && pytest -m "not schemathesis" --cov=app --cov-fail-under=85
 ```
 
-**auraxis-web (Nuxt/Biome):**
+**auraxis-web (Nuxt/@nuxt/eslint):**
 ```bash
-npx biome check --write . && npx nuxi typecheck && npx vitest run
+pnpm lint && pnpm typecheck && pnpm test:coverage
 ```
 
 **auraxis-app (React Native/ESLint):**
 ```bash
-npm run lint && npx tsc --noEmit && npx jest --passWithNoTests
+npm run lint && npm run typecheck && npm run test:coverage
 ```
 
 > Referência completa: `repos/<repo-alvo>/.context/quality_gates.md`
@@ -168,7 +171,7 @@ cd /path/to/auraxis-platform
 ./scripts/agent-lock.sh release <agente>
 ```
 
-> **Nunca encerrar sessão sem liberar o lock.** Lock expirado bloqueia outros agentes.
+> **Nunca encerrar sessão sem liberar o lock.** O TTL evita lock eterno, mas liberar explicitamente mantém coordenação previsível.
 
 ### 8.4 Atualizar status global (se houve decisão relevante)
 

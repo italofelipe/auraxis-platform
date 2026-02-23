@@ -28,9 +28,26 @@ overall=0
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
-ok()   { echo "  ✅  $*"; }
-warn() { echo "  ⚠️   $*"; [[ $overall -lt $WARN ]] && overall=$WARN; }
-fail() { echo "  ❌  $*"; [[ $overall -lt $FAIL ]] && overall=$FAIL; }
+ok() {
+  echo "  ✅  $*"
+  return 0
+}
+
+warn() {
+  echo "  ⚠️   $*"
+  if [[ $overall -lt $WARN ]]; then
+    overall=$WARN
+  fi
+  return 0
+}
+
+fail() {
+  echo "  ❌  $*"
+  if [[ $overall -lt $FAIL ]]; then
+    overall=$FAIL
+  fi
+  return 0
+}
 section() { echo ""; echo "── $* ──────────────────────────────────────────"; }
 
 # ── Platform checks ────────────────────────────────────────────────────────────
@@ -64,6 +81,11 @@ check_platform() {
     ok "Platform branch: master"
   else
     warn "Platform branch: $BRANCH (not master)"
+  fi
+
+  # Nested repository in repos/ is an operational hazard for submodules.
+  if [[ -d "$REPOS_DIR/.git" ]]; then
+    warn "Nested git repo detected at repos/.git (remove to avoid submodule conflicts)"
   fi
 }
 

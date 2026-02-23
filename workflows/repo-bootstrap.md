@@ -25,7 +25,7 @@ cd /path/to/auraxis-platform
 Exemplos:
 ```bash
 ./scripts/bootstrap-repo.sh auraxis-web
-./scripts/bootstrap-repo.sh auraxis-mobile
+./scripts/bootstrap-repo.sh auraxis-app
 ```
 
 Resultado: `repos/<repo-name>/` com governance baseline e commit inicial.

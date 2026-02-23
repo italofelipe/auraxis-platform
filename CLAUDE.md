@@ -34,8 +34,8 @@ auraxis-platform/
   .context/         # Shared knowledge base, governance, templates
   repos/            # Product repositories (as git submodules)
     auraxis-api/    # Backend: Python + Flask (active)
-    auraxis-web/    # Web: Nuxt.js (planned)
-    auraxis-mobile/ # Mobile: React Native (planned)
+    auraxis-web/    # Web: Nuxt 4 + TypeScript (active)
+    auraxis-app/    # Mobile: React Native + Expo (active)
   scripts/          # Platform-level automation and utilities
   workflows/        # Orchestration pipelines
   docs/             # Cross-repo documentation

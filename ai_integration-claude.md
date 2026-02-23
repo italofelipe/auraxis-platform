@@ -12,7 +12,7 @@ leia também `repos/auraxis-api/ai_integration-claude.md`.
 | Platform     | Governança, contexto, templates, orquestração       |
 | auraxis-api  | Implementação backend, review, análise, documentação |
 | auraxis-web  | (futuro) Implementação frontend Nuxt.js              |
-| auraxis-mobile | (futuro) Implementação React Native               |
+| auraxis-app    | Implementação React Native + Expo                 |
 
 ---
 

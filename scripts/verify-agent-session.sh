@@ -12,10 +12,28 @@ FAILURES=0
 WARNINGS=0
 
 # --- Helpers ---
-ok()   { [[ "$QUIET" != "--quiet" ]] && echo "  ✅ $*"; }
-warn() { [[ "$QUIET" != "--quiet" ]] && echo "  ⚠️  $*"; WARNINGS=$((WARNINGS + 1)); }
+ok() {
+  if [[ "$QUIET" != "--quiet" ]]; then
+    echo "  ✅ $*"
+  fi
+  return 0
+}
+
+warn() {
+  if [[ "$QUIET" != "--quiet" ]]; then
+    echo "  ⚠️  $*"
+  fi
+  WARNINGS=$((WARNINGS + 1))
+  return 0
+}
+
 fail() { echo "  ❌ $*"; FAILURES=$((FAILURES + 1)); }
-section() { [[ "$QUIET" != "--quiet" ]] && echo ""; echo "── $* ──────────────────────────────────"; }
+section() {
+  if [[ "$QUIET" != "--quiet" ]]; then
+    echo ""
+  fi
+  echo "── $* ──────────────────────────────────"
+}
 
 # --- Main ---
 [[ "$QUIET" != "--quiet" ]] && echo "🔍 Verificando prereqs para sessão de agente..."

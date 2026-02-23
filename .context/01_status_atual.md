@@ -23,13 +23,13 @@ Data: 2026-02-23
 **Objetivo:** configurar ambiente multi-repo para que todos os agentes operem corretamente.
 
 - `auraxis-app` (React Native + Expo SDK 54) registrado como submodule.
-- `auraxis-web` (Nuxt 3 + TypeScript) registrado como submodule.
+- `auraxis-web` (Nuxt 4 + TypeScript) registrado como submodule.
 - Governance baseline em ambos: `CLAUDE.md`, `.gitignore`, `tasks.md`, `steering.md`.
 - `scripts/setup-submodules.sh` criado — onboarding one-shot para agentes e desenvolvedores.
 - `scripts/check-health.sh` atualizado:
   - Detecção correta de `.git` file vs. diretório (submodule vs. repo standalone).
   - Seção dedicada para `auraxis-app` (Mobile health) e `auraxis-web` (Web health).
-  - Nome correto `auraxis-app` (não `auraxis-mobile`).
+  - Nome canônico do app mobile: `auraxis-app`.
 - `.context/11_repo_map.md` atualizado com mapa dos 3 submodules ativos.
 - `.gitmodules` com todos os 3 submodules registrados.
 
@@ -62,8 +62,8 @@ Ambiente multi-repo configurado. Os agentes podem agora:
 Próximas tasks de produto:
 - **X4**: adoção faseada de Ruff (advisory → substituição de flake8/black/isort) em `auraxis-api`
 - **B10**: questionário indicativo de perfil investidor em `auraxis-api`
-- **APP1**: setup de linting em `auraxis-app`
-- **WEB1**: inicialização do projeto Nuxt 3 em `auraxis-web`
+- **APP2**: cliente HTTP + integração inicial com `auraxis-api` em `auraxis-app`
+- **WEB2**: cliente HTTP + tipagem de contrato em `auraxis-web`
 
 ## Discovery J1..J5
 - Pacote de discovery consolidado em `.context/discovery/`.
@@ -82,7 +82,7 @@ Próximas tasks de produto:
 
 | Item | Arquivo(s) | Descrição |
 |:-----|:-----------|:----------|
-| Quality gates web | `repos/auraxis-web/steering.md` | Biome + nuxi typecheck + vitest — comandos concretos e thresholds |
+| Quality gates web | `repos/auraxis-web/steering.md` | @nuxt/eslint + nuxi typecheck + vitest — comandos concretos e thresholds |
 | Quality gates mobile | `repos/auraxis-app/steering.md` | ESLint + tsc --noEmit + jest — comandos concretos e thresholds |
 | Contexto local web | `repos/auraxis-web/.context/` | README, architecture.md, quality_gates.md |
 | Contexto local mobile | `repos/auraxis-app/.context/` | README, architecture.md, quality_gates.md |
@@ -115,7 +115,7 @@ Próximas tasks de produto:
 | **Risco** | Baixo — advisory não substitui nada, apenas adiciona |
 
 > ✅ **WEB1 concluído** (2026-02-23): Nuxt 4.3.1 + @nuxt/eslint.
-> ✅ **APP2 + Security tooling** (2026-02-23): jest-expo + testing-library/react-native + Gitleaks + TruffleHog + Dependabot + SonarCloud + Lighthouse CI + Playwright + bundle analysis em ambos os repos.
+> ✅ **Baseline de qualidade + security tooling** (2026-02-23): jest-expo + testing-library/react-native + Gitleaks + TruffleHog + Dependabot + SonarCloud + Lighthouse CI + Playwright + bundle analysis em ambos os repos.
 > Próximas tasks: **X4** (Ruff advisory, auraxis-api) ou **WEB3/APP3** (Sentry + primeiros testes reais).
 
 ### Fila (ordem de prioridade)
@@ -125,7 +125,7 @@ Próximas tasks de produto:
 | 1 | `X4` | `auraxis-api` | Ruff advisory |
 | 2 | `X3` | `auraxis-api` | Flask/FastAPI coexistence fase 0 |
 | 3 | `B10` | `auraxis-api` | Questionário de perfil investidor (5-10 perguntas) |
-| 4 | `APP2` | `auraxis-app` | Jest setup real (jest-expo + coverage thresholds + @testing-library/react-native) |
+| 4 | `APP2` | `auraxis-app` | Cliente HTTP + healthcheck `/health` com `EXPO_PUBLIC_API_URL` |
 | 5 | `WEB2` | `auraxis-web` | vitest.config.ts com defineVitestConfig + coverage ≥ 85% |
 
 ---
@@ -142,7 +142,7 @@ Próximas tasks de produto:
 | CODING_STANDARDS.md mobile | `repos/auraxis-app/CODING_STANDARDS.md` | Manual canônico: TypeScript, RN components, hooks, Expo Router, segurança |
 | Pre-commit hooks app | `repos/auraxis-app/.husky/` | pre-commit (lint-staged), commit-msg (commitlint), pre-push (tsc+jest) |
 | Pre-commit hooks web | `repos/auraxis-web/.husky/` | pre-commit (lint-staged), commit-msg (commitlint), pre-push (nuxi+vitest) |
-| lint-staged config | ambos repos | ESLint fix (app) / Biome check (web) em staged files |
+| lint-staged config | ambos repos | ESLint fix (app e web) em staged files |
 | commitlint config | ambos repos | Conventional Commits com types explícitos |
 | CI pipeline app | `repos/auraxis-app/.github/workflows/ci.yml` | 7 jobs: lint, typecheck, test+coverage, secret-scan, dep-audit, commitlint, expo-export |
 | CI pipeline web | `repos/auraxis-web/.github/workflows/ci.yml` | 7 jobs: lint, typecheck, test+coverage, build, secret-scan, dep-audit, commitlint |
@@ -259,3 +259,33 @@ Principais gaps: Jest setup real (APP2), Vitest config (WEB2), SonarCloud (APP4/
 - `auraxis-app` → `origin/main`: commits de frontend arch docs + tsconfig fix
 - `auraxis-web` → `origin/main`: commits de frontend arch docs + package.json fixes
 - `auraxis-platform` `1b66214`: submodule pointers (branch `docs/agent-autonomy-baseline`)
+
+---
+
+## PLT1.7 — Remediação de maturidade agentic (concluído 2026-02-23)
+
+**Objetivo:** eliminar gaps operacionais que reduziam confiabilidade de sessões autônomas multi-agente.
+
+### O que foi feito
+
+| Item | Arquivo(s) | Resultado |
+|:-----|:-----------|:----------|
+| Plano formal de remediação | `.context/27_agentic_maturity_remediation_plan.md` | Deficiências priorizadas (P0→P3), estratégia e critério de saída registrados |
+| Script health-check | `scripts/check-health.sh` | Corrigido abort prematuro com warnings; diagnóstico agora roda completo |
+| Lock com TTL real | `scripts/agent-lock.sh`, `.context/agent_lock.schema.json` | `expires_at` implementado + auto-liberação de lock expirado |
+| Workflow de sessão | `workflows/agent-session.md` | Gates atualizados para stack real (`pnpm lint/typecheck/test:coverage`) |
+| Workflow de entrega | `workflows/feature-delivery.md` | Escopo atualizado para `auraxis-app`; quality gates por repo documentados |
+| Bootstrap de repos | `scripts/bootstrap-repo.sh`, `workflows/repo-bootstrap.md` | Removida referência a script inexistente; exemplos atualizados para `auraxis-app` |
+| Nomenclatura canônica | `AGENTS.md`, `README.md`, `CLAUDE.md`, `.context/00_overview.md`, `ai_integration-claude.md` | Referências operacionais migradas de `auraxis-mobile` para `auraxis-app` |
+| Backend GraphQL docs | `repos/auraxis-api/steering.md`, `repos/auraxis-api/CLAUDE.md`, `repos/auraxis-api/CODING_STANDARDS.md` | Drift Ariadne/Graphene eliminado |
+| Handoff no ai_squad | `repos/auraxis-api/ai_squad/tools/tool_security.py` | Allowlist expandida para `.context/handoffs` e `.context/reports` |
+| Sonar secret alignment | `repos/auraxis-web/.github/workflows/ci.yml`, `repos/auraxis-app/.github/workflows/ci.yml` | CI padronizado em `SONAR_AURAXIS_WEB_TOKEN` e `SONAR_AURAXIS_APP_TOKEN` |
+| Higiene de artefatos | `repos/auraxis-web/.gitignore`, `repos/auraxis-app/.gitignore` | `coverage/` e `.nuxtrc` ignorados; repo aninhado em `repos/.git` removido |
+| Sync de tasks/status | `repos/auraxis-app/tasks.md`, `repos/auraxis-web/tasks.md`, `.context/01_status_atual.md` | Status e backlog local alinhados ao estado atual |
+
+### O que foi validado
+
+- `scripts/agent-lock.sh`: TTL validado em smoke test com `AGENT_LOCK_TTL_SECONDS=1`.
+- `scripts/check-health.sh`: execução fim-a-fim sem abort prematuro.
+- `scripts/verify-agent-session.sh --quiet`: corrigido para execução silenciosa sem falha espúria.
+- Busca por drift crítico (`auraxis-mobile`, `Ariadne`) limpa nos artefatos operacionais.
