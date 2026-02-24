@@ -2,6 +2,19 @@
 
 Data: 2026-02-24
 
+## Atualização CI Compat (2026-02-24 — correção de falhas app/web)
+- `auraxis-app`:
+  - `dependency-review.yml` voltou para modo compatível (`continue-on-error` + warning explícito) quando o GitHub retorna "Dependency review is not supported on this repository".
+  - `ci.yml` com job `sonarcloud` condicionado por `ENABLE_SONAR_CI=true` para evitar quebra enquanto Automatic Analysis permanecer ativo no SonarCloud.
+- `auraxis-web`:
+  - `dependency-review.yml` voltou para modo compatível (`continue-on-error` + warning explícito).
+  - `ci.yml` com job `sonarcloud` condicionado por `ENABLE_SONAR_CI=true` pelo mesmo motivo.
+- Observação: esse ajuste elimina quebra sistêmica de CI e preserva rastreabilidade dos gaps de configuração externa.
+- Pendência manual obrigatória para voltar ao modo estrito:
+  - habilitar/confirmar Dependency Graph no GitHub dos repos frontend;
+  - desabilitar Automatic Analysis no SonarCloud dos projetos frontend;
+  - reativar `ENABLE_SONAR_CI=true` para scanner CI.
+
 ## Atualização Foundation Hardening (2026-02-24 — API + App + Web)
 - Objetivo aplicado: preparar os 3 repos para execução autônoma antes de novo bloco de features.
 - `auraxis-api`:

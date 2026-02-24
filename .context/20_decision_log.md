@@ -179,6 +179,23 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 
 ---
 
+### DEC-017 — Modo compatibilidade temporário para CI frontend
+
+**Decisão:** aplicar modo compatibilidade transitório em `auraxis-app` e `auraxis-web` para desbloquear CI enquanto configurações externas não estão estáveis:
+- `dependency-review` com fallback controlado em erro de "repository not supported";
+- `sonarcloud` condicionado por `ENABLE_SONAR_CI`.
+
+**Racional:** houve falha sistêmica de pipeline por dependência de configuração fora do repositório (Dependency Graph e Automatic Analysis no SonarCloud). O modo compatibilidade evita bloqueio contínuo sem esconder a pendência.
+
+**Alternativas rejeitadas:**
+- Manter modo estrito e aceitar CI vermelho contínuo.
+- Remover os checks dos workflows.
+
+**Dono:** plataforma + owners frontend.
+**Impacto:** CI volta a ser executável imediatamente; retorno ao modo estrito depende de ajustes manuais no GitHub/SonarCloud.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

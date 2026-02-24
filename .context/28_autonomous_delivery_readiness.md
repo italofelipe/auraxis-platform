@@ -27,8 +27,8 @@ Decisão:
 
 Estado atual:
 - ✅ `auraxis-api`: scanner CI ativo no workflow
-- ✅ `auraxis-app`: scanner CI ativo no workflow
-- ✅ `auraxis-web`: scanner CI ativo no workflow
+- ⚠️ `auraxis-app`: scanner CI condicionado por `ENABLE_SONAR_CI` (modo compatibilidade até desligar Automatic Analysis)
+- ⚠️ `auraxis-web`: scanner CI condicionado por `ENABLE_SONAR_CI` (modo compatibilidade até desligar Automatic Analysis)
 
 Pendência manual (painel SonarCloud):
 - [ ] Desabilitar Automatic Analysis em:
@@ -47,7 +47,7 @@ Status:
 - ✅ Sonar scanner pinado por SHA nos workflows
 
 Pendência recomendada:
-- [ ] Garantir Dependency Graph habilitado nos 3 repositórios para enforcement total do Dependency Review.
+- [ ] Garantir Dependency Graph habilitado nos 3 repositórios para enforcement total do Dependency Review (app/web em modo compatibilidade temporário).
 
 ---
 

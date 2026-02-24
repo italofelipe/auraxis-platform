@@ -2,6 +2,38 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (fix de falhas CI em app/web)
+
+### O que foi feito
+
+- `repos/auraxis-app/.github/workflows/dependency-review.yml`:
+  - restaurado fallback compatível (`continue-on-error` + warning) para erro de repositório não suportado.
+- `repos/auraxis-web/.github/workflows/dependency-review.yml`:
+  - mesmo ajuste de fallback compatível.
+- `repos/auraxis-app/.github/workflows/ci.yml` e `repos/auraxis-web/.github/workflows/ci.yml`:
+  - job `sonarcloud` condicionado por `ENABLE_SONAR_CI == 'true'` para evitar conflito com Automatic Analysis ainda ativo.
+- `tasks.md` de app/web atualizado com rastreabilidade do modo compatibilidade.
+
+### O que foi validado
+
+- YAML parse OK nos 4 workflows ajustados.
+- Push publicado nas branches:
+  - `auraxis-app`: `acea673`
+  - `auraxis-web`: `d4e0596`
+
+### Riscos pendentes
+
+- Enquanto `ENABLE_SONAR_CI` permanecer `false`, o scanner Sonar CI não roda.
+- O fallback do dependency-review impede bloqueio estrito quando o GitHub marca o repo como não suportado.
+
+### Próximo passo sugerido
+
+1. No SonarCloud, desligar Automatic Analysis para app/web.
+2. Ativar `ENABLE_SONAR_CI=true` nos dois repos.
+3. Em GitHub Security Analysis, garantir Dependency Graph habilitado e então remover fallback compatível do dependency-review.
+
+---
+
 ## Atualização rápida — 2026-02-24 (foundation hardening para execução autônoma)
 
 ### O que foi feito
