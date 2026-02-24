@@ -2,6 +2,34 @@
 
 Data: 2026-02-24
 
+## Atualização APP9 + WEB10 (2026-02-24 — baseline de testes sem bypass)
+- `auraxis-app`:
+  - scripts `test`, `test:coverage` e `test:watch` sem `--passWithNoTests`;
+  - suíte real adicionada para fluxo crítico inicial (tema/renderização interativa):
+    - `hooks/use-theme-color.test.ts`
+    - `components/themed-text.test.tsx`
+    - `components/themed-view.test.tsx`
+    - `components/ui/collapsible.test.tsx`
+  - baseline de coverage definido no `jest.config.js` para os módulos críticos cobertos no bloco.
+- `auraxis-web`:
+  - scripts `test` e `test:coverage` sem `--passWithNoTests`;
+  - `vitest.config.ts` sem `passWithNoTests`, coverage incluindo `app/app.vue`;
+  - suíte real adicionada: `app/app.spec.ts`;
+  - ambiente padrão de teste ajustado para `happy-dom` com instrução de uso pontual de ambiente `nuxt` por arquivo.
+- Validação local concluída:
+  - app: `npm run lint`, `npm run typecheck`, `npm run test:coverage`, `npm run quality-check` ✅
+  - web: `pnpm lint`, `pnpm typecheck`, `pnpm test:coverage`, `pnpm quality-check` ✅
+
+## Atualização Governança Merge (2026-02-24 — solo maintainer mode)
+- Branch protection atualizado para não exigir aprovador em review:
+  - `required_approving_review_count=0`
+  - `require_last_push_approval=false`
+- Aplicado e validado via API em:
+  - `italofelipe/auraxis-api:master`
+  - `italofelipe/auraxis-app:main`
+  - `italofelipe/auraxis-web:main`
+- Demais proteções mantidas: status checks obrigatórios, linear history, conversation resolution, bloqueio de force-push/delete.
+
 ## Atualização Sonar (2026-02-24 — pós desativação do Automatic Analysis)
 - `auraxis-app` e `auraxis-web` voltaram para scanner Sonar estrito em CI (sem `ENABLE_SONAR_CI`).
 - Conflito `CI analysis while Automatic Analysis is enabled` mitigado após sua ação no SonarCloud e remoção do modo compatível de Sonar nos workflows.

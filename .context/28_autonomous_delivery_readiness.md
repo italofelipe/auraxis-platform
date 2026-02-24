@@ -11,8 +11,9 @@ Objetivo: garantir base estável de governança, segurança e instrumentação a
 Status:
 - ✅ Branch protection ativo em `main` para `auraxis-api`, `auraxis-app`, `auraxis-web`
 - ✅ Required checks padronizados com `CI Passed` + dependency check por repo
+- ✅ Modo solo maintainer aplicado (sem aprovador obrigatório de review)
 - ✅ Force-push/delete bloqueados
-- ✅ PR obrigatório com aprovação e conversation resolution
+- ✅ PR obrigatório com conversation resolution
 
 Referência:
 - `governance/github/branch-protection-config.json`
@@ -68,5 +69,5 @@ Pendência recomendada:
 1. Fechar pendências manuais do SonarCloud (Automatic Analysis OFF nos 3 projetos).
 2. Confirmar pipelines verdes em `main` nos 3 repos após hardening.
 3. Executar `WEB9` (dockerização do Nuxt) para completar baseline de execução padronizada.
-4. Executar `APP9` e `WEB10` para remover `--passWithNoTests` e tornar os gates de teste estritamente bloqueantes.
+4. APP9 e WEB10: ✅ concluídos (gates de teste sem `passWithNoTests` em app/web).
 5. Iniciar `APP2` e `WEB2` (clientes HTTP) com contratos versionados e testes.

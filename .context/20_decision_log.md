@@ -198,6 +198,36 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 
 ---
 
+### DEC-018 — Branch protection sem aprovador obrigatório (solo maintainer)
+
+**Decisão:** manter proteção de branch com PR/checks, porém sem exigência de aprovação de review (`required_approving_review_count=0`).
+
+**Racional:** o projeto está em operação por um único mantenedor; exigir aprovador bloqueia merge sem ganho real de segregação de funções.
+
+**Alternativas rejeitadas:**
+- Manter 1 aprovação obrigatória e usar autoaprovação/manual workaround.
+- Remover totalmente `required_pull_request_reviews`.
+
+**Dono:** maintainer do repositório.
+**Impacto:** merge destravado para fluxo solo, mantendo os gates automáticos obrigatórios de CI/segurança.
+
+---
+
+### DEC-019 — Remover `passWithNoTests` com baseline mínimo real em app/web
+
+**Decisão:** concluir `APP9` e `WEB10` removendo o bypass `--passWithNoTests` e introduzindo suítes reais mínimas para manter gate de teste estritamente bloqueante.
+
+**Racional:** manter bypass em scaffold inicial mascara regressões e reduz confiabilidade de agentes autônomos. O baseline mínimo permite evolução incremental sem travar o fluxo por cobertura inexistente.
+
+**Alternativas rejeitadas:**
+- manter `passWithNoTests` até início das features;
+- remover bypass sem introduzir suíte real (quebraria pipeline imediatamente).
+
+**Dono:** plataforma + owners frontend.
+**Impacto:** testes tornam-se obrigatórios desde já; backlog técnico remanescente é expandir escopo de cobertura em `APP8`/`WEB8`.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

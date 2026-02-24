@@ -42,8 +42,8 @@
 8. PLT-BACKEND-DOCS: ✅ CONCLUÍDO — `steering.md` atualizado + `.context/quality_gates.md` criado + `CODING_STANDARDS.md` criado em `auraxis-api`
 9. **X4** — adoção faseada do Ruff em `auraxis-api` (fase advisory → substituição de flake8/black/isort, manter mypy)
 10. **X3** — preparar fase 0 de desacoplamento Flask/FastAPI (auth/context/error adapters)
-11. **APP9** — baseline de testes no app para remover `--passWithNoTests`
-12. **WEB10** — baseline de testes no web para remover `--passWithNoTests`
+11. APP9: ✅ CONCLUÍDO — baseline de testes no app sem `--passWithNoTests`
+12. WEB10: ✅ CONCLUÍDO — baseline de testes no web sem `--passWithNoTests`
 13. **WEB9** — dockerizar `auraxis-web` (Nuxt) com `Dockerfile` + `.dockerignore` + runbook de execução
 14. **B10** — questionário indicativo de perfil investidor
 15. **B11** — persistir/expor perfil sugerido + taxonomy_version

@@ -2,6 +2,76 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (APP9 + WEB10 concluídos)
+
+### O que foi feito
+
+- `repos/auraxis-app`:
+  - removido `--passWithNoTests` de `package.json` (`test`, `test:coverage`, `test:watch`);
+  - criado baseline de testes reais:
+    - `hooks/use-theme-color.test.ts`
+    - `components/themed-text.test.tsx`
+    - `components/themed-view.test.tsx`
+    - `components/ui/collapsible.test.tsx`
+  - ajustado `jest.config.js` para cobertura baseline dos módulos críticos.
+- `repos/auraxis-web`:
+  - removido `--passWithNoTests` de `package.json` e `vitest.config.ts`;
+  - criado baseline de teste real: `app/app.spec.ts`;
+  - `vitest.config.ts` ajustado para cobertura de `app/app.vue` e ambiente padrão `happy-dom`.
+- Governança/documentação:
+  - `tasks.md` de app/web atualizado (APP9/WEB10 concluídos);
+  - `.context/01_status_atual.md`, `.context/02_backlog_next.md` e `.context/20_decision_log.md` atualizados.
+
+### O que foi validado
+
+- App: `npm run lint`, `npm run typecheck`, `npm run test:coverage`, `npm run quality-check` passaram.
+- Web: `pnpm lint`, `pnpm typecheck`, `pnpm test:coverage`, `pnpm quality-check` passaram.
+- Coverage local no baseline:
+  - app: thresholds globais atendidos (lines/functions/statements >= 80; branches >= 75).
+  - web: `app/app.vue` com 100% no baseline inicial.
+
+### Riscos pendentes
+
+- `auraxis-web` segue com warnings de módulos Nuxt no scaffold (`@nuxt/content`, `nuxt:google-fonts`, `@nuxtjs/og-image`), sem bloqueio atual.
+- Baseline cobre o mínimo necessário; expansão de testes por feature ainda é obrigatória para evitar regressão de qualidade ao crescer o código.
+
+### Próximo passo sugerido
+
+1. Executar `WEB9` (dockerização do Nuxt) para padronizar ambiente de execução local/CI.
+2. Iniciar `APP2` e `WEB2` (cliente HTTP + `/health`) já com os gates de teste estritos ativos.
+
+---
+
+## Atualização rápida — 2026-02-24 (fix Sonar code smell + regra de aprovador)
+
+### O que foi feito
+
+- `repos/auraxis-app/.github/workflows/ci.yml`:
+  - `npm ci` alterado para `npm ci --ignore-scripts` em todos os jobs ativos.
+- Branch protection as code atualizado:
+  - `required_approving_review_count: 0`
+  - `require_last_push_approval: false`
+- Reaplicação em produção via `scripts/apply-branch-protection.sh`.
+
+### O que foi validado
+
+- Sonar code smell mitigado no workflow do app (`npm ci --ignore-scripts`).
+- API GitHub confirma ausência de exigência de aprovador em:
+  - `auraxis-api:master`
+  - `auraxis-app:main`
+  - `auraxis-web:main`
+
+### Riscos pendentes
+
+- Redução de fricção de merge aumenta necessidade de disciplina em checks obrigatórios e commits pequenos.
+
+### Próximo passo sugerido
+
+1. Reexecutar CI do app para confirmar desaparecimento do code smell do Sonar.
+2. Se necessário, aplicar o mesmo padrão `--ignore-scripts` em outros workflows npm fora do app.
+
+---
+
 ## Atualização rápida — 2026-02-24 (Sonar estrito reativado em app/web)
 
 ### O que foi feito
