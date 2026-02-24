@@ -22,6 +22,9 @@ Todo agente deve iniciar por:
 - Seguir política de contratos em `.context/16_contract_compatibility_policy.md`.
 - Seguir framework de discovery em `.context/17_discovery_framework.md`.
 - Rodar ritual de feedback por bloco em `.context/18_feedback_loop.md`.
+- Ao concluir um bloco, reportar no terminal: status, o que foi implementado, tasks concluídas e próxima sugestão.
+- Em erro/bloqueio, notificar gestor e agentes paralelos no terminal e registrar motivo em `tasks_status/<TASK_ID>.md` (local).
+- `tasks_status/` é telemetria local e não deve ser commitado; fonte de verdade continua sendo `tasks.md`/`TASKS.md`.
 
 ## Handoff obrigatório
 Ao finalizar um bloco, registrar:

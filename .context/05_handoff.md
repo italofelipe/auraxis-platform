@@ -2,6 +2,35 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (migração do ai_squad para a platform)
+
+### O que foi feito
+
+- `ai_squad` movido de `repos/auraxis-api/ai_squad` para `auraxis-platform/ai_squad`.
+- Runtime do squad ajustado para:
+  - resolver repo alvo por `AURAXIS_TARGET_REPO`/`AURAXIS_PROJECT_ROOT`;
+  - registrar resumo de execução no terminal;
+  - registrar bloqueios/status em `tasks_status/<TASK_ID>.md`.
+- `scripts/check-health.sh` atualizado para validar `ai_squad` no nível da platform.
+- `.gitignore` da platform atualizado para ignorar `tasks_status/` e artefatos locais de `ai_squad`.
+- Contrato de agentes atualizado com regra explícita de notificação terminal + registro de bloqueios em `tasks_status`.
+
+### O que foi validado
+
+- Execução de `python3 main.py` em `ai_squad` inicia no novo path e resolve repo alvo corretamente.
+- Em ausência de `OPENAI_API_KEY`, o fluxo falha de forma explícita e registra bloqueio em `tasks_status` com notificação de gestor/agentes paralelos.
+- `check-health.sh auraxis-api` reconhece `ai_squad` no root da platform.
+
+### Riscos pendentes
+
+- O pipeline atual do `ai_squad` continua backend-first (ferramentas de migração/schema/testes Flask). Para web/app, precisa de expansão de ferramentas e fluxo dedicado.
+- `tasks_status` é telemetria local e não deve ser usado para reconciliar divergências de backlog (fonte oficial segue `tasks.md`/`TASKS.md`).
+
+### Próximo passo sugerido
+
+1. Criar workflow dedicado de squad para `auraxis-web` e `auraxis-app` com tools específicas de frontend/mobile.
+2. Adicionar templates de status por fase no `tasks_status` para facilitar leitura inter-agentes.
+
 ## Atualização rápida — 2026-02-24 (registro de foundation visual + UI stack)
 
 ### O que foi feito

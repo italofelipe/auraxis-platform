@@ -297,6 +297,26 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 
 ---
 
+### DEC-024 — `ai_squad` promovido para nível de platform + telemetria local `tasks_status`
+
+**Decisão:** mover `ai_squad` de `repos/auraxis-api/ai_squad` para `auraxis-platform/ai_squad`, mantendo execução funcional e adicionando resolução de repo-alvo por ambiente:
+- `AURAXIS_TARGET_REPO` (default: `auraxis-api`);
+- `AURAXIS_PROJECT_ROOT` (override explícito).
+
+Além disso, padronizar telemetria operacional local dos agentes em `auraxis-platform/tasks_status/` para status de execução e bloqueios.
+
+**Racional:** o squad não deve ser acoplado fisicamente a um único repo de produto. No nível de plataforma, o orquestrador fica alinhado ao modelo multi-repo e facilita expansão futura para web/app. O diretório `tasks_status` melhora coordenação entre agentes em paralelo sem competir com a fonte oficial de status (`tasks.md`/`TASKS.md`).
+
+**Alternativas rejeitadas:**
+- manter `ai_squad` dentro de `auraxis-api`;
+- centralizar status operacional dentro de `tasks.md` (aumenta ruído e conflita com rastreio oficial);
+- versionar `tasks_status` no git.
+
+**Dono:** plataforma.
+**Impacto:** scripts/documentação atualizados para novo entrypoint; `tasks_status/` passa a ser artefato local ignorado no git; `TASKS.md/tasks.md` permanece como única fonte de verdade de progresso.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

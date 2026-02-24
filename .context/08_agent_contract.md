@@ -2,7 +2,7 @@
 
 > Contrato de comportamento obrigatório para todos os agentes que operam no ecossistema Auraxis.
 > Vinculante para Claude, GPT, Gemini, CrewAI e qualquer agente futuro.
-> Atualizado: 2026-02-23
+> Atualizado: 2026-02-24
 
 ---
 
@@ -57,6 +57,9 @@ Para trabalho em produto (web, app, api), também ler:
 - Registrar decisões em `20_decision_log.md`
 - Atualizar `tasks.md` do repo com próximos passos
 - Registrar handoff em `05_handoff.md` se a sessão encerra
+- Reportar no terminal: status final, o que foi implementado, tasks concluídas e próxima tarefa sugerida
+- Em erro/bloqueio: notificar gestor e agentes paralelos no terminal, e registrar detalhe técnico em `tasks_status/<TASK_ID>.md` na platform
+- `tasks_status/` é log operacional local (não versionado); o status oficial continua em `tasks.md`/`TASKS.md`
 
 ---
 
