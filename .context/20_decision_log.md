@@ -194,6 +194,8 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 **Dono:** plataforma + owners frontend.
 **Impacto:** CI volta a ser executável imediatamente; retorno ao modo estrito depende de ajustes manuais no GitHub/SonarCloud.
 
+**Atualização (2026-02-24):** após desativação do Automatic Analysis no SonarCloud (app/web), o modo estrito de Sonar em CI foi reativado. O fallback de dependency-review permanece temporariamente.
+
 ---
 
 ## Decisões pendentes

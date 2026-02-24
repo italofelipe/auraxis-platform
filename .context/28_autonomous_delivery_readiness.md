@@ -27,8 +27,8 @@ Decisão:
 
 Estado atual:
 - ✅ `auraxis-api`: scanner CI ativo no workflow
-- ⚠️ `auraxis-app`: scanner CI condicionado por `ENABLE_SONAR_CI` (modo compatibilidade até desligar Automatic Analysis)
-- ⚠️ `auraxis-web`: scanner CI condicionado por `ENABLE_SONAR_CI` (modo compatibilidade até desligar Automatic Analysis)
+- ✅ `auraxis-app`: scanner CI ativo no workflow
+- ✅ `auraxis-web`: scanner CI ativo no workflow
 
 Pendência manual (painel SonarCloud):
 - [ ] Desabilitar Automatic Analysis em:

@@ -2,6 +2,11 @@
 
 Data: 2026-02-24
 
+## Atualização Sonar (2026-02-24 — pós desativação do Automatic Analysis)
+- `auraxis-app` e `auraxis-web` voltaram para scanner Sonar estrito em CI (sem `ENABLE_SONAR_CI`).
+- Conflito `CI analysis while Automatic Analysis is enabled` mitigado após sua ação no SonarCloud e remoção do modo compatível de Sonar nos workflows.
+- `dependency-review` permanece em fallback controlado nos frontend repos até estabilização do suporte/Dependency Graph no GitHub.
+
 ## Atualização CI Compat (2026-02-24 — correção de falhas app/web)
 - `auraxis-app`:
   - `dependency-review.yml` voltou para modo compatível (`continue-on-error` + warning explícito) quando o GitHub retorna "Dependency review is not supported on this repository".

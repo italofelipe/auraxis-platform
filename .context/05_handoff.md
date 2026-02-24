@@ -2,6 +2,32 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (Sonar estrito reativado em app/web)
+
+### O que foi feito
+
+- `repos/auraxis-app/.github/workflows/ci.yml`: removida condição `ENABLE_SONAR_CI` do job `sonarcloud`.
+- `repos/auraxis-web/.github/workflows/ci.yml`: removida condição `ENABLE_SONAR_CI` do job `sonarcloud`.
+- `tasks.md` de app/web atualizado com rastreabilidade da reativação do modo estrito.
+
+### O que foi validado
+
+- YAML parse OK nos dois workflows.
+- Push publicado nas branches:
+  - `auraxis-app`: `3e7f290`
+  - `auraxis-web`: `d51d38f`
+
+### Riscos pendentes
+
+- `dependency-review` ainda em fallback compatível enquanto o GitHub reportar “repository not supported”.
+
+### Próximo passo sugerido
+
+1. Reexecutar pipelines de app/web para confirmar Sonar verde com scanner CI.
+2. Após validar Dependency Graph suportado, remover fallback do dependency-review para voltar ao modo estrito completo.
+
+---
+
 ## Atualização rápida — 2026-02-24 (fix de falhas CI em app/web)
 
 ### O que foi feito
