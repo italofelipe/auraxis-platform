@@ -1,7 +1,7 @@
 # Steering Global — Auraxis Platform
 
 > Governança técnica global. Vinculante para todos os agentes, desenvolvedores e repositórios.
-> Atualizado: 2026-02-23
+> Atualizado: 2026-02-24
 
 ---
 
@@ -27,6 +27,8 @@ Entregar o produto Auraxis com previsibilidade, segurança e qualidade, usando f
 - **Coverage não regride.** Nenhum PR pode baixar o threshold estabelecido.
 - **Zero `any` implícito.** TypeScript strict é obrigatório em todos os projetos TS.
 - **Zero erros de lint.** ESLint com `--max-warnings 0` em todos os repos frontend.
+- **Stack de UI padronizada.** Web usa Chakra UI customizado e app usa React Native Paper (ou ADR substituta); Tailwind é proibido em ambos.
+- **Design system único.** Paleta oficial (`#262121`, `#ffbe4d`, `#413939`, `#0b0909`, `#ffd180`, `#ffab1a`), tipografia (`Playfair Display` + `Raleway`) e grid base de 8px.
 
 ### Segurança — não negociável em nenhum repo
 - **Zero secrets em código.** Nenhum token, API key ou credential hardcoded.

@@ -2,6 +2,36 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (registro de foundation visual + UI stack)
+
+### O que foi feito
+
+- `auraxis-platform`:
+  - arquitetura frontend atualizada com o padrão canônico de paleta, tipografia e grid;
+  - steering global atualizado com regra explícita de stack UI frontend e proibição de Tailwind;
+  - decision log atualizado com decisão formal (`DEC-023`) sobre sistema visual e stack.
+- `repos/auraxis-web`:
+  - documentação técnica atualizada para Chakra UI customizado + grid 8px + paleta oficial;
+  - `tasks.md` atualizado com bloco de implementação/migração para UI kit e TanStack Query.
+- `repos/auraxis-app`:
+  - documentação técnica atualizada para React Native Paper + grid 8px + paleta oficial;
+  - `tasks.md` atualizado com bloco de implementação para baseline de UI kit e TanStack Query.
+
+### O que foi validado
+
+- Edição consistente em `frontend architecture`, `steering`, `coding standards` e `tasks` para os dois frontends.
+- Nenhum ajuste de código/runtime foi feito neste bloco (somente governança e documentação).
+
+### Riscos pendentes
+
+- O padrão está documentado, mas a migração técnica para remover Tailwind no web e consolidar os tokens oficiais ainda depende das tasks novas.
+- TanStack Query no app ainda precisa de validação prática de integração com Expo no primeiro bloco de dados reais.
+
+### Próximo passo sugerido
+
+1. Executar as tasks novas de foundation em `auraxis-web` e `auraxis-app`.
+2. Após cada bloco, rodar `quality-check` e atualizar os snapshots de contexto/handoff.
+
 ## Atualização rápida — 2026-02-24 (web Sonar 0% coverage: LCOV fix)
 
 ### O que foi feito

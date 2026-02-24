@@ -2,6 +2,19 @@
 
 Data: 2026-02-24
 
+## Atualização Frontend Foundation (2026-02-24 — design system + stack UI)
+- Diretriz global registrada para frontend:
+  - paleta oficial: `#262121`, `#ffbe4d`, `#413939`, `#0b0909`, `#ffd180`, `#ffab1a`;
+  - tipografia oficial: `Playfair Display` (headings) + `Raleway` (body);
+  - grid base: `8px`.
+- Stack de UI oficial registrada:
+  - `auraxis-web`: Chakra UI customizado (Tailwind proibido).
+  - `auraxis-app`: React Native Paper como base (ou substituição via ADR).
+- Estado de servidor:
+  - web: padrão obrigatório com TanStack Query (`@tanstack/vue-query`);
+  - app: adoção recomendada com TanStack Query (`@tanstack/react-query`) por bloco de integração.
+- Documentação de contexto/repos atualizada para orientar execução de agentes sem ambiguidade.
+
 ## Atualização Sonar coverage gates (2026-02-24 — app/web)
 - `auraxis-app`:
   - `sonar-project.properties` ajustado com escopo de análise alinhado ao baseline coberto por testes (`lib/api.ts`, `components/themed-*`, `components/ui/collapsible.tsx`, `hooks/use-theme-color.ts`).

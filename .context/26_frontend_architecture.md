@@ -1,6 +1,6 @@
 # Frontend Architecture — Auraxis Platform
 
-Última atualização: 2026-02-23
+Última atualização: 2026-02-24
 
 > Documento canônico de arquitetura, padrões e diretrizes para `auraxis-app` (React Native)
 > e `auraxis-web` (Nuxt 4). Toda decisão de design de código nos frontends deriva deste
@@ -32,9 +32,46 @@ Estes princípios não são negociáveis. Nenhuma tarefa, prazo ou conveniência
 
 **PWA requirements (auraxis-web):**
 - Service worker com estratégia offline-first para rotas críticas
-- `manifest.json` correto (ícones, `display: standalone`, `theme_color`)
+- `manifest.json` correto (ícones, `display: standalone`, `theme_color` alinhado ao token `brand.primary` = `#ffab1a`)
 - Lighthouse PWA score ≥ 90 (gate de CI)
 - Instalável em iOS Safari e Android Chrome
+
+---
+
+## 2.1 Diretrizes visuais e stack UI (canônico)
+
+Estas definições são mandatórias para `auraxis-web` e `auraxis-app`.
+
+### Paleta canônica (brand)
+
+- `#262121`
+- `#ffbe4d`
+- `#413939`
+- `#0b0909`
+- `#ffd180`
+- `#ffab1a`
+
+### Tipografia canônica
+
+- Headings: `Playfair Display`
+- Body/UI text: `Raleway`
+
+### Grid e espaçamento
+
+- Grid base: **8px**
+- Tokens de spacing devem ser múltiplos de 8 (`8, 16, 24, 32, ...`).
+- Ajuste fino de `4px` só é permitido para microajuste visual pontual (não para layout estrutural).
+
+### Bibliotecas de UI por plataforma
+
+- **Web:** componentes baseados em **Chakra UI** (customizados para o tema Auraxis).
+- **Mobile:** base padrão em **React Native Paper**. Troca por outra lib só com ADR registrada.
+- **Tailwind está proibido** em ambas as plataformas (web e mobile).
+
+### Estado de servidor (API)
+
+- **Web:** `@tanstack/vue-query` é o padrão obrigatório para server-state/caching/retries.
+- **Mobile:** `@tanstack/react-query` é recomendado e deve ser adotado quando a integração do bloco exigir cache, retry, invalidação e sincronização de dados remotos.
 
 ---
 
@@ -145,7 +182,7 @@ function parseApiError(value: unknown): string {
 
 // ✅ satisfies para validação sem perda de tipo
 const theme = {
-  colors: { primary: '#6366F1' }
+  colors: { primary: '#ffab1a' }
 } satisfies ThemeConfig
 
 // ✅ Readonly para dados imutáveis
@@ -200,32 +237,35 @@ shared/theme/
 // primitives.ts — valores brutos, não usar em componentes
 export const primitives = {
   color: {
-    indigo500: '#6366F1',
-    indigo600: '#4F46E5',
-    red500:    '#EF4444',
-    gray100:   '#F3F4F6',
-    gray900:   '#111827',
+    brandSurface:  '#262121',
+    brandPrimary:  '#ffab1a',
+    brandHover:    '#ffbe4d',
+    brandHighlight:'#ffd180',
+    brandMuted:    '#413939',
+    brandDeep:     '#0b0909',
   },
   space: {
-    1: 4,
-    2: 8,
-    3: 12,
-    4: 16,
-    6: 24,
-    8: 32,
+    1: 8,
+    2: 16,
+    3: 24,
+    4: 32,
+    5: 40,
+    6: 48,
   },
 } as const
 
 // semantic.ts — tokens de significado, use estes nos componentes
 export const colors = {
   action: {
-    primary:         primitives.color.indigo500,
-    primaryHover:    primitives.color.indigo600,
-    destructive:     primitives.color.red500,
+    primary:      primitives.color.brandPrimary,
+    primaryHover: primitives.color.brandHover,
+    highlight:    primitives.color.brandHighlight,
   },
   surface: {
-    background:      primitives.color.gray100,
-    foreground:      primitives.color.gray900,
+    background:   primitives.color.brandDeep,
+    raised:       primitives.color.brandSurface,
+    foreground:   primitives.color.brandHighlight,
+    border:       primitives.color.brandMuted,
   },
 } as const satisfies SemanticColors
 
@@ -255,11 +295,12 @@ export const typography = {
 
 // spacing.ts
 export const spacing = {
-  xs:   primitives.space[1],   // 4px
-  sm:   primitives.space[2],   // 8px
-  md:   primitives.space[4],   // 16px
-  lg:   primitives.space[6],   // 24px
-  xl:   primitives.space[8],   // 32px
+  xs:   primitives.space[1],   // 8px
+  sm:   primitives.space[2],   // 16px
+  md:   primitives.space[3],   // 24px
+  lg:   primitives.space[4],   // 32px
+  xl:   primitives.space[5],   // 40px
+  xxl:  primitives.space[6],   // 48px
 } as const
 ```
 
@@ -268,7 +309,7 @@ export const spacing = {
 ```typescript
 // ❌ NUNCA — valor hardcoded
 const styles = StyleSheet.create({
-  title: { fontSize: 16, color: '#6366F1', marginTop: 8 }
+  title: { fontSize: 16, color: '#ffab1a', marginTop: 8 }
 })
 
 // ✅ SEMPRE — token semântico

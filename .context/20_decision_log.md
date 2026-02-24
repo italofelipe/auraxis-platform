@@ -275,6 +275,28 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 
 ---
 
+### DEC-023 — Sistema visual unificado + stack de UI oficial no frontend
+
+**Decisão:** padronizar `auraxis-web` e `auraxis-app` com um sistema visual único e stack de UI oficial:
+- paleta oficial: `#262121`, `#ffbe4d`, `#413939`, `#0b0909`, `#ffd180`, `#ffab1a`;
+- tipografia oficial: `Playfair Display` (headings) + `Raleway` (body);
+- grid base: `8px`;
+- web com componentes baseados em **Chakra UI** (customizados);
+- mobile com **React Native Paper** como padrão (substituição apenas via ADR);
+- **Tailwind proibido** nas duas plataformas.
+
+**Racional:** agentes autônomos exigem regras visuais e tecnológicas explícitas para evitar drift de implementação e inconsistência entre app/web. Definir paleta/fonte/grid e biblioteca-base reduz ambiguidade de código gerado e acelera revisão.
+
+**Alternativas rejeitadas:**
+- manter liberdade de escolha de UI kit por tarefa/agente;
+- continuar com utilitários Tailwind no frontend;
+- adiar padronização visual para fase pós-features.
+
+**Dono:** plataforma + owners frontend.
+**Impacto:** `steering.md`, `CODING_STANDARDS.md`, `tasks.md` e arquitetura frontend passam a exigir o padrão unificado; backlog de migração/adoção de UI base e server-state fica explícito.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |
