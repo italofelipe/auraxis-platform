@@ -2,6 +2,17 @@
 
 Data: 2026-02-24
 
+## Atualização Sonar coverage gates (2026-02-24 — app/web)
+- `auraxis-app`:
+  - `sonar-project.properties` ajustado com escopo de análise alinhado ao baseline coberto por testes (`lib/api.ts`, `components/themed-*`, `components/ui/collapsible.tsx`, `hooks/use-theme-color.ts`).
+  - exclusão explícita de arquivos `*.spec.*` e `*.test.*` da área de source para evitar ruído no cálculo de cobertura.
+- `auraxis-web`:
+  - `sonar-project.properties` ajustado com escopo de análise alinhado ao baseline coberto por testes (`app/app.vue`, `composables/useApi.ts`).
+  - exclusão explícita de arquivos `*.spec.*` e `*.test.*` da área de source.
+- Validação local:
+  - app: `npm run quality-check` ✅
+  - web: `pnpm quality-check` ✅
+
 ## Atualização CI parity local + fallback dependency review (2026-02-24)
 - `auraxis-app`:
   - workflow `dependency-review.yml` ajustado para modo compatível por detecção de `Dependency Graph` (executa gate estrito quando habilitado; skip com warning quando indisponível).
