@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AgentLock",
+  "description": "Mutex protocol for concurrent agent coordination in Auraxis Platform. Written to .context/agent_lock.json when an agent session starts. Cleared on session end. Prevents two agents from working on the same repo simultaneously.",
+  "type": "object",
+  "required": ["agent", "repo", "since", "expires_at", "task", "pid"],
+  "properties": {
+    "agent": {
+      "type": "string",
+      "description": "Identifier of the agent holding the lock",
+      "enum": ["claude", "gemini", "gpt", "crewai", "human"]
+    },
+    "repo": {
+      "type": "string",
+      "description": "Repo scope of the lock. Use 'platform' for platform-level work.",
+      "examples": ["auraxis-api", "auraxis-web", "auraxis-app", "platform"]
+    },
+    "since": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the lock was acquired"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the lock expires (default TTL: 4h)"
+    },
+    "task": {
+      "type": "string",
+      "description": "Brief description of the current task (for display/debugging)"
+    },
+    "pid": {
+      "type": ["integer", "string"],
+      "description": "Process ID or session identifier (use 'interactive' for REPL sessions)"
+    },
+    "branch": {
+      "type": "string",
+      "description": "Active git branch (optional, for reference)"
+    }
+  },
+  "additionalProperties": false
+}

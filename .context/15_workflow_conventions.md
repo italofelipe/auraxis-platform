@@ -12,6 +12,11 @@ Formato recomendado:
 - `docs/<escopo-curto>`
 - `test/<escopo-curto>`
 
+Restrições obrigatórias:
+- Não usar prefixo `codex/` em branches.
+- Não usar branches genéricas sem tipo (ex.: `italo-test`).
+- Antes de qualquer `git push`, atualizar a branch de trabalho com a branch alvo (`main`/`master`) e resolver conflitos localmente.
+
 Exemplos:
 - `feat/profile-investor-quiz`
 - `fix/auth-password-reset-token-expiry`
@@ -33,9 +38,11 @@ Padrão: Conventional Commits
 2. Criar branch de trabalho.
 3. Implementar incrementalmente.
 4. Executar testes/checks aplicáveis.
-5. Atualizar documentação de status.
-6. Commits granulares e reversíveis.
-7. Abrir PR com contexto claro.
+5. Fazer `pull` da branch alvo na branch de trabalho (ex.: `git pull --no-rebase origin main`).
+6. Resolver conflitos localmente e revalidar checks.
+7. Atualizar documentação de status.
+8. Commits granulares e reversíveis.
+9. Abrir PR com contexto claro.
 
 ## Política de PR
 Todo PR deve incluir:

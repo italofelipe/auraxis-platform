@@ -13,7 +13,7 @@ Centralizar regras de execução e contexto compartilhado para trabalho humano +
 ```text
 auraxis-platform/
   .context/                 # base de conhecimento e governança
-  repos/                    # auraxis-api, auraxis-web, auraxis-mobile
+  repos/                    # auraxis-api, auraxis-web, auraxis-app
   workflows/                # esteiras e automações
   scripts/                  # utilitários de orquestração
   docs/                     # documentação transversal
@@ -45,7 +45,7 @@ cd /Users/italochagas/Desktop/projetos/auraxis-platform
 
 git submodule add <git-url-backend> repos/auraxis-api
 git submodule add <git-url-web> repos/auraxis-web
-git submodule add <git-url-mobile> repos/auraxis-mobile
+git submodule add <git-url-app> repos/auraxis-app
 
 git submodule update --init --recursive
 ```
@@ -67,7 +67,7 @@ Use apenas se não quiser versionar ponteiros de commit dos repos no `auraxis-pl
 - Handoff registrado.
 
 ## Setup dos novos repositórios (agnóstico de stack)
-Ao criar `repos/auraxis-web` e `repos/auraxis-mobile`, iniciar com:
+Ao criar um novo repo em `repos/` (ex.: `auraxis-web`, `auraxis-app`), iniciar com:
 - `README.md` curto
 - `steering.md` (a partir do template)
 - `tasks.md` (a partir do template)
@@ -92,7 +92,7 @@ Modelos prontos em `.context/templates` para inicializar novos repositórios:
 5. Registrar handoff para continuidade.
 
 ## Próximo passo sugerido
-1. Adicionar os repositórios de produto em `repos/` (preferencialmente com submodule).
-2. Aplicar templates mínimos em cada repo novo.
-3. Configurar CI de cada repo com baseline de qualidade e segurança.
-4. Configurar rotina de revisão de contexto (`.context/19_context_maintenance.md`).
+1. Rodar `./scripts/verify-agent-session.sh`.
+2. Rodar `./scripts/check-health.sh`.
+3. Ler `.context/01_status_atual.md` e seguir a próxima task prioritária.
+4. Trabalhar em branch dedicada e atualizar `tasks.md` + `.context/05_handoff.md` ao fechar bloco.

@@ -1,15 +1,58 @@
 # Próximas Prioridades
 
-## Em aberto imediato
-1. PLT1.1: migrar backend para `repos/auraxis-api` e validar checklist pós-migração (`.context/22_workspace_migration_checklist.md`)
-2. PLT1.2: concluir estratégia operacional de multi-repo (submodules vs pastas locais) com governança/CI basal
-3. X4: iniciar plano de adoção do Ruff (fase advisory -> substituição de flake8/black/isort), mantendo `mypy`
-4. X3: preparar fase 0 de desacoplamento para coexistência Flask/FastAPI (auth/context/error adapters)
-5. B10: questionário indicativo de perfil investidor
-6. B11: persistir/expor perfil sugerido + taxonomy_version
-7. F1..F4: entidades auxiliares e integração em transações
-8. G5: seed de dados local
-9. B7: discovery OTP (bloqueado por provedor/compliance)
+## ✅ SETUP MANUAL — concluído
+
+> Todos os itens abaixo foram realizados pelo usuário. CI, secrets e configurações de repo estão prontos.
+
+### SETUP-1 — SonarCloud ✅
+- [x] Token criado para `auraxis-web` → secret configurado no repo
+- [x] Token criado para `auraxis-app` → secret configurado no repo
+- [x] Token de `auraxis-api` confirmado funcional (setup antigo)
+
+### SETUP-2 — GitHub: auto-merge ✅
+- [x] `auraxis-web` → Allow auto-merge habilitado
+- [x] `auraxis-app` → Allow auto-merge habilitado
+- [x] "Automatically delete head branches" habilitado em ambos
+
+### SETUP-3 — Branch protection: status gate ✅
+- [x] `auraxis-web` → Required status: `ci-passed` no master
+- [x] `auraxis-app` → Required status: `ci-passed` no master
+- [x] "Require branches to be up to date before merging" habilitado
+
+### SETUP-4 — Lighthouse CI ✅
+- [x] GitHub App instalado
+- [x] `LHCI_GITHUB_APP_TOKEN` configurado como secret em `auraxis-web`
+
+### SETUP-5 — IAM trust policy AWS (débito técnico — não bloqueante)
+> Reclassificado: não é crítico para operação dos agentes. Deve ser feito oportunisticamente.
+- [ ] Atualizar subject hints nos roles dev/prod para `auraxis-api` (renomeado antes)
+- Referência: `.context/01_status_atual.md` seção PLT1.1
+
+---
+
+## Em aberto — produto (ordem de prioridade)
+
+1. PLT1.1: ✅ CONCLUÍDO
+2. PLT1.2: ✅ CONCLUÍDO
+3. PLT1.3: ✅ CONCLUÍDO
+4. PLT1.4: ✅ CONCLUÍDO
+5. PLT1.5: ✅ CONCLUÍDO
+6. WEB1: ✅ CONCLUÍDO — Nuxt 4.3.1 + @nuxt/eslint + quality stack
+7. APP2: ✅ CONCLUÍDO — cliente HTTP no app (`lib/api.ts`) com base URL por env, healthcheck `/health` e testes
+8. PLT-BACKEND-DOCS: ✅ CONCLUÍDO — `steering.md` atualizado + `.context/quality_gates.md` criado + `CODING_STANDARDS.md` criado em `auraxis-api`
+9. **X4** — adoção faseada do Ruff em `auraxis-api` (fase advisory → substituição de flake8/black/isort, manter mypy)
+10. **X3** — preparar fase 0 de desacoplamento Flask/FastAPI (auth/context/error adapters)
+11. APP9: ✅ CONCLUÍDO — baseline de testes no app sem `--passWithNoTests`
+12. WEB10: ✅ CONCLUÍDO — baseline de testes no web sem `--passWithNoTests`
+13. WEB2: ✅ CONCLUÍDO — composable `useApi()` + `NUXT_PUBLIC_API_BASE` + teste de healthcheck
+14. WEB9: ✅ CONCLUÍDO — Dockerfile/.dockerignore/docker-compose + runbook + gate de build de imagem no CI
+15. **X4** — adoção faseada do Ruff em `auraxis-api` (fase advisory → substituição de flake8/black/isort, manter mypy)
+16. **X3** — preparar fase 0 de desacoplamento Flask/FastAPI (auth/context/error adapters)
+17. **B10** — questionário indicativo de perfil investidor
+18. **B11** — persistir/expor perfil sugerido + taxonomy_version
+19. F1..F4 — entidades auxiliares e integração em transações
+20. G5 — seed de dados local
+21. B7 — discovery OTP (bloqueado por provedor/compliance)
 
 ## Discovery (ideias)
 - Exportação CSV/XLSX por período

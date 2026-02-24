@@ -10,11 +10,12 @@ Todo agente deve iniciar por:
 - Governança global
 - Contexto compartilhado
 - Templates de bootstrap
-- Orquestração entre repos (`repos/auraxis-api`, `repos/auraxis-web`, `repos/auraxis-mobile`)
+- Orquestração entre repos (`repos/auraxis-api`, `repos/auraxis-web`, `repos/auraxis-app`)
 
 ## Regras de execução
 - Não commitar diretamente em `main/master` dos repos de produto.
 - Usar conventional branching + conventional commits.
+- Não criar nem publicar branches com prefixo `codex/`.
 - Manter commits pequenos e reversíveis.
 - Atualizar contexto (`.context`) após decisões relevantes.
 - Atualizar `tasks.md` no repositório afetado a cada bloco.
