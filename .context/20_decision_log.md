@@ -130,6 +130,23 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 
 ---
 
+## 2026-02-24
+
+### DEC-014 — Branch protection versionado como codigo para app/web
+
+**Decisão:** versionar as regras de branch protection em JSON dentro da platform e aplicar via script de API (`curl + jq`), em vez de manter apenas configuração manual no UI do GitHub.
+
+**Racional:** reduz drift entre repositórios, permite auditoria por commit e acelera bootstrap de novos ambientes/agentes com a mesma política de proteção.
+
+**Alternativas rejeitadas:**
+- Configuração manual via UI: sem rastreabilidade e propensa a drift.
+- Dependência exclusiva de GitHub Rulesets sem automação local: maior acoplamento a permissões/flows do UI.
+
+**Dono:** plataforma (governança global).
+**Impacto:** política de proteção para `auraxis-app` e `auraxis-web` fica reproduzível e reaplicável via `scripts/apply-branch-protection.sh`.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

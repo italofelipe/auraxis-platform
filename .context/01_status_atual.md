@@ -2,6 +2,25 @@
 
 Data: 2026-02-24
 
+## Atualização Governança GitHub (2026-02-24 — branch protection as code)
+- Configuração versionada criada em `governance/github/branch-protection-config.json`.
+- Script de aplicação via API criado em `scripts/apply-branch-protection.sh`.
+- Escopo da regra:
+  - `italofelipe/auraxis-app` (`main` e `master`, se existir)
+  - `italofelipe/auraxis-web` (`main` e `master`, se existir)
+- Checks obrigatórios definidos:
+  - `CI Passed`
+  - `Dependency Review (CVE check)`
+- Proteções habilitadas no payload:
+  - PR obrigatório com 1 aprovação
+  - dismiss stale reviews
+  - require last push approval
+  - required conversation resolution
+  - required linear history
+  - force push e delete desabilitados
+  - enforce admins habilitado
+- Observação operacional: aplicação remota depende de token `GITHUB_ADMIN_TOKEN` no ambiente local.
+
 ## Backend (auraxis-api)
 - Bloco B4/B5/B6 concluído (recuperação de senha por link).
 - Bloco de perfil V1 concluído em produção de código (`B1/B2/B3/B8/B9`).

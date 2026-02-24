@@ -2,6 +2,37 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (branch protection JSON + aplicador API)
+
+### O que foi feito
+
+- Criado arquivo de configuração versionado:
+  - `governance/github/branch-protection-config.json`
+- Criado script de aplicação via GitHub REST API:
+  - `scripts/apply-branch-protection.sh`
+- Criado guia de uso:
+  - `governance/github/README.md`
+
+### O que foi validado
+
+- `DRY_RUN=true ./scripts/apply-branch-protection.sh` executa e gera payloads esperados para:
+  - `auraxis-app`: `main`, `master`
+  - `auraxis-web`: `main`, `master`
+- `git ls-remote --symref origin HEAD` confirma `main` como default branch em app e web.
+
+### Riscos pendentes
+
+- Aplicação efetiva no GitHub não foi executada neste ambiente por ausência de token admin (`GITHUB_ADMIN_TOKEN`).
+
+### Próximo passo sugerido
+
+1. Exportar token admin e executar:
+   - `GITHUB_ADMIN_TOKEN=<token> ./scripts/apply-branch-protection.sh`
+2. Verificar no GitHub (Settings → Branches) se `main` ficou protegido nos dois repos.
+3. Opcional: criar `master` e reaplicar script, caso queira também proteger esse branch legado.
+
+---
+
 ## Atualização rápida — 2026-02-24 (App Sonar automatic analysis conflict)
 
 ### O que foi feito
