@@ -21,3 +21,12 @@ coverage/
 
 # Agent lock (runtime state — never commit)
 .context/agent_lock.json
+
+# Local squad runtime telemetry (not source of truth)
+tasks_status/
+
+# ai_squad local runtime artifacts
+ai_squad/.env
+ai_squad/.venv/
+ai_squad/__pycache__/
+ai_squad/logs/tool_audit.log

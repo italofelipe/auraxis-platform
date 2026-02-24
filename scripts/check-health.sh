@@ -87,6 +87,17 @@ check_platform() {
   if [[ -d "$REPOS_DIR/.git" ]]; then
     warn "Nested git repo detected at repos/.git (remove to avoid submodule conflicts)"
   fi
+
+  if [[ -d "$PLATFORM_ROOT/ai_squad" ]]; then
+    ok "ai_squad/ present at platform root"
+    if [[ -f "$PLATFORM_ROOT/ai_squad/main.py" ]]; then
+      ok "ai_squad/main.py present"
+    else
+      warn "ai_squad/main.py missing"
+    fi
+  else
+    warn "ai_squad/ not found at platform root"
+  fi
 }
 
 # ── Agent lock check ───────────────────────────────────────────────────────────
@@ -207,17 +218,6 @@ check_backend() {
     warn "Missing CLAUDE.md"
   fi
 
-  # ai_squad
-  if [[ -d "$path/ai_squad" ]]; then
-    ok "ai_squad/ present"
-    if [[ -f "$path/ai_squad/main.py" ]]; then
-      ok "ai_squad/main.py present"
-    else
-      warn "ai_squad/main.py missing"
-    fi
-  else
-    warn "ai_squad/ not found"
-  fi
 }
 
 check_web() {

@@ -2,6 +2,21 @@
 
 Data: 2026-02-24
 
+## Atualização AI Squad + Telemetria de bloqueios (2026-02-24)
+- `ai_squad` migrado de `repos/auraxis-api/ai_squad` para `auraxis-platform/ai_squad`.
+- Resolução de repo alvo adicionada via ambiente:
+  - `AURAXIS_TARGET_REPO` (default `auraxis-api`);
+  - `AURAXIS_PROJECT_ROOT` (override explícito).
+- Runtime do squad atualizado para emitir resumo no terminal ao final da run:
+  - status final;
+  - o que foi implementado;
+  - próxima task sugerida;
+  - notificações explícitas para gestor e agentes paralelos quando houver bloqueio.
+- Telemetria local adicionada em `tasks_status/<TASK_ID>.md` (não versionada) para registrar:
+  - progresso operacional;
+  - erros/bloqueios e contexto técnico de falha.
+- Fonte oficial de progresso permanece em `tasks.md`/`TASKS.md` dos repos de produto.
+
 ## Atualização Frontend Foundation (2026-02-24 — design system + stack UI)
 - Diretriz global registrada para frontend:
   - paleta oficial: `#262121`, `#ffbe4d`, `#413939`, `#0b0909`, `#ffd180`, `#ffab1a`;

@@ -1,6 +1,6 @@
 # Repo Map
 
-Última atualização: 2026-02-23
+Última atualização: 2026-02-24
 
 ## Submodules registrados
 
@@ -24,11 +24,13 @@ git submodule update --init --recursive
 
 ```
 auraxis-platform/
+  ai_squad/        # Orquestrador CrewAI compartilhado (repo-alvo por variável)
   repos/
     auraxis-api/   # Backend: regras de negócio, API REST/GraphQL, segurança
     auraxis-app/   # Mobile: React Native + Expo (iOS + Android)
     auraxis-web/   # Web: Nuxt 4 (SPA/SSR)
   .context/        # Governança compartilhada entre todos os repos
+  tasks_status/    # Telemetria local de execução de agentes (não versionada)
   scripts/         # Automação de plataforma
   workflows/       # Protocolos de agentes e entrega
 ```

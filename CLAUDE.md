@@ -85,7 +85,7 @@ Multiple AI agents operate across this platform:
 | Claude  | Governance, review, orchestration, docs   | This file   |
 | Gemini  | Architecture review, alternative analysis | `ai_integration-gemini.md` |
 | GPT     | Feature implementation, code generation   | `ai_integration-gpt.md`    |
-| CrewAI  | Automated PM→Dev→QA pipeline              | `repos/auraxis-api/ai_squad/` |
+| CrewAI  | Automated PM→Dev→QA pipeline              | `ai_squad/` |
 
 **Agent lock:** Before starting any automated work, check `.context/agent_lock.json`.
 If another agent is active, wait or coordinate. Register your session on start, clear on end.

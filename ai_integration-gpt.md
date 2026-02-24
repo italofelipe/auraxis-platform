@@ -107,5 +107,5 @@ Handoffs em `.context/handoffs/` garantem continuidade entre agentes.
 
 ## Contexto do CrewAI
 
-O GPT pode ser configurado como LLM base do `ai_squad/` (CrewAI) no backend.
-Ver `repos/auraxis-api/ai_squad/README.md` para configuração de `OPENAI_API_KEY`.
+O GPT pode ser configurado como LLM base do `ai_squad/` (CrewAI) no workspace.
+Ver `ai_squad/README.md` para configuração de `OPENAI_API_KEY`, `AURAXIS_TARGET_REPO` e briefing de execução.
