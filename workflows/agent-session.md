@@ -164,6 +164,23 @@ Editar `.context/05_handoff.md` com:
 - Próximo passo sugerido (task ID + repo)
 - Branch(es) abertas e commits
 
+### 8.2.1 Sincronizar branch antes do push (obrigatório)
+
+Antes de qualquer push, atualizar a branch atual com a branch alvo do PR:
+
+```bash
+# Exemplo para repos com main
+git pull --no-rebase origin main
+
+# Exemplo para repos com master
+git pull --no-rebase origin master
+```
+
+Se houver conflito:
+- Resolver localmente.
+- Reexecutar quality gates.
+- Só então executar `git push`.
+
 ### 8.3 Liberar lock
 
 ```bash
