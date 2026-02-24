@@ -243,6 +243,22 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 
 ---
 
+### DEC-021 — Coverage mínimo de 85% e normalização de URL sem regex vulnerável
+
+**Decisão:** padronizar o piso mínimo de cobertura em `85%` para `lines/functions/statements/branches` nos projetos frontend (`auraxis-app` e `auraxis-web`) e proibir normalização de base URL com regex potencialmente suscetível a backtracking.
+
+**Racional:** o modelo de execução com agentes autônomos exige gates determinísticos de qualidade e segurança. O alerta do Sonar sobre regex em trim de barras finais aponta risco de ReDoS; a substituição por algoritmo linear elimina esse vetor. O threshold único de 85% reduz ambiguidade entre repos e evita regressão silenciosa de testes em código novo.
+
+**Alternativas rejeitadas:**
+- manter thresholds distintos (80/85) entre app e web;
+- manter regex com exceção/waiver no Sonar;
+- reduzir rigor de branches para acelerar merge.
+
+**Dono:** plataforma + owners frontend.
+**Impacto:** `jest.config.js` e `vitest.config.ts` alinhados para 85% global; testes do cliente API em app/web ampliados; documentação de governança e quality gates atualizada.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

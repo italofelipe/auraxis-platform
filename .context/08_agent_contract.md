@@ -95,7 +95,7 @@ Para trabalho em produto (web, app, api), também ler:
 pnpm quality-check  # = pnpm lint && pnpm typecheck && pnpm test:coverage
 
 # Thresholds:
-# Vitest: lines ≥ 85%, functions ≥ 85%, statements ≥ 85%, branches ≥ 80%
+# Vitest: lines ≥ 85%, functions ≥ 85%, statements ≥ 85%, branches ≥ 85%
 # ESLint: 0 erros (@nuxt/eslint)
 # TypeScript: 0 erros (strict: true)
 ```
@@ -109,7 +109,7 @@ Referência completa: `repos/auraxis-web/.context/quality_gates.md`
 npm run quality-check  # = npm run lint && npm run typecheck && npm run test:coverage
 
 # Thresholds:
-# jest-expo: lines ≥ 80%, functions ≥ 80%, statements ≥ 80%, branches ≥ 75%
+# jest-expo: lines ≥ 85%, functions ≥ 85%, statements ≥ 85%, branches ≥ 85%
 # ESLint: 0 erros (eslint-config-expo, --max-warnings 0)
 # TypeScript: 0 erros (strict: true)
 

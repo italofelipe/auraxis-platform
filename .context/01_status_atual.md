@@ -2,6 +2,20 @@
 
 Data: 2026-02-24
 
+## Atualização Segurança + Coverage 85% (2026-02-24 — Sonar regex/ReDoS)
+- `auraxis-app`:
+  - `lib/api.ts` refatorado para remover regex de trim de barras finais e usar algoritmo linear `removeTrailingSlashes`.
+  - cobertura expandida (`lib/api.test.ts`, `components/themed-text.test.tsx`, `components/ui/collapsible.test.tsx`) e threshold global reforçado em 85% para lines/functions/statements/branches.
+  - validação local: `npm run quality-check` ✅ e `npm run test:coverage` ✅ (All files: statements 98.11, branches 97.36, functions 94.11, lines 100).
+- `auraxis-web`:
+  - `composables/useApi.ts` refatorado para remover regex de trim de barras finais e usar algoritmo linear `removeTrailingSlashes`.
+  - `useApi` ajustado com injeção opcional de dependências para testes determinísticos sem bootstrap Nuxt.
+  - cobertura expandida em `composables/useApi.spec.ts` e thresholds de coverage reforçados para 85% em todas as dimensões.
+  - validação local: `pnpm quality-check` ✅ e `pnpm test:coverage` ✅ (All files: 100/100/100/100).
+- Governança:
+  - documentação global/local atualizada para refletir piso mínimo de 85% em todo código novo.
+  - `tasks.md` de `auraxis-app` e `auraxis-web` atualizados com rastreabilidade do fix de segurança e do gate de cobertura.
+
 ## Atualização Lint Hardening App/Web (2026-02-24 — perfil estrito)
 - `auraxis-app`:
   - perfil ESLint estrito aplicado (`semi`, `quotes`, `complexity`, `max-params`, `max-lines-per-function`, disciplina TypeScript);

@@ -2,6 +2,46 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (fix Sonar regex + enforcement coverage 85%)
+
+### O que foi feito
+
+- `repos/auraxis-app`:
+  - `lib/api.ts`: removido padrão de regex para normalização de URL e aplicado `removeTrailingSlashes` com algoritmo linear.
+  - `jest.config.js`: thresholds de coverage alinhados para 85% em lines/functions/statements/branches.
+  - testes ampliados em `lib/api.test.ts`, `components/themed-text.test.tsx` e `components/ui/collapsible.test.tsx`.
+  - `tasks.md` atualizado com rastreabilidade de segurança + quality gate.
+- `repos/auraxis-web`:
+  - `composables/useApi.ts`: removido padrão de regex para normalização de URL e aplicado `removeTrailingSlashes` com algoritmo linear.
+  - `useApi` ajustado com injeção opcional de dependências para teste determinístico.
+  - `composables/useApi.spec.ts` ampliado para cobrir runtime config + fallback.
+  - `vitest.config.ts` alinhado para coverage mínimo de 85% em todas as dimensões.
+  - `tasks.md` atualizado com rastreabilidade de segurança + quality gate.
+- `auraxis-platform`:
+  - documentação global atualizada (`01_status_atual.md`, `20_decision_log.md`, `24_frontend_quality_gaps.md`) para registrar política de coverage mínimo 85% e decisão de segurança.
+
+### O que foi validado
+
+- App:
+  - `npm run quality-check` ✅
+  - `npm run test:coverage` ✅ (All files: statements 98.11, branches 97.36, functions 94.11, lines 100)
+- Web:
+  - `pnpm quality-check` ✅
+  - `pnpm test:coverage` ✅ (All files: 100/100/100/100)
+- Busca de padrão inseguro:
+  - sem ocorrências de regex `replace(/\/+$/, "")` em `auraxis-app` e `auraxis-web`.
+
+### Riscos pendentes
+
+- Warnings não bloqueantes de módulos Nuxt (`@nuxt/content`, `nuxt:google-fonts`, `@nuxtjs/og-image`) ainda aparecem nos testes/build do web scaffold.
+- `npm` local está com configs legadas (`always-auth`, `email`) gerando warnings em todos os comandos do app; não bloqueia qualidade, mas adiciona ruído operacional.
+
+### Próximo passo sugerido
+
+1. Abrir PRs das branches `chore/app9-test-baseline` e `chore/web10-test-baseline` com este bloco.
+2. Após merge, atualizar ponteiros de submodule no `auraxis-platform` e consolidar em `main`.
+3. Endereçar warnings de scaffold Nuxt para reduzir ruído antes do início dos blocos de feature.
+
 ## Atualização rápida — 2026-02-24 (lint hardening estrito em app/web)
 
 ### O que foi feito

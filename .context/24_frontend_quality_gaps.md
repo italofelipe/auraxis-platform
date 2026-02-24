@@ -18,7 +18,7 @@
 | lint-staged (ESLint fix em staged files) | ✅ configurado | `lint-staged.config.js` |
 | commitlint (Conventional Commits) | ✅ configurado | `.commitlintrc.json` |
 | jest-expo + @testing-library/react-native | ✅ instalado | `package.json#devDependencies` |
-| jest.config.js (coverage ≥ 80%) | ✅ criado | `jest.config.js` |
+| jest.config.js (coverage ≥ 85%) | ✅ criado | `jest.config.js` |
 | jest.setup.ts + mocks | ✅ criado | `jest.setup.ts`, `__mocks__/` |
 | CODING_STANDARDS.md | ✅ criado | `CODING_STANDARDS.md` |
 | SonarCloud config | ✅ criado | `sonar-project.properties` |
@@ -88,7 +88,7 @@
 | Pre-commit hooks | ✅ 7 hooks | ✅ 3 hooks | ✅ 3 hooks |
 | Commit lint | ✅ commitlint | ✅ commitlint | ✅ commitlint |
 | Tests | ✅ Pytest | ✅ Vitest (config) | ✅ Jest (jest-expo) |
-| Coverage threshold | ✅ 85% enforced | ✅ 85% (vitest.config.ts) | ✅ 80% (jest.config.js) |
+| Coverage threshold | ✅ 85% enforced | ✅ 85% (vitest.config.ts) | ✅ 85% (jest.config.js) |
 | CI pipeline | ✅ 11 jobs | ✅ 12 jobs | ✅ 10 jobs |
 | Secret scan | ✅ Gitleaks + detect-private-key | ✅ Gitleaks + TruffleHog | ✅ Gitleaks + TruffleHog |
 | Dep audit | ✅ pip-audit | ✅ pnpm audit + dep-review | ✅ npm audit + dep-review |

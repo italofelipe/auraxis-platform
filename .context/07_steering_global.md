@@ -61,8 +61,8 @@ Ver também `25_quality_security_playbook.md` — referência operacional comple
 | Stack | Quality gates | Arquivo de referência |
 |:------|:-------------|:----------------------|
 | auraxis-web (Nuxt 4 + Vitest) | lint + typecheck + test (≥85%) + build + lighthouse + e2e | `repos/auraxis-web/.context/quality_gates.md` |
-| auraxis-app (RN + jest-expo) | lint + typecheck + test (≥80%) + expo-bundle + secret scan | `repos/auraxis-app/.context/quality_gates.md` |
-| auraxis-api (Python + pytest) | ruff + mypy + pytest (≥80%) | `repos/auraxis-api/.context/quality_gates.md` |
+| auraxis-app (RN + jest-expo) | lint + typecheck + test (≥85%) + expo-bundle + secret scan | `repos/auraxis-app/.context/quality_gates.md` |
+| auraxis-api (Python + pytest) | ruff + mypy + pytest (≥85%) | `repos/auraxis-api/.context/quality_gates.md` |
 
 Detalhe completo: `25_quality_security_playbook.md`
 

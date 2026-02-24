@@ -12,7 +12,7 @@
 2. **Toda lógica nova tem teste** — antes do merge.
 3. **Nenhum secret no código** — Gitleaks + TruffleHog auditam automaticamente.
 4. **CVEs high/critical bloqueiam PRs** — Dependency Review Action.
-5. **Coverage não regride** — web ≥ 85%, app ≥ 80%.
+5. **Coverage não regride** — web ≥ 85%, app ≥ 85%.
 6. **Vitest é para web, jest-expo é para mobile** — não trocar.
 
 ---
@@ -131,7 +131,7 @@ npm run detox:build:android && npm run detox:test:android
 | Vitest — lines | ≥ 85% | CI |
 | Vitest — functions | ≥ 85% | CI |
 | Vitest — statements | ≥ 85% | CI |
-| Vitest — branches | ≥ 80% | CI |
+| Vitest — branches | ≥ 85% | CI |
 | Build Nuxt | Sucesso | CI |
 | Playwright E2E | 0 falhas | CI |
 | Lighthouse — A11y | ≥ 90 | CI |
@@ -147,10 +147,10 @@ npm run detox:build:android && npm run detox:test:android
 | ESLint | 0 erros, 0 warnings | commit (lint-staged) + CI |
 | TypeScript | 0 erros | commit (pre-push) + CI |
 | jest-expo — testes | 100% passando | CI |
-| jest-expo — lines | ≥ 80% | CI |
-| jest-expo — functions | ≥ 80% | CI |
-| jest-expo — statements | ≥ 80% | CI |
-| jest-expo — branches | ≥ 75% | CI |
+| jest-expo — lines | ≥ 85% | CI |
+| jest-expo — functions | ≥ 85% | CI |
+| jest-expo — statements | ≥ 85% | CI |
+| jest-expo — branches | ≥ 85% | CI |
 | JS bundle Android | ≤ 6 MB | CI (PR) |
 | JS bundle iOS | ≤ 6 MB | CI (PR) |
 
@@ -221,7 +221,7 @@ push / PR → master
 │
 ├── lint              (ESLint — 0 erros, --max-warnings 0)
 ├── typecheck         (tsc --noEmit — 0 erros)
-├── test              (jest-expo + coverage ≥ 80%)
+├── test              (jest-expo + coverage ≥ 85%)
 │
 ├── expo-bundle       (export android — valida que bundle JS compila)
 │   └── bundle-analysis   (comenta tamanho no PR; hard limit 6 MB)
