@@ -1,6 +1,6 @@
 # Status Atual (snapshot)
 
-Data: 2026-02-23
+Data: 2026-02-24
 
 ## Backend (auraxis-api)
 - Bloco B4/B5/B6 concluído (recuperação de senha por link).
@@ -12,6 +12,13 @@ Data: 2026-02-23
 - Testes REST/GraphQL/paridade OpenAPI atualizados.
 - `TASKS.md` sincronizado na rodada atual com prioridades `PLT1 -> X4 -> X3`.
 - Handoff pre-migração do backend publicado em `.context/handoffs/2026-02-22_pre-migracao-auraxis-platform.md`.
+
+## Atualização CI/Governança (2026-02-24)
+- Política global/documentada: branches devem seguir conventional branching e não usar prefixo `codex/`.
+- `auraxis-web`: CI corrigido para usar `pnpm@10.30.1` também no `pnpm/action-setup` (sem conflito com `packageManager`).
+- `auraxis-app`: CI endurecido para:
+  - não falhar quando o bot não puder comentar em PR (`403 Resource not accessible by integration`);
+  - manter gate de audit para runtime com exceção temporária e explícita do advisory `GHSA-3ppc-4f35-3m26` da cadeia Expo.
 
 ## Commits recentes (auraxis-api)
 - 3e8da64 fix(ci): harden local Sonar and pip-audit hooks for auraxis-api

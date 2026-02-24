@@ -21,6 +21,7 @@ Permitir que qualquer agente retome contexto sem depender do histórico de chat.
 ## Regras
 - Não commitar em master.
 - Conventional commits + conventional branching.
+- Não usar prefixo `codex/` em branches.
 - Commits pequenos e reversíveis.
 - Atualizar tasks.md e .context a cada bloco concluído.
 - Registrar handoff após cada bloco concluído.

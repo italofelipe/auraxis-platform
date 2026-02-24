@@ -16,6 +16,7 @@ Entregar o produto Auraxis com previsibilidade, segurança e qualidade, usando f
 ### Entrega
 - Não commitar diretamente em `master`/`main`.
 - Branches e commits seguem `conventional branching` e `conventional commits`.
+- Prefixo `codex/` é proibido em qualquer branch local/remota publicada.
 - Commits pequenos, reversíveis e com escopo claro.
 - Toda mudança relevante deve atualizar documentação de contexto.
 - Toda feature com impacto de contrato deve ter teste de regressão.

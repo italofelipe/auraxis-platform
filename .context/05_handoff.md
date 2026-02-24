@@ -2,6 +2,39 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (branch policy + CI web/app)
+
+### O que foi feito
+
+- Governança atualizada para reforçar política de branching:
+  - `AGENTS.md`
+  - `.context/07_steering_global.md`
+  - `.context/15_workflow_conventions.md`
+  - `.context/04_agent_playbook.md`
+- Regra documentada: branches devem seguir conventional branching e **não** usar prefixo `codex/`.
+- `repos/auraxis-web/.github/workflows/ci.yml`: `PNPM_VERSION` alinhado para `10.30.1` (mesma versão de `packageManager`) para eliminar erro de múltiplas versões.
+- `repos/auraxis-app/.github/workflows/ci.yml`:
+  - comentário de bundle-size via `github-script` com tratamento de erro 403 (não quebra job quando token não pode comentar);
+  - `permissions` explícitas (`issues: write`, `pull-requests: write`);
+  - gate de audit ajustado para runtime (`--omit=dev`) com allowlist temporária do advisory `GHSA-3ppc-4f35-3m26` (cadeia Expo), mantendo bloqueio para qualquer outro high/critical.
+- `tasks.md` sincronizado em `auraxis-web` e `auraxis-app`.
+
+### O que foi validado
+
+- Diagnóstico reproduzido para `npm audit` no app: vulnerabilidades high concentradas na cadeia `minimatch` via Expo/React Native.
+- Revisão dos workflows confirma eliminação do conflito de versão pnpm no web.
+
+### Riscos pendentes
+
+- Allowlist do advisory do Expo é técnica e temporária; requer revisão quando Expo publicar cadeia sem `minimatch < 10.2.1`.
+
+### Próximo passo sugerido
+
+1. Reexecutar CI de `auraxis-web` e `auraxis-app` na branch atual para confirmar pipeline verde.
+2. Planejar atualização coordenada da stack Expo/React Native para remover a exceção de audit.
+
+---
+
 ## Atualização rápida — 2026-02-23 (sonar-local-check auraxis-api)
 
 ### O que foi feito

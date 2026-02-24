@@ -15,6 +15,7 @@ Todo agente deve iniciar por:
 ## Regras de execução
 - Não commitar diretamente em `main/master` dos repos de produto.
 - Usar conventional branching + conventional commits.
+- Não criar nem publicar branches com prefixo `codex/`.
 - Manter commits pequenos e reversíveis.
 - Atualizar contexto (`.context`) após decisões relevantes.
 - Atualizar `tasks.md` no repositório afetado a cada bloco.

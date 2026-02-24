@@ -12,6 +12,10 @@ Formato recomendado:
 - `docs/<escopo-curto>`
 - `test/<escopo-curto>`
 
+Restrições obrigatórias:
+- Não usar prefixo `codex/` em branches.
+- Não usar branches genéricas sem tipo (ex.: `italo-test`).
+
 Exemplos:
 - `feat/profile-investor-quiz`
 - `fix/auth-password-reset-token-expiry`
