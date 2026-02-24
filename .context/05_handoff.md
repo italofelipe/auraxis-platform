@@ -2,6 +2,40 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (CI failures web/app — round 3)
+
+### O que foi feito
+
+- `auraxis-web`:
+  - Sonar atualizado para `sonarqube-scan-action@v6` com SHA fixo (`fd88b7d7ccbaefd23d8f36f73b59db7a3d246602`);
+  - `sonar.organization` corrigido para `sensoriumit`;
+  - jobs `lighthouse` e `e2e` protegidos por flags de variável de repositório:
+    - `ENABLE_LIGHTHOUSE_CI=true`
+    - `ENABLE_WEB_E2E=true`
+  - ajuste de comandos locais em `playwright.config.ts` e `.lighthouserc.yml` para `NITRO_HOST/NITRO_PORT`.
+- `auraxis-app`:
+  - Sonar atualizado para `sonarqube-scan-action@v6` com SHA fixo;
+  - `sonar.organization` corrigido para `sensoriumit`.
+
+### O que foi validado
+
+- YAML dos workflows parseando corretamente após mudanças.
+- `sonar-project.properties` de app/web com organização `sensoriumit`.
+- Branches publicadas em padrão convencional:
+  - `fix/ci-web-app-pipeline-hardening` (web/app/platform)
+
+### Riscos pendentes
+
+- E2E/Lighthouse no web dependem de habilitação explícita das variáveis de repositório.
+- Runtime SSR do scaffold web ainda instável no modo `preview`/prerender; tratado por desativação controlada de jobs até estabilização.
+
+### Próximo passo sugerido
+
+1. Reexecutar CI nas PRs dos branches `fix/ci-web-app-pipeline-hardening`.
+2. Habilitar `ENABLE_LIGHTHOUSE_CI` e `ENABLE_WEB_E2E` somente após estabilizar runtime SSR do web.
+
+---
+
 ## Atualização rápida — 2026-02-24 (CI app/web hardening round 2)
 
 ### O que foi feito

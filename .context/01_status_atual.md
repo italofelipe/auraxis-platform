@@ -31,6 +31,13 @@ Data: 2026-02-24
   - audit do CI ajustado para fail em high/critical não allowlistados (allowlist temporária só para `GHSA-3ppc-4f35-3m26`);
   - Sonar migrado para `sonarqube-scan-action@v5` e `sonar.sources=.`.
 
+## Atualização CI hardening (2026-02-24 — rodada 3)
+- `auraxis-app` e `auraxis-web`:
+  - Sonar atualizado para `sonarqube-scan-action@v6` com SHA pinado.
+  - `sonar.organization` corrigido para `sensoriumit`.
+- `auraxis-web`:
+  - jobs `lighthouse` e `e2e` condicionados por variáveis de repositório (`ENABLE_LIGHTHOUSE_CI`, `ENABLE_WEB_E2E`) para evitar quebra em scaffold ainda instável no runtime SSR.
+
 ## Commits recentes (auraxis-api)
 - 3e8da64 fix(ci): harden local Sonar and pip-audit hooks for auraxis-api
 - d6f03fe fix(aws): update OIDC subject hints to auraxis-api repo name
