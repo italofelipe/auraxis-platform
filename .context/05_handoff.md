@@ -2,6 +2,30 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (App Sonar automatic analysis conflict)
+
+### O que foi feito
+
+- `repos/auraxis-app/.github/workflows/ci.yml`:
+  - job `sonarcloud` condicionado por variável de repositório `ENABLE_SONAR_CI == 'true'`.
+- `repos/auraxis-app/tasks.md` atualizado com rastreabilidade.
+
+### O que foi validado
+
+- YAML de CI do app parseando corretamente.
+- Branch `fix/ci-web-app-pipeline-hardening` com commit de correção publicado.
+
+### Riscos pendentes
+
+- Se `ENABLE_SONAR_CI=true` e Automatic Analysis continuar ligado no SonarCloud, o conflito reaparece.
+
+### Próximo passo sugerido
+
+1. Manter `ENABLE_SONAR_CI` desativado enquanto Automatic Analysis estiver ativo no projeto app.
+2. Se quiser scanner CI, desativar Automatic Analysis no SonarCloud do app e só então ativar `ENABLE_SONAR_CI=true`.
+
+---
+
 ## Atualização rápida — 2026-02-24 (Sonar workflow permissions finding)
 
 ### O que foi feito
