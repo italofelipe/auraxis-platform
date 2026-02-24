@@ -2,6 +2,32 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (remoção do check `CI Passed`)
+
+### O que foi feito
+
+- Removido job agregador `ci-passed` dos workflows de CI em:
+  - `repos/auraxis-web/.github/workflows/ci.yml`
+  - `repos/auraxis-app/.github/workflows/ci.yml`
+- Comentários de `auto-merge.yml` de app/web atualizados para refletir checks reais obrigatórios.
+- Política de branch protection as code (`governance/github/branch-protection-config.json`) atualizada para exigir checks reais por repo (api/app/web), sem `CI Passed`.
+- Documentação de pipeline/contexto atualizada para remover referência ao gate sintético.
+
+### O que foi validado
+
+- Busca global por `CI Passed`/`ci-passed` não encontrou referências ativas em workflows ou governança (apenas histórico em `tasks.md`).
+- `auraxis-api` confirmado sem job `ci-passed` no CI atual.
+
+### Riscos pendentes
+
+- As proteções remotas no GitHub só mudam após reaplicar `scripts/apply-branch-protection.sh` com token admin.
+- Até essa reaplicação, o check legado pode continuar pendente nas regras atualmente ativas.
+
+### Próximo passo sugerido
+
+1. Executar `./scripts/apply-branch-protection.sh` com `GITHUB_ADMIN_TOKEN` para propagar a nova política.
+2. Validar em um PR por repo se os checks obrigatórios esperados estão corretos no branch protection.
+
 ## Atualização rápida — 2026-02-24 (migração do ai_squad para a platform)
 
 ### O que foi feito
