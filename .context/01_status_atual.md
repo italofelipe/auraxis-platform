@@ -2,6 +2,22 @@
 
 Data: 2026-02-24
 
+## Atualização Governança GitHub (2026-02-24 — branch protection aplicado)
+- Branch protection aplicado via API com `scripts/apply-branch-protection.sh`:
+  - `italofelipe/auraxis-app:main` ✅
+  - `italofelipe/auraxis-web:main` ✅
+- Branches legados `master` não existem nos dois repositórios (skip esperado):
+  - `italofelipe/auraxis-app:master` ⏭️
+  - `italofelipe/auraxis-web:master` ⏭️
+- Verificação pós-aplicação via GitHub API:
+  - required checks: `CI Passed` + `Dependency Review (CVE check)`
+  - `strict` checks habilitado
+  - `enforce_admins` habilitado
+  - PR reviews: 1 aprovação, stale dismiss, last-push-approval
+  - `required_conversation_resolution` habilitado
+  - `required_linear_history` habilitado
+  - `allow_force_pushes=false`, `allow_deletions=false`
+
 ## Atualização Governança GitHub (2026-02-24 — branch protection as code)
 - Configuração versionada criada em `governance/github/branch-protection-config.json`.
 - Script de aplicação via API criado em `scripts/apply-branch-protection.sh`.

@@ -2,6 +2,38 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (branch protection aplicado em produção)
+
+### O que foi feito
+
+- Executado `scripts/apply-branch-protection.sh` com token admin.
+- Proteções aplicadas em:
+  - `italofelipe/auraxis-app:main`
+  - `italofelipe/auraxis-web:main`
+- Configuração JSON alinhada com retorno real da API (`allow_fork_syncing=false`).
+
+### O que foi validado
+
+- Consulta da API em `/branches/main/protection` para app e web confirma:
+  - required checks: `CI Passed` e `Dependency Review (CVE check)`
+  - strict up-to-date habilitado
+  - 1 aprovação obrigatória + dismiss stale + last push approval
+  - conversation resolution e linear history habilitados
+  - force push e delete desabilitados
+- `master` ausente em app/web (skip esperado pelo script).
+
+### Riscos pendentes
+
+- Nenhum risco técnico bloqueante identificado para branch protection em `main`.
+- Se futuramente `master` for criado, será necessário reaplicar o script para proteger esse branch.
+
+### Próximo passo sugerido
+
+1. Abrir PR desta branch para `main` no `auraxis-platform` e mergear para manter governança versionada no trunk.
+2. (Opcional) converter também para GitHub Rulesets centralizados se quiser enforcement adicional em nível de organização.
+
+---
+
 ## Atualização rápida — 2026-02-24 (branch protection JSON + aplicador API)
 
 ### O que foi feito

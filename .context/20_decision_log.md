@@ -145,6 +145,8 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 **Dono:** plataforma (governança global).
 **Impacto:** política de proteção para `auraxis-app` e `auraxis-web` fica reproduzível e reaplicável via `scripts/apply-branch-protection.sh`.
 
+**Execução (2026-02-24):** aplicado em produção para `italofelipe/auraxis-app:main` e `italofelipe/auraxis-web:main`; `master` inexistente em ambos.
+
 ---
 
 ## Decisões pendentes

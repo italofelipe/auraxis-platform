@@ -28,6 +28,6 @@
     "allow_deletions": false,
     "block_creations": false,
     "lock_branch": false,
-    "allow_fork_syncing": true
+    "allow_fork_syncing": false
   }
 }
