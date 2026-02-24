@@ -3,6 +3,11 @@
   "owner": "italofelipe",
   "repositories": [
     {
+      "name": "auraxis-api",
+      "branches": ["main", "master"],
+      "required_checks": ["CI Passed", "Dependency Review (PR gate)"]
+    },
+    {
       "name": "auraxis-app",
       "branches": ["main", "master"],
       "required_checks": ["CI Passed", "Dependency Review (CVE check)"]

@@ -35,6 +35,7 @@ Este índice organiza a leitura mínima para qualquer pessoa ou agente retomar o
 | `25_quality_security_playbook.md` | **Ao trabalhar em qualquer repo frontend** — manual completo de quality + security |
 | `26_frontend_architecture.md` | **Antes de qualquer trabalho em auraxis-app ou auraxis-web** — arquitetura, tokens, feature-based, zero `any`, PWA |
 | `27_agentic_maturity_remediation_plan.md` | Ao acompanhar as correções de maturidade operacional para autonomia de agentes |
+| `28_autonomous_delivery_readiness.md` | Antes de iniciar novos blocos de feature com agentes autônomos (baseline de prontidão) |
 | `17_discovery_framework.md` | Ao avaliar novas features/ideias |
 | `18_feedback_loop.md` | Ao encerrar um ciclo de trabalho |
 | `19_context_maintenance.md` | Ao atualizar arquivos de `.context/` |

@@ -36,5 +36,6 @@ DRY_RUN=true ./scripts/apply-branch-protection.sh
 
 ### Escopo atual
 
+- `italofelipe/auraxis-api` em `main` e `master` (se existir)
 - `italofelipe/auraxis-app` em `main` e `master` (se existir)
 - `italofelipe/auraxis-web` em `main` e `master` (se existir)

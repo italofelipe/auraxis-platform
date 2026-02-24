@@ -42,11 +42,14 @@
 8. PLT-BACKEND-DOCS: ✅ CONCLUÍDO — `steering.md` atualizado + `.context/quality_gates.md` criado + `CODING_STANDARDS.md` criado em `auraxis-api`
 9. **X4** — adoção faseada do Ruff em `auraxis-api` (fase advisory → substituição de flake8/black/isort, manter mypy)
 10. **X3** — preparar fase 0 de desacoplamento Flask/FastAPI (auth/context/error adapters)
-11. **B10** — questionário indicativo de perfil investidor
-12. **B11** — persistir/expor perfil sugerido + taxonomy_version
-13. F1..F4 — entidades auxiliares e integração em transações
-14. G5 — seed de dados local
-15. B7 — discovery OTP (bloqueado por provedor/compliance)
+11. **APP9** — baseline de testes no app para remover `--passWithNoTests`
+12. **WEB10** — baseline de testes no web para remover `--passWithNoTests`
+13. **WEB9** — dockerizar `auraxis-web` (Nuxt) com `Dockerfile` + `.dockerignore` + runbook de execução
+14. **B10** — questionário indicativo de perfil investidor
+15. **B11** — persistir/expor perfil sugerido + taxonomy_version
+16. F1..F4 — entidades auxiliares e integração em transações
+17. G5 — seed de dados local
+18. B7 — discovery OTP (bloqueado por provedor/compliance)
 
 ## Discovery (ideias)
 - Exportação CSV/XLSX por período

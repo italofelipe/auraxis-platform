@@ -2,6 +2,29 @@
 
 Data: 2026-02-24
 
+## Atualização Foundation Hardening (2026-02-24 — API + App + Web)
+- Objetivo aplicado: preparar os 3 repos para execução autônoma antes de novo bloco de features.
+- `auraxis-api`:
+  - branch de trabalho migrada para padrão convencional (`fix/agentic-foundation-hardening`);
+  - CI endurecido com job final `CI Passed` para branch protection;
+  - Sonar fixado em modo CI scanner (actions pinadas por SHA, sem dependência de vars de projeto/organização);
+  - secret preferencial padronizado para `SONAR_AURAXIS_API_TOKEN` (fallback para `SONAR_TOKEN`);
+  - correção de CVEs bloqueantes de pre-push: `Flask==3.1.3`, `Werkzeug==3.1.6`.
+- `auraxis-app`:
+  - Sonar CI scanner sempre ativo (remoção do gate por `ENABLE_SONAR_CI`);
+  - dependency review tornado bloqueante (remoção de fallback permissivo);
+  - correção de warning de Jest (`setupFilesAfterFramework` -> `setupFilesAfterEnv`);
+  - backlog técnico adicionado: baseline de testes para remover `--passWithNoTests` (`APP9`).
+- `auraxis-web`:
+  - dependency review tornado bloqueante (remoção de fallback permissivo);
+  - higiene aplicada: remoção de artefato local `.nuxtrc 2`;
+  - `.gitignore` endurecido para variantes `.nuxtrc*`;
+  - backlog adicionado: dockerização Nuxt (`WEB9`) e baseline de testes para remover `--passWithNoTests` (`WEB10`).
+- Governança global:
+  - branch protection as code estendido para `auraxis-api` em `master`;
+  - aplicação validada por API para `auraxis-api:master`, `auraxis-app:main`, `auraxis-web:main`;
+  - novo snapshot de prontidão adicionado em `.context/28_autonomous_delivery_readiness.md`.
+
 ## Atualização Governança GitHub (2026-02-24 — branch protection aplicado)
 - Branch protection aplicado via API com `scripts/apply-branch-protection.sh`:
   - `italofelipe/auraxis-app:main` ✅

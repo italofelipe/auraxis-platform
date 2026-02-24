@@ -132,7 +132,7 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 
 ## 2026-02-24
 
-### DEC-014 — Branch protection versionado como codigo para app/web
+### DEC-014 — Branch protection versionado como codigo para api/app/web
 
 **Decisão:** versionar as regras de branch protection em JSON dentro da platform e aplicar via script de API (`curl + jq`), em vez de manter apenas configuração manual no UI do GitHub.
 
@@ -143,9 +143,39 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 - Dependência exclusiva de GitHub Rulesets sem automação local: maior acoplamento a permissões/flows do UI.
 
 **Dono:** plataforma (governança global).
-**Impacto:** política de proteção para `auraxis-app` e `auraxis-web` fica reproduzível e reaplicável via `scripts/apply-branch-protection.sh`.
+**Impacto:** política de proteção para `auraxis-api`, `auraxis-app` e `auraxis-web` fica reproduzível e reaplicável via `scripts/apply-branch-protection.sh`.
 
-**Execução (2026-02-24):** aplicado em produção para `italofelipe/auraxis-app:main` e `italofelipe/auraxis-web:main`; `master` inexistente em ambos.
+**Execução (2026-02-24):** aplicado em produção para `italofelipe/auraxis-api:master`, `italofelipe/auraxis-app:main` e `italofelipe/auraxis-web:main`.
+
+---
+
+### DEC-015 — SonarCloud padronizado em CI scanner-only
+
+**Decisão:** os 3 repositórios de produto devem operar SonarCloud exclusivamente por scanner em CI, com Automatic Analysis desabilitado no painel.
+
+**Racional:** elimina conflito entre modos de análise, torna o gate determinístico por PR/pipeline e preserva rastreabilidade por commit/workflow.
+
+**Alternativas rejeitadas:**
+- Manter modo híbrido (automatic + CI): gera falhas intermitentes e ambiguidade de fonte de verdade.
+- Usar apenas Automatic Analysis: reduz controle fino de parâmetros, coverage e sequência de gates no CI.
+
+**Dono:** plataforma + owners de repo.
+**Impacto:** workflows de app/web/api tornam-se a única via oficial de análise Sonar.
+
+---
+
+### DEC-016 — Dependency review estritamente bloqueante em frontend
+
+**Decisão:** remover fallback permissivo dos workflows `dependency-review.yml` de `auraxis-app` e `auraxis-web`.
+
+**Racional:** com branch protection exigindo `Dependency Review`, o fallback transformava um check obrigatório em sinal advisory, reduzindo efetividade do gate de supply-chain.
+
+**Alternativas rejeitadas:**
+- Manter fallback até novo ciclo: mantém lacuna de enforcement em PRs.
+- Bloquear apenas por `npm/pnpm audit`: cobre runtime local, mas não substitui o gate de introdução de novas dependências vulneráveis no PR.
+
+**Dono:** plataforma + frontend repos.
+**Impacto:** o check de dependency-review passa a bloquear merge de forma consistente.
 
 ---
 

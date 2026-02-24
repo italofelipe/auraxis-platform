@@ -2,6 +2,58 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (foundation hardening para execução autônoma)
+
+### O que foi feito
+
+- `auraxis-api`:
+  - branch migrada para `fix/agentic-foundation-hardening` (sem prefixo `codex/`);
+  - `.github/workflows/ci.yml` endurecido: Sonar em CI scanner-only, actions Sonar pinadas por SHA, token preferencial `SONAR_AURAXIS_API_TOKEN`, novo job final `CI Passed`;
+  - `requirements.txt` atualizado para corrigir CVEs bloqueantes (`Flask==3.1.3`, `Werkzeug==3.1.6`);
+  - `TASKS.md` e `steering.md` atualizados.
+- `auraxis-app`:
+  - `.github/workflows/ci.yml`: Sonar scanner sempre ativo;
+  - `.github/workflows/dependency-review.yml`: sem fallback permissivo (modo bloqueante);
+  - `jest.config.js`: `setupFilesAfterEnv` corrigido;
+  - `tasks.md`/`steering.md` atualizados (incluindo `APP9`).
+- `auraxis-web`:
+  - `.github/workflows/dependency-review.yml`: sem fallback permissivo (modo bloqueante);
+  - faxina de artefato local (`.nuxtrc 2`) e hardening de `.gitignore` (`.nuxtrc*`);
+  - `tasks.md`/`steering.md` atualizados (incluindo `WEB9` e `WEB10`).
+- `auraxis-platform`:
+  - branch protection as code ampliado para incluir `auraxis-api`;
+  - backlog global atualizado com `APP9`, `WEB10` e `WEB9`;
+  - novo documento de prontidão criado: `.context/28_autonomous_delivery_readiness.md`.
+
+### O que foi validado
+
+- YAML parse OK:
+  - `repos/auraxis-api/.github/workflows/ci.yml`
+  - `repos/auraxis-app/.github/workflows/ci.yml`
+  - `repos/auraxis-app/.github/workflows/dependency-review.yml`
+  - `repos/auraxis-web/.github/workflows/dependency-review.yml`
+- JSON parse OK:
+  - `governance/github/branch-protection-config.json`
+- Branch protection validado por API:
+  - `auraxis-api:master` com checks `CI Passed` + `Dependency Review (PR gate)`
+  - `auraxis-app:main` com checks `CI Passed` + `Dependency Review (CVE check)`
+  - `auraxis-web:main` com checks `CI Passed` + `Dependency Review (CVE check)`
+- `scripts/check-health.sh` executado com repos limpos nos submodules.
+
+### Riscos pendentes
+
+- Automatic Analysis ainda precisa estar desabilitado no painel SonarCloud dos 3 projetos para evitar conflito estrutural com CI scanner.
+- `APP9` e `WEB10` ainda pendentes: os scripts de teste seguem com `--passWithNoTests`.
+- Warnings não-bloqueantes do scaffold frontend (`nuxt/content`, `nuxt:google-fonts`, `og-image`) ainda presentes.
+
+### Próximo passo sugerido
+
+1. Desabilitar Automatic Analysis no SonarCloud (api/app/web) e reexecutar pipelines no `main/master`.
+2. Executar `APP9` e `WEB10` para tornar testes estritamente bloqueantes.
+3. Executar `WEB9` (dockerização Nuxt) e só então iniciar `APP2`/`WEB2`.
+
+---
+
 ## Atualização rápida — 2026-02-24 (branch protection aplicado em produção)
 
 ### O que foi feito
