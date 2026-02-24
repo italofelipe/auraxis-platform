@@ -2,6 +2,31 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (web Sonar 0% coverage: LCOV fix)
+
+### O que foi feito
+
+- `repos/auraxis-web`:
+  - `package.json` (`test:coverage`) ajustado para forçar reporters via CLI, incluindo `--coverage.reporter=lcovonly`.
+  - `ci.yml` do job `sonarcloud` com validação explícita `test -f coverage/lcov.info` antes do scan.
+  - `vitest.config.ts` mantido alinhado com reporter de cobertura esperado.
+  - `tasks.md` atualizado com rastreabilidade do fix.
+
+### O que foi validado
+
+- `pnpm test:coverage` gera `coverage/lcov.info` de forma determinística ✅
+- `pnpm quality-check` segue passando ✅
+- Push publicado no web: `cd65eca`
+
+### Riscos pendentes
+
+- Security hotspots continuam exigindo triagem no SonarCloud quando fizerem parte das condições do Quality Gate da organização.
+
+### Próximo passo sugerido
+
+1. Reexecutar o pipeline de `auraxis-web` para confirmar que o Sonar deixa de reportar cobertura 0%.
+2. Se o gate ainda falhar por hotspots, revisar/aprovar hotspots no SonarCloud para o projeto `italofelipe_auraxis-web`.
+
 ## Atualização rápida — 2026-02-24 (fix Sonar coverage gates app/web)
 
 ### O que foi feito
