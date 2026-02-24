@@ -2,6 +2,21 @@
 
 Data: 2026-02-24
 
+## Atualização Lint Hardening App/Web (2026-02-24 — perfil estrito)
+- `auraxis-app`:
+  - perfil ESLint estrito aplicado (`semi`, `quotes`, `complexity`, `max-params`, `max-lines-per-function`, disciplina TypeScript);
+  - `lint` endurecido com `--max-warnings 0`;
+  - `.prettierrc.json` adicionado e documentação de estilo atualizada em `CODING_STANDARDS.md`.
+- `auraxis-web`:
+  - perfil ESLint estrito aplicado com o mesmo baseline de regras;
+  - `lint` endurecido com `--max-warnings 0`;
+  - `lint-staged` endurecido com `--max-warnings 0` no `package.json`;
+  - `.prettierrc.json` adicionado e `lint-staged.config.js` legado removido;
+  - documentação de estilo atualizada em `CODING_STANDARDS.md`.
+- Validação local:
+  - app: `npm run quality-check` ✅
+  - web: `pnpm quality-check` ✅
+
 ## Atualização APP9 + WEB10 (2026-02-24 — baseline de testes sem bypass)
 - `auraxis-app`:
   - scripts `test`, `test:coverage` e `test:watch` sem `--passWithNoTests`;

@@ -228,6 +228,21 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 
 ---
 
+### DEC-020 — Perfil ESLint estrito e consistente em app/web
+
+**Decisão:** padronizar `auraxis-app` e `auraxis-web` com perfil ESLint estrito (estilo + complexidade + disciplina TypeScript), mantendo abordagem mista OO/funcional.
+
+**Racional:** agentes/autoria híbrida aumentam risco de variação de estilo e complexidade acidental. Regras estritas com `--max-warnings 0` reduzem drift e melhoram previsibilidade em revisão e manutenção.
+
+**Alternativas rejeitadas:**
+- manter apenas regras padrão de Expo/Nuxt;
+- impor OO puro em toda a base (incompatível com padrões idiomáticos de UI React/Vue).
+
+**Dono:** plataforma + owners frontend.
+**Impacto:** padronização obrigatória de estilo e limites de complexidade; camadas de domínio/aplicação seguem orientação mais OO, enquanto UI/composables seguem estilo funcional com guardrails.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

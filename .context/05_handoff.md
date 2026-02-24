@@ -2,6 +2,42 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (lint hardening estrito em app/web)
+
+### O que foi feito
+
+- `repos/auraxis-app`:
+  - perfil ESLint estrito aplicado com regras de estilo e complexidade;
+  - `lint` passou a rodar com `--max-warnings 0`;
+  - `.prettierrc.json` adicionado;
+  - `CODING_STANDARDS.md` atualizado com seção de perfil lint (mix OO + funcional).
+- `repos/auraxis-web`:
+  - perfil ESLint estrito aplicado com baseline equivalente ao app;
+  - `lint` e `lint-staged` endurecidos com `--max-warnings 0`;
+  - `.prettierrc.json` adicionado;
+  - removido `lint-staged.config.js` legado (fonte de warning em hook);
+  - `CODING_STANDARDS.md` atualizado com seção de perfil lint (mix OO + funcional).
+
+### O que foi validado
+
+- App: `npm run quality-check` ✅
+- Web: `pnpm quality-check` ✅
+- Push das branches publicado:
+  - `auraxis-app`: `chore/app9-test-baseline` (commit `ae56e16`)
+  - `auraxis-web`: `chore/web10-test-baseline` (commits `57d5b81`, `c73ca29`, `388b445`)
+
+### Riscos pendentes
+
+- Rigor de lint aumentou o volume de ajustes de estilo em arquivos legados do scaffold.
+- Para evitar atrito em mudanças pequenas, manter refactors estruturais em commits separados de feature.
+
+### Próximo passo sugerido
+
+1. Abrir PRs de app/web e validar CI completo no GitHub.
+2. Seguir para `WEB9` (dockerização) antes de iniciar novos blocos de feature.
+
+---
+
 ## Atualização rápida — 2026-02-24 (APP9 + WEB10 concluídos)
 
 ### O que foi feito
