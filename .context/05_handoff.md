@@ -2,6 +2,47 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (CI app/web hardening round 2)
+
+### O que foi feito
+
+- `repos/auraxis-app/.github/workflows/dependency-review.yml`:
+  - removido input inválido `warn-licenses`;
+  - fallback não-bloqueante quando Dependency Graph está desativado.
+- `repos/auraxis-web/.github/workflows/dependency-review.yml`:
+  - removido input inválido `warn-licenses`;
+  - fallback não-bloqueante quando Dependency Graph está desativado.
+- `repos/auraxis-app/sonar-project.properties` e `repos/auraxis-web/sonar-project.properties`:
+  - `sonar.sources=.` para evitar falha por diretórios opcionais ausentes.
+- `repos/auraxis-app/.github/workflows/ci.yml` e `repos/auraxis-web/.github/workflows/ci.yml`:
+  - Sonar migrado para `SonarSource/sonarqube-scan-action@v5` (substitui action deprecated).
+- `repos/auraxis-web`:
+  - `eslint` adicionado explicitamente em devDependencies (corrige `sh: eslint: not found`);
+  - `storybook@9.1.17` adicionado para eliminar advisory high do pacote `storybook`;
+  - audit do CI ajustado para fail em high/critical não allowlistados, com exceção temporária explícita para `GHSA-3ppc-4f35-3m26` (`minimatch` transiente).
+
+### O que foi validado
+
+- `pnpm lint` no `auraxis-web` executando sem erro de binário ausente.
+- YAML parse OK nos quatro workflows alterados (app/web CI + dependency review).
+- Simulação local do gate de audit:
+  - `web_audit_gate_pass`
+  - `app_audit_gate_pass`
+
+### Riscos pendentes
+
+- Dependency Review continua sem enforcement real até habilitar Dependency Graph no GitHub.
+- Advisory de `minimatch` permanece allowlistado temporariamente (cadeia transiente).
+
+### Próximo passo sugerido
+
+1. Habilitar Dependency Graph em:
+   - `https://github.com/italofelipe/auraxis-app/settings/security_analysis`
+   - `https://github.com/italofelipe/auraxis-web/settings/security_analysis`
+2. Remover allowlist de `minimatch` após atualização de cadeia dependente.
+
+---
+
 ## Atualização rápida — 2026-02-24 (branch policy + CI web/app)
 
 ### O que foi feito

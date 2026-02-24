@@ -20,6 +20,17 @@ Data: 2026-02-24
   - não falhar quando o bot não puder comentar em PR (`403 Resource not accessible by integration`);
   - manter gate de audit para runtime com exceção temporária e explícita do advisory `GHSA-3ppc-4f35-3m26` da cadeia Expo.
 
+## Atualização CI hardening (2026-02-24 — rodada 2)
+- `auraxis-app`:
+  - `dependency-review-action` corrigido (remoção de input inválido e fallback enquanto Dependency Graph estiver desativado);
+  - Sonar migrado para `sonarqube-scan-action@v5`;
+  - `sonar.sources` tornado resiliente (`.`) para evitar erro por diretório ausente.
+- `auraxis-web`:
+  - correção de `eslint: not found` via `eslint` explícito em devDependencies;
+  - advisory high de `storybook` mitigado com `storybook@9.1.17`;
+  - audit do CI ajustado para fail em high/critical não allowlistados (allowlist temporária só para `GHSA-3ppc-4f35-3m26`);
+  - Sonar migrado para `sonarqube-scan-action@v5` e `sonar.sources=.`.
+
 ## Commits recentes (auraxis-api)
 - 3e8da64 fix(ci): harden local Sonar and pip-audit hooks for auraxis-api
 - d6f03fe fix(aws): update OIDC subject hints to auraxis-api repo name
