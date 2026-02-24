@@ -317,6 +317,24 @@ Além disso, padronizar telemetria operacional local dos agentes em `auraxis-pla
 
 ---
 
+### DEC-025 — Remover gate sintético `CI Passed` e exigir checks reais por repo
+
+**Decisão:** descontinuar o job agregador `ci-passed` nos pipelines de `auraxis-web` e `auraxis-app`, e atualizar a política de branch protection para exigir diretamente os checks reais de CI (lint/typecheck/test/build/security/sonar/dependency review).
+
+Para `auraxis-api`, manter sem `ci-passed` (já inexistente no workflow) e remover sua exigência residual em branch protection.
+
+**Racional:** o check sintético gera acoplamento desnecessário, risco de pendência infinita quando o contexto não existe no workflow e pouca observabilidade sobre qual gate real falhou. Exigir checks reais simplifica debugging e reduz falsos bloqueios.
+
+**Alternativas rejeitadas:**
+- manter `ci-passed` e tentar estabilizar por ajustes incrementais;
+- remover required checks e confiar apenas em disciplina manual;
+- exigir somente um check mínimo (ex.: dependency review).
+
+**Dono:** plataforma + owners de repo.
+**Impacto:** workflows ficam mais simples, branch protection mais explícita e alinhada com os jobs efetivos de cada produto.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

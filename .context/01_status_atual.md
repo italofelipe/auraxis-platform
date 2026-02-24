@@ -2,6 +2,13 @@
 
 Data: 2026-02-24
 
+## Atualização CI (2026-02-24 — remoção do gate sintético `CI Passed`)
+- `auraxis-web`: job `ci-passed` removido do workflow de CI.
+- `auraxis-app`: job `ci-passed` removido do workflow de CI.
+- `auraxis-api`: confirmado que não existe job `ci-passed` no workflow atual.
+- Governança central (`branch-protection-config.json`) atualizada para exigir checks reais por repositório (substituindo `CI Passed`).
+- Documentação de pipeline/auto-merge atualizada para refletir status checks reais.
+
 ## Atualização AI Squad + Telemetria de bloqueios (2026-02-24)
 - `ai_squad` migrado de `repos/auraxis-api/ai_squad` para `auraxis-platform/ai_squad`.
 - Resolução de repo alvo adicionada via ambiente:

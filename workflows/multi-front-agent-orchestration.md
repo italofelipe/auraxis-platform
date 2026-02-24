@@ -50,4 +50,4 @@ Campos minimos:
 - cada lane com delivery report publicado;
 - contexto global atualizado (`01_status_atual.md`, `02_backlog_next.md`, `05_handoff.md`);
 - locks liberados em todos os agentes;
-- status check `CI Passed` verde nas 3 frentes.
+- todos os status checks obrigatórios verdes nas 3 frentes.
