@@ -2,6 +2,35 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (Sonar workflow permissions finding)
+
+### O que foi feito
+
+- `auraxis-app` e `auraxis-web`:
+  - removidas permissões em nível global de workflow (`permissions` no root);
+  - permissões mínimas movidas para nível de job (least privilege) em:
+    - `ci.yml`
+    - `dependency-review.yml`
+    - `auto-merge.yml`
+- Escopos de escrita (`issues`/`pull-requests`) mantidos apenas nos jobs que realmente comentam PR.
+
+### O que foi validado
+
+- Não há `permissions:` no nível raiz dos workflows de app/web.
+- YAML parseando corretamente após alterações.
+- Sonar mantido com org `sensoriumit` + action pinada por SHA completo em app/web.
+
+### Riscos pendentes
+
+- Requer nova execução de CI para refletir o novo snapshot do Sonar Quality/Security rating.
+
+### Próximo passo sugerido
+
+1. Reexecutar os pipelines das PRs em `fix/ci-web-app-pipeline-hardening`.
+2. Confirmar que o finding "Move this read permission from workflow level to job level" desapareceu.
+
+---
+
 ## Atualização rápida — 2026-02-24 (CI failures web/app — round 3)
 
 ### O que foi feito

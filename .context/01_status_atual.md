@@ -38,6 +38,11 @@ Data: 2026-02-24
 - `auraxis-web`:
   - jobs `lighthouse` e `e2e` condicionados por variáveis de repositório (`ENABLE_LIGHTHOUSE_CI`, `ENABLE_WEB_E2E`) para evitar quebra em scaffold ainda instável no runtime SSR.
 
+## Atualização Security Policy (2026-02-24 — rodada 4)
+- `auraxis-app` e `auraxis-web`:
+  - permissões de workflow movidas do nível global para nível de job em `ci.yml`, `dependency-review.yml` e `auto-merge.yml`;
+  - aplicação de least privilege por job para mitigar finding de segurança do Sonar/Actions policy.
+
 ## Commits recentes (auraxis-api)
 - 3e8da64 fix(ci): harden local Sonar and pip-audit hooks for auraxis-api
 - d6f03fe fix(aws): update OIDC subject hints to auraxis-api repo name
