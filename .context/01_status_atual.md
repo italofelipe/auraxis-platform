@@ -2,6 +2,23 @@
 
 Data: 2026-02-24
 
+## Atualização CI parity local + fallback dependency review (2026-02-24)
+- `auraxis-app`:
+  - workflow `dependency-review.yml` ajustado para modo compatível por detecção de `Dependency Graph` (executa gate estrito quando habilitado; skip com warning quando indisponível).
+  - workflow `ci.yml` passou a reutilizar `scripts/ci-audit-gate.js` no job de audit, eliminando drift entre local e CI.
+  - criado `scripts/run_ci_like_actions_local.sh` para reproduzir gates críticos do GitHub Actions localmente.
+  - `quality-check` alinhado para usar `test:coverage` (não mais `test` sem coverage).
+  - normalização de URL atualizada para `codePointAt` (compliance Sonar).
+- `auraxis-web`:
+  - workflow `dependency-review.yml` ajustado para o mesmo modo compatível por detecção de `Dependency Graph`.
+  - workflow `ci.yml` passou a reutilizar `scripts/ci-audit-gate.cjs` no job de audit.
+  - criado `scripts/run_ci_like_actions_local.sh` para reproduzir gates críticos do GitHub Actions localmente.
+  - `quality-check` alinhado para usar `test:coverage`.
+  - normalização de URL atualizada para `codePointAt` (compliance Sonar).
+- Validação local executada:
+  - app: `npm run quality-check` e `npm run ci:local -- --local` ✅
+  - web: `pnpm quality-check` e `pnpm ci:local --local` ✅
+
 ## Atualização Segurança + Coverage 85% (2026-02-24 — Sonar regex/ReDoS)
 - `auraxis-app`:
   - `lib/api.ts` refatorado para remover regex de trim de barras finais e usar algoritmo linear `removeTrailingSlashes`.

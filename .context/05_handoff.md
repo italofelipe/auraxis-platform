@@ -2,6 +2,44 @@
 
 Data: 2026-02-23 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-24 (CI parity local frontend + fixes Sonar/Dependency Review)
+
+### O que foi feito
+
+- `repos/auraxis-app`:
+  - `dependency-review.yml` alterado para detectar `Dependency Graph` e executar fallback controlado quando indisponível.
+  - `ci.yml` passou a reutilizar `scripts/ci-audit-gate.js` no job de audit.
+  - criado `scripts/run_ci_like_actions_local.sh` para replicar gates críticos do CI localmente.
+  - `package.json` atualizado: `quality-check` com `test:coverage` e novo script `ci:local`.
+  - `lib/api.ts` ajustado de `charCodeAt` para `codePointAt`.
+- `repos/auraxis-web`:
+  - `dependency-review.yml` com a mesma estratégia capability-aware.
+  - `ci.yml` passou a reutilizar `scripts/ci-audit-gate.cjs` no job de audit.
+  - criado `scripts/run_ci_like_actions_local.sh` para replicar gates críticos do CI localmente.
+  - `package.json` atualizado: `quality-check` com `test:coverage` e novo script `ci:local`.
+  - `composables/useApi.ts` ajustado de `charCodeAt` para `codePointAt`.
+- `tasks.md` e `.context/quality_gates.md` atualizados em app/web para rastreabilidade.
+
+### O que foi validado
+
+- App:
+  - `npm run quality-check` ✅
+  - `npm run ci:local -- --local` ✅
+- Web:
+  - `pnpm quality-check` ✅
+  - `pnpm ci:local --local` ✅
+
+### Riscos pendentes
+
+- Enquanto `Dependency Graph` estiver desabilitado, o gate `dependency-review` seguirá em modo compatibilidade (warning + skip) nos frontends.
+- Warnings de scaffold Nuxt permanecem não-bloqueantes (`@nuxt/content`, `nuxt:google-fonts`, `@nuxtjs/og-image`).
+
+### Próximo passo sugerido
+
+1. Habilitar `Dependency Graph` no GitHub (`app` e `web`) para reativar bloqueio estrito do `dependency-review`.
+2. Rodar `ci:local` como pré-push padrão dos agentes para reduzir divergência local/CI.
+3. Se necessário, acrescentar etapa opcional `--with-sonar` nos fluxos locais com token/scanner instalados.
+
 ## Atualização rápida — 2026-02-24 (fix Sonar regex + enforcement coverage 85%)
 
 ### O que foi feito

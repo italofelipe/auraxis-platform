@@ -259,6 +259,22 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 
 ---
 
+### DEC-022 — CI-like local obrigatório para frontend + dependency-review compatível por capability
+
+**Decisão:** adotar scripts `run_ci_like_actions_local.sh` em `auraxis-app` e `auraxis-web` para espelhar os gates críticos do GitHub Actions localmente; para `dependency-review`, executar gate estrito somente quando `Dependency Graph` estiver disponível/habilitado no repositório e aplicar fallback explícito com warning quando não estiver.
+
+**Racional:** o principal ruído recente veio de diferenças entre ambiente local e CI, além de falhas não determinísticas em `dependency-review` por limitação de capability do repositório. A combinação de CI-like local + fallback capability-aware reduz quebra surpresa sem mascarar riscos.
+
+**Alternativas rejeitadas:**
+- manter `dependency-review` estrito sem capability check (quebra contínua quando repo não suportar);
+- desabilitar `dependency-review` permanentemente;
+- manter lógica de audit inline em YAML (drift alto entre local e CI).
+
+**Dono:** plataforma + owners frontend.
+**Impacto:** pipelines frontend mais previsíveis; auditoria de dependências reutiliza scripts versionados; execução local passa a ser pré-condição prática antes de push em blocos críticos.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |
