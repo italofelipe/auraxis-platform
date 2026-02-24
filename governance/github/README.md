@@ -39,3 +39,9 @@ DRY_RUN=true ./scripts/apply-branch-protection.sh
 - `italofelipe/auraxis-api` em `main` e `master` (se existir)
 - `italofelipe/auraxis-app` em `main` e `master` (se existir)
 - `italofelipe/auraxis-web` em `main` e `master` (se existir)
+
+### Politica atual de review
+
+- Modo `solo maintainer`: sem aprovador obrigatório de review.
+- PR obrigatório e conversation resolution obrigatório.
+- Force push e delete de branch protegida continuam bloqueados.

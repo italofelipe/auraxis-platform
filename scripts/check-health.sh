@@ -238,6 +238,32 @@ check_web() {
   else
     warn "package.json not found (Nuxt not initialized yet — bootstrap pending)"
   fi
+
+  if [[ -f "$path/product.md" ]]; then
+    ok "product.md present"
+  else
+    warn "product.md missing (SDD context incomplete)"
+  fi
+
+  if [[ -f "$path/.context/templates/feature_card_template.md" ]] && [[ -f "$path/.context/templates/delivery_report_template.md" ]]; then
+    ok "SDD templates present (.context/templates)"
+  else
+    warn "SDD templates missing in .context/templates"
+  fi
+
+  if [[ -f "$path/.github/workflows/dependency-review.yml" ]]; then
+    if rg -n "continue-on-error:\\s*true" "$path/.github/workflows/dependency-review.yml" >/dev/null 2>&1; then
+      fail "Dependency Review in fallback mode (continue-on-error=true)"
+    else
+      ok "Dependency Review enforcement mode enabled"
+    fi
+  fi
+
+  if [[ -f "$path/Dockerfile" ]] && [[ -f "$path/.dockerignore" ]]; then
+    ok "Docker baseline present (WEB9)"
+  else
+    warn "Docker baseline missing (WEB9 pending)"
+  fi
 }
 
 check_mobile() {
@@ -262,6 +288,26 @@ check_mobile() {
     fi
   else
     warn "package.json not found (Expo not initialized yet)"
+  fi
+
+  if [[ -f "$path/product.md" ]]; then
+    ok "product.md present"
+  else
+    warn "product.md missing (SDD context incomplete)"
+  fi
+
+  if [[ -f "$path/.context/templates/feature_card_template.md" ]] && [[ -f "$path/.context/templates/delivery_report_template.md" ]]; then
+    ok "SDD templates present (.context/templates)"
+  else
+    warn "SDD templates missing in .context/templates"
+  fi
+
+  if [[ -f "$path/.github/workflows/dependency-review.yml" ]]; then
+    if rg -n "continue-on-error:\\s*true" "$path/.github/workflows/dependency-review.yml" >/dev/null 2>&1; then
+      fail "Dependency Review in fallback mode (continue-on-error=true)"
+    else
+      ok "Dependency Review enforcement mode enabled"
+    fi
   fi
 }
 

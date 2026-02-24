@@ -38,18 +38,21 @@
 4. PLT1.4: ✅ CONCLUÍDO
 5. PLT1.5: ✅ CONCLUÍDO
 6. WEB1: ✅ CONCLUÍDO — Nuxt 4.3.1 + @nuxt/eslint + quality stack
-7. APP2 + Security tooling: ✅ CONCLUÍDO — jest-expo + Playwright + Dependabot + SonarCloud + Lighthouse + bundle analysis
+7. APP2: ✅ CONCLUÍDO — cliente HTTP no app (`lib/api.ts`) com base URL por env, healthcheck `/health` e testes
 8. PLT-BACKEND-DOCS: ✅ CONCLUÍDO — `steering.md` atualizado + `.context/quality_gates.md` criado + `CODING_STANDARDS.md` criado em `auraxis-api`
 9. **X4** — adoção faseada do Ruff em `auraxis-api` (fase advisory → substituição de flake8/black/isort, manter mypy)
 10. **X3** — preparar fase 0 de desacoplamento Flask/FastAPI (auth/context/error adapters)
 11. APP9: ✅ CONCLUÍDO — baseline de testes no app sem `--passWithNoTests`
 12. WEB10: ✅ CONCLUÍDO — baseline de testes no web sem `--passWithNoTests`
-13. **WEB9** — dockerizar `auraxis-web` (Nuxt) com `Dockerfile` + `.dockerignore` + runbook de execução
-14. **B10** — questionário indicativo de perfil investidor
-15. **B11** — persistir/expor perfil sugerido + taxonomy_version
-16. F1..F4 — entidades auxiliares e integração em transações
-17. G5 — seed de dados local
-18. B7 — discovery OTP (bloqueado por provedor/compliance)
+13. WEB2: ✅ CONCLUÍDO — composable `useApi()` + `NUXT_PUBLIC_API_BASE` + teste de healthcheck
+14. WEB9: ✅ CONCLUÍDO — Dockerfile/.dockerignore/docker-compose + runbook + gate de build de imagem no CI
+15. **X4** — adoção faseada do Ruff em `auraxis-api` (fase advisory → substituição de flake8/black/isort, manter mypy)
+16. **X3** — preparar fase 0 de desacoplamento Flask/FastAPI (auth/context/error adapters)
+17. **B10** — questionário indicativo de perfil investidor
+18. **B11** — persistir/expor perfil sugerido + taxonomy_version
+19. F1..F4 — entidades auxiliares e integração em transações
+20. G5 — seed de dados local
+21. B7 — discovery OTP (bloqueado por provedor/compliance)
 
 ## Discovery (ideias)
 - Exportação CSV/XLSX por período

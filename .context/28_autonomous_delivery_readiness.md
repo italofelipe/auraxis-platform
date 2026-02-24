@@ -31,11 +31,8 @@ Estado atual:
 - ✅ `auraxis-app`: scanner CI ativo no workflow
 - ✅ `auraxis-web`: scanner CI ativo no workflow
 
-Pendência manual (painel SonarCloud):
-- [ ] Desabilitar Automatic Analysis em:
-  - `italofelipe_auraxis-api`
-  - `italofelipe_auraxis-app`
-  - `italofelipe_auraxis-web`
+Status operacional:
+- ✅ Automatic Analysis desabilitado e modo CI scanner adotado como padrão único
 
 ---
 
@@ -48,7 +45,7 @@ Status:
 - ✅ Sonar scanner pinado por SHA nos workflows
 
 Pendência recomendada:
-- [ ] Garantir Dependency Graph habilitado nos 3 repositórios para enforcement total do Dependency Review (app/web em modo compatibilidade temporário).
+- [ ] Confirmar Dependency Graph habilitado nos 3 repositórios (app/web agora sem fallback permissivo no workflow).
 
 ---
 
@@ -58,6 +55,9 @@ Status:
 - ✅ Removido artefato local indevido no web (`.nuxtrc 2`)
 - ✅ `.gitignore` do web ajustado para evitar recorrência (`.nuxtrc*`)
 - ✅ Política de branch `codex/*` proibida documentada na plataforma
+- ✅ `WEB9` concluído: Dockerfile + docker-compose + runbook + gate de Docker build no CI
+- ✅ `APP2` e `WEB2` concluídos: clientes HTTP com healthcheck e testes
+- ✅ Templates SDD locais adicionados em `auraxis-app` e `auraxis-web`
 
 Pendência recomendada:
 - [ ] Eliminar branches remotos legados `codex/*` ainda existentes após migração de PRs ativos.
@@ -66,8 +66,7 @@ Pendência recomendada:
 
 ## 5) Próximo bloco (pré-feature)
 
-1. Fechar pendências manuais do SonarCloud (Automatic Analysis OFF nos 3 projetos).
-2. Confirmar pipelines verdes em `main` nos 3 repos após hardening.
-3. Executar `WEB9` (dockerização do Nuxt) para completar baseline de execução padronizada.
-4. APP9 e WEB10: ✅ concluídos (gates de teste sem `passWithNoTests` em app/web).
-5. Iniciar `APP2` e `WEB2` (clientes HTTP) com contratos versionados e testes.
+1. Confirmar pipelines verdes em `main` nos 3 repos após hardening final.
+2. Aplicar branch protection as-code atualizado (`solo maintainer`) com `scripts/apply-branch-protection.sh`.
+3. Iniciar backlog de negócio: `B10` e `B11` (API), seguido de fluxos consumidores em web/app.
+4. Ativar progressivamente E2E/Lighthouse no web via flags de repo após estabilização do SSR.

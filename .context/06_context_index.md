@@ -1,6 +1,6 @@
 # Context Index
 
-Última atualização: 2026-02-23
+Última atualização: 2026-02-24
 
 ## Objetivo
 
@@ -78,6 +78,7 @@ Este índice organiza a leitura mínima para qualquer pessoa ou agente retomar o
 |:---------|:---------------|
 | `../workflows/agent-session.md` | Protocolo completo de sessão de agente (7 passos) |
 | `../workflows/feature-delivery.md` | Ciclo SDD de entrega de feature (SPEC → CLOSE) |
+| `../workflows/multi-front-agent-orchestration.md` | Modelo de execução paralela API/Web/App com CrewAI + Claude + Gemini + GPT |
 | `../workflows/repo-bootstrap.md` | Criação de novo repo de produto (opções A e B) |
 
 ---

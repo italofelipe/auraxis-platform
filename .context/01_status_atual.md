@@ -439,3 +439,29 @@ Principais gaps: Jest setup real (APP2), Vitest config (WEB2), SonarCloud (APP4/
 - `scripts/check-health.sh`: execução fim-a-fim sem abort prematuro.
 - `scripts/verify-agent-session.sh --quiet`: corrigido para execução silenciosa sem falha espúria.
 - Busca por drift crítico (`auraxis-mobile`, `Ariadne`) limpa nos artefatos operacionais.
+
+---
+
+## PLT1.8 — Hardening final para autonomia em 3 frentes (concluído 2026-02-24)
+
+**Objetivo:** elevar prontidão operacional para execução paralela API/Web/App com SDD e agentes autônomos.
+
+### O que foi feito
+
+| Item | Arquivo(s) | Resultado |
+|:-----|:-----------|:----------|
+| Branch protection as-code alinhado | `governance/github/branch-protection-config.json`, `governance/github/README.md` | Modo solo maintainer refletido no código (0 aprovadores obrigatórios) |
+| Dependency review estrito em app/web | `repos/auraxis-app/.github/workflows/dependency-review.yml`, `repos/auraxis-web/.github/workflows/dependency-review.yml` | Fallback permissivo removido (`continue-on-error`) |
+| APP2 concluído | `repos/auraxis-app/lib/api.ts`, `repos/auraxis-app/lib/api.test.ts`, `repos/auraxis-app/jest.config.js` | Cliente HTTP com `EXPO_PUBLIC_API_URL` + healthcheck `/health` + testes |
+| WEB2 concluído | `repos/auraxis-web/composables/useApi.ts`, `repos/auraxis-web/composables/useApi.spec.ts`, `repos/auraxis-web/nuxt.config.ts` | Composable HTTP com `NUXT_PUBLIC_API_BASE` + healthcheck `/health` + testes |
+| WEB9 concluído | `repos/auraxis-web/Dockerfile`, `repos/auraxis-web/.dockerignore`, `repos/auraxis-web/docker-compose.yml`, `repos/auraxis-web/docs/runbooks/WEB9-docker.md` | Docker baseline para dev/runtime e runbook operacional |
+| CI web com gate Docker | `repos/auraxis-web/.github/workflows/ci.yml` | Job `Docker Build (Nuxt)` adicionado ao `CI Passed` |
+| SDD operacional em app/web | `repos/auraxis-app/.context/templates/*`, `repos/auraxis-app/product.md`, `repos/auraxis-web/.context/templates/*`, `repos/auraxis-web/product.md` | Templates locais + product brief + diretórios de handoff/report habilitados |
+| Health-check de prontidão expandido | `scripts/check-health.sh` | Valida templates SDD, `product.md`, dependency review estrito e Docker no web |
+| Orquestração multi-front documentada | `workflows/multi-front-agent-orchestration.md`, `.context/06_context_index.md` | Protocolo de execução paralela com papéis CrewAI/Claude/Gemini/GPT |
+
+### Próximos passos imediatos
+
+1. Executar CI em `auraxis-app` e `auraxis-web` para confirmar verde pós-hardening.
+2. Aplicar branch protection atualizado via `scripts/apply-branch-protection.sh`.
+3. Iniciar backlog de negócio (`B10`/`B11`) com lanes paralelas consumidoras em web/app.
