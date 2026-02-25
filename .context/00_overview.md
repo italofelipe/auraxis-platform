@@ -8,6 +8,13 @@ Centralizar contexto de produto, engenharia e execução para trabalho humano + 
 - repos/auraxis-web (web atual)
 - repos/auraxis-app (app mobile atual)
 
+## Diretriz de hospedagem web
+- Web em AWS desde o dia 0.
+- Nao usar Vercel ou GitHub Pages para ambiente oficial.
+- Segmentar experiencia em:
+  - paginas publicas (institucional + SEO + superficies de aquisicao)
+  - paginas privadas (rotas autenticadas)
+
 ## Fonte de verdade
 - Status global e handoff da plataforma: `.context/01_status_atual.md` e `.context/05_handoff.md`
 - Status e andamento por produto: `tasks.md` de cada repositório em `repos/`

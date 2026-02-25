@@ -1,6 +1,25 @@
 # Status Atual (snapshot)
 
-Data: 2026-02-24
+Data: 2026-02-25
+
+## Atualização PLT4.1 (2026-02-25 — hygiene gate de flags)
+- `auraxis-web`:
+  - catálogo versionado em `config/feature-flags.json`;
+  - validador `scripts/check-feature-flags.cjs`;
+  - job `Feature Flags Hygiene` adicionado em `.github/workflows/ci.yml`;
+  - parity local atualizada em `scripts/run_ci_like_actions_local.sh`.
+- `auraxis-app`:
+  - catálogo versionado em `config/feature-flags.json`;
+  - validador `scripts/check-feature-flags.cjs`;
+  - job `Feature Flags Hygiene` adicionado em `.github/workflows/ci.yml`;
+  - parity local atualizada em `scripts/run_ci_like_actions_local.sh`.
+- `auraxis-api`:
+  - catálogo versionado em `config/feature-flags.json`;
+  - validador `scripts/check_feature_flags.py`;
+  - step `Feature Flags Hygiene` adicionado no job `quality` do CI;
+  - parity local atualizada em `scripts/run_ci_like_actions_local.sh`.
+- Resultado:
+  - PLT4 ganhou enforcement de governança de lifecycle (owner/removeBy/expiração) em todos os repositórios de produto.
 
 ## Atualização CI (2026-02-24 — remoção do gate sintético `CI Passed`)
 - `auraxis-web`: job `ci-passed` removido do workflow de CI.
