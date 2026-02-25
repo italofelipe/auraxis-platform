@@ -1,66 +1,52 @@
 # Próximas Prioridades
 
-## ✅ SETUP MANUAL — concluído
+Atualizado: 2026-02-25
 
-> Todos os itens abaixo foram realizados pelo usuário. CI, secrets e configurações de repo estão prontos.
+## Estado dos blocos de plataforma
 
-### SETUP-1 — SonarCloud ✅
-- [x] Token criado para `auraxis-web` → secret configurado no repo
-- [x] Token criado para `auraxis-app` → secret configurado no repo
-- [x] Token de `auraxis-api` confirmado funcional (setup antigo)
+1. `PLT2` (stores app + PWA): **45%**
+2. `PLT3` (versionamento automático multi-repo): **65%**
+3. `PLT4` (feature toggles OSS): **55%**
+4. `PLT5` (deploy mínimo frontends): **60%**
 
-### SETUP-2 — GitHub: auto-merge ✅
-- [x] `auraxis-web` → Allow auto-merge habilitado
-- [x] `auraxis-app` → Allow auto-merge habilitado
-- [x] "Automatically delete head branches" habilitado em ambos
+## Entregas concluídas sem ação manual
 
-### SETUP-3 — Branch protection: status gate ✅
-- [x] `auraxis-web` → Required status: `ci-passed` no master
-- [x] `auraxis-app` → Required status: `ci-passed` no master
-- [x] "Require branches to be up to date before merging" habilitado
+1. **PLT4.1** — Automação de higiene de flags
+- Gate bloqueante no CI de web/app/api para validar owner, removeBy e expiração de flags.
+- Paridade local atualizada nos scripts de CI-like.
 
-### SETUP-4 — Lighthouse CI ✅
-- [x] GitHub App instalado
-- [x] `LHCI_GITHUB_APP_TOKEN` configurado como secret em `auraxis-web`
+## Próximas entregas (sem depender de ação manual)
 
-### SETUP-5 — IAM trust policy AWS (débito técnico — não bloqueante)
-> Reclassificado: não é crítico para operação dos agentes. Deve ser feito oportunisticamente.
-- [ ] Atualizar subject hints nos roles dev/prod para `auraxis-api` (renomeado antes)
-- Referência: `.context/01_status_atual.md` seção PLT1.1
+1. **PLT4.2** — Integração runtime de flags
+- Conectar runtime web/app/api ao provider OSS com fallback local.
 
----
+2. **PLT3.1** — Fechar policy de release cut
+- Consolidar política operacional de release (cadência, freeze, hotfix) e checklist de aprovação de PR de release.
 
-## Em aberto — produto (ordem de prioridade)
+3. **PLT5.1** — Hardening de smoke checks pós-deploy
+- Automatizar smoke mínimo (`/` e `/health`) após deploy baseline no web/app.
 
-1. PLT1.1: ✅ CONCLUÍDO
-2. PLT1.2: ✅ CONCLUÍDO
-3. PLT1.3: ✅ CONCLUÍDO
-4. PLT1.4: ✅ CONCLUÍDO
-5. PLT1.5: ✅ CONCLUÍDO
-6. WEB1: ✅ CONCLUÍDO — Nuxt 4.3.1 + @nuxt/eslint + quality stack
-7. APP2: ✅ CONCLUÍDO — cliente HTTP no app (`lib/api.ts`) com base URL por env, healthcheck `/health` e testes
-8. PLT-BACKEND-DOCS: ✅ CONCLUÍDO — `steering.md` atualizado + `.context/quality_gates.md` criado + `CODING_STANDARDS.md` criado em `auraxis-api`
-9. **X4** — adoção faseada do Ruff em `auraxis-api` (fase advisory → substituição de flake8/black/isort, manter mypy)
-10. **X3** — preparar fase 0 de desacoplamento Flask/FastAPI (auth/context/error adapters)
-11. APP9: ✅ CONCLUÍDO — baseline de testes no app sem `--passWithNoTests`
-12. WEB10: ✅ CONCLUÍDO — baseline de testes no web sem `--passWithNoTests`
-13. WEB2: ✅ CONCLUÍDO — composable `useApi()` + `NUXT_PUBLIC_API_BASE` + teste de healthcheck
-14. WEB9: ✅ CONCLUÍDO — Dockerfile/.dockerignore/docker-compose + runbook + gate de build de imagem no CI
-15. **X4** — adoção faseada do Ruff em `auraxis-api` (fase advisory → substituição de flake8/black/isort, manter mypy)
-16. **X3** — preparar fase 0 de desacoplamento Flask/FastAPI (auth/context/error adapters)
-17. **B10** — questionário indicativo de perfil investidor
-18. **B11** — persistir/expor perfil sugerido + taxonomy_version
-19. F1..F4 — entidades auxiliares e integração em transações
-20. G5 — seed de dados local
-21. B7 — discovery OTP (bloqueado por provedor/compliance)
+4. **API-local-resilience** — Fechar fricção de ambiente local
+- Normalizar entrypoints Python da `.venv` (shebang legado) para evitar execução inconsistente em máquinas novas.
 
-## Discovery (ideias)
-- Exportação CSV/XLSX por período
-- Importação de relatórios bancários + conciliação
-- Insights com LLM
-- Aba de ferramentas financeiras
-- Open Finance (fase posterior)
+## Pendências manuais (executar quando disponível)
 
-## Discovery (materializado)
-- J1..J5 detalhados em `.context/discovery/`.
-- Roadmap consolidado em `.context/discovery/discovery_execucao_roadmap.md`.
+1. Credenciais e cadastros de loja (Play Store / App Store Connect).
+2. Secrets finais para release/submissão (`EXPO_TOKEN`, IDs de store, assinaturas).
+3. Habilitação operacional final de ambientes de deploy público.
+
+Referência operacional: `tasks_status/PLT2-PLT5_manual_steps.md`.
+
+## Backlog funcional (produto)
+
+1. `B10` — questionário indicativo de perfil investidor.
+2. `B11` — persistência/exposição do perfil sugerido.
+3. `B12` + `J6` — calculadora "Pedir aumento" (backend + ferramentas frontend).
+4. `F1..F4` — entidades auxiliares e integração transacional.
+5. `G5` — seed local.
+6. `B7` — discovery OTP (bloqueado por compliance/provedor).
+
+## Tech debt estrutural
+
+1. `X4` — adoção faseada do Ruff no backend.
+2. `X3` — plano de desacoplamento Flask/FastAPI (fase 0).

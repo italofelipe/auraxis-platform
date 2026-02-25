@@ -335,6 +335,22 @@ Para `auraxis-api`, manter sem `ci-passed` (já inexistente no workflow) e remov
 
 ---
 
+### DEC-026 — PLT4.1 obrigatório: hygiene gate de feature flags no CI
+
+**Decisão:** tornar obrigatória a validação de lifecycle de flags em todos os repositórios de produto (`auraxis-web`, `auraxis-app`, `auraxis-api`) com catálogo versionado + gate bloqueante no CI.
+
+**Racional:** sem enforcement automático, flags ficam sem owner/removal-date e acumulam débito técnico invisível. O gate reduz risco de drift e impede rollout sem governança mínima.
+
+**Alternativas rejeitadas:**
+- manter validação manual em review;
+- aplicar gate apenas em um repositório;
+- validar somente formato, sem checar expiração.
+
+**Dono:** plataforma + owners de repo.
+**Impacto:** novos validadores locais/CI adicionados; qualquer flag sem `owner`/`removeBy` ou expirada sem cleanup bloqueia pipeline.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

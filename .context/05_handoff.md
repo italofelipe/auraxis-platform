@@ -1,6 +1,42 @@
 # Handoff (Atual)
 
-Data: 2026-02-23 (Remediação de maturidade agentic)
+Data: 2026-02-25 (Remediação de maturidade agentic)
+
+## Atualização rápida — 2026-02-25 (PLT4.1 hygiene gate)
+
+### O que foi feito
+
+- `auraxis-web`:
+  - criado `config/feature-flags.json`;
+  - criado `scripts/check-feature-flags.cjs`;
+  - adicionado job `Feature Flags Hygiene` no CI;
+  - script de parity local atualizado para executar `pnpm flags:check`.
+- `auraxis-app`:
+  - criado `config/feature-flags.json`;
+  - criado `scripts/check-feature-flags.cjs`;
+  - adicionado job `Feature Flags Hygiene` no CI;
+  - script de parity local atualizado para executar `npm run flags:check`.
+- `auraxis-api`:
+  - criado `config/feature-flags.json`;
+  - criado `scripts/check_feature_flags.py`;
+  - adicionado step de hygiene no job `quality` do CI;
+  - script de parity local atualizado para executar `python scripts/check_feature_flags.py`.
+
+### O que foi validado
+
+- web: `pnpm quality-check` ✅ e `pnpm flags:check` ✅
+- app: `npm run quality-check` ✅ e `npm run flags:check` ✅
+- api: `python scripts/check_feature_flags.py` ✅ e `bash scripts/run_ci_like_actions_local.sh --local --fast` ✅
+
+### Riscos pendentes
+
+- Este bloco valida lifecycle/governança de flag, mas não cobre runtime SDK/provider.
+- Integração runtime permanece no escopo do PLT4 principal.
+
+### Próximo passo sugerido
+
+1. Implementar PLT4.2 (runtime Unleash/OpenFeature com fallback em web/app/api).
+2. Abrir PRs e revalidar branch protection checks após entrada do novo job de hygiene.
 
 ## Atualização rápida — 2026-02-24 (remoção do check `CI Passed`)
 
