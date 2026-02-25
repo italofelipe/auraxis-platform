@@ -10,6 +10,7 @@ Centralizar contexto de produto, engenharia e execução para trabalho humano + 
 
 ## Diretriz de hospedagem web
 - Web em AWS desde o dia 0.
+- Dominio oficial web: `auraxis.com`.
 - Nao usar Vercel ou GitHub Pages para ambiente oficial.
 - Segmentar experiencia em:
   - paginas publicas (institucional + SEO + superficies de aquisicao)
