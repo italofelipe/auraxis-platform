@@ -1,4 +1,4 @@
-# Discovery Execution Roadmap (J1..J5)
+# Discovery Execution Roadmap (J1..J8)
 
 ## Objetivo
 Transformar ideias em backlog executavel com risco controlado.
@@ -32,6 +32,16 @@ Saida esperada:
 Saida esperada:
 - viabilidade formal go/no-go
 
+## Fase 5 - Web growth surface (pos ciclo atual de execucao)
+- J6: paginas publicas/privadas + SEO institucional
+- J7: ferramentas hibridas (publico/logado) + simulacao persistivel
+- J8: newsletter e growth loop
+
+Saida esperada:
+- IA de informacao web aprovada (publico x privado)
+- backlog de growth com criterios de aceite e custo controlado
+- plano de implementacao sem bloquear ciclo atual
+
 ## Matriz resumida
 | Item | Valor | Esforco | Risco | Prioridade |
 |---|---|---|---|---|
@@ -40,6 +50,9 @@ Saida esperada:
 | J3 | Alto | Alto | Alto | P2 |
 | J4 | Medio/Alto | Medio | Medio | P2 |
 | J5 | Alto | Alto | Alto | P3 (blocked) |
+| J6 | Alto | Medio | Medio | P2 (pos ciclo) |
+| J7 | Alto | Medio/Alto | Medio | P2 (pos ciclo) |
+| J8 | Medio/Alto | Medio | Medio | P2 (pos ciclo) |
 
 ## Criterio de encerramento desta rodada de discovery
 - Todos os itens com escopo v1, risco, dependencia e aceite definidos.

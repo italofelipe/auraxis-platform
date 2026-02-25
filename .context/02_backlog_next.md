@@ -46,6 +46,12 @@ Referência operacional: `tasks_status/PLT2-PLT5_manual_steps.md`.
 5. `G5` — seed local.
 6. `B7` — discovery OTP (bloqueado por compliance/provedor).
 
+## Fila de discovery (refinar apos ciclo atual de execucao)
+
+1. `J6` — Web: paginas publicas/privadas e SEO institucional.
+2. `J7` — Ferramentas hibridas (publico + logado) com simulacao persistivel.
+3. `J8` — Newsletter e growth loop.
+
 ## Tech debt estrutural
 
 1. `X4` — adoção faseada do Ruff no backend.

@@ -110,6 +110,9 @@ Este índice organiza a leitura mínima para qualquer pessoa ou agente retomar o
 | `discovery/J3_conciliacao_insights_llm.md` | Conciliação + LLM |
 | `discovery/J4_aba_ferramentas_conveniencia.md` | Ferramentas de conveniência |
 | `discovery/J5_open_finance_open_banking.md` | Open Finance (bloqueado) |
+| `discovery/J6_web_paginas_publicas_privadas_seo.md` | Arquitetura web pública/privada + SEO |
+| `discovery/J7_ferramentas_publica_privada_simulacao.md` | Ferramentas híbridas (público/logado) |
+| `discovery/J8_newsletter_growth_loop.md` | Newsletter e growth loop |
 | `discovery/discovery_execucao_roadmap.md` | Roadmap consolidado de discovery |
 
 ---
