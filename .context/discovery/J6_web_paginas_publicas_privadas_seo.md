@@ -26,7 +26,7 @@ Separar arquitetura publica vs privada melhora descoberta organica, reduz fricca
 - Segmentacao SEO por cluster avancado.
 
 ## Dependencias
-- Definicao de dominio final na AWS.
+- Dominio final definido na AWS (`auraxis.com`).
 - Politica de session/auth da web.
 
 ## Criterios de aceite

@@ -351,6 +351,44 @@ Para `auraxis-api`, manter sem `ci-passed` (já inexistente no workflow) e remov
 
 ---
 
+### DEC-027 — Postergar publicação externa até fechar bloco funcional backend atual
+
+**Decisão:** postergar o ciclo de publicação externa (Play Store/App Store para app e publicação web pública) para depois do fechamento do bloco funcional backend atualmente em execução.
+
+**Racional:** o setup de publicação em lojas exige custos e overhead operacional neste momento. O foco imediato é estabilidade de fundação + entrega de features backend com validação local de frontend/mobile.
+
+**Alternativas rejeitadas:**
+- manter trilha de publicação externa em paralelo com backend;
+- avançar com App Store neste ciclo (custo imediato sem ganho de curto prazo);
+- forçar release público antecipado da web antes do fechamento funcional backend.
+
+**Dono:** maintainer + plataforma.
+**Impacto:** estratégia operacional passa a ser local-first temporariamente:
+- app: Android Studio/Xcode e builds de preview sem submissão;
+- web: execução/validação local sem release público;
+- retomada de PLT2/PLT5 externo somente após conclusão do bloco backend.
+
+---
+
+### DEC-028 — Checkpoint de validação do app antes da próxima major feature backend (sem freeze)
+
+**Decisão:** não adotar freeze formal do backlog backend. Em vez disso, sempre que um bloco backend atual for concluído, a próxima major feature backend só inicia após subir/validar uma versão do app (preview/internal) para verificação integrada.
+
+**Racional:** evita acúmulo de drift entre backend e app sem travar a evolução contínua do backlog backend. Mantém cadência de validação real em dispositivo sem impor overhead de congelamento.
+
+**Alternativas rejeitadas:**
+- congelar backend antes de cada ciclo de validação do app;
+- adiar validações do app para milestones longos;
+- validar apenas por testes locais sem build/install real.
+
+**Dono:** maintainer + plataforma.
+**Impacto:** política de execução:
+- backend segue com backlog próprio sem freeze;
+- checkpoint obrigatório de app release/preview antes de iniciar próxima major feature backend;
+- novos itens adicionados ao backend podem coexistir, respeitando o checkpoint entre blocos maiores.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

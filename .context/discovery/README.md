@@ -1,7 +1,7 @@
-# Discovery Backlog - J1 to J8
+# Discovery Backlog - J1 to J11
 
 ## Objetivo
-Consolidar discovery orientado a execucao para os itens J1..J8 antes da migracao definitiva para operacao multi-repo.
+Consolidar discovery orientado a execucao para os itens J1..J11 antes da migracao definitiva para operacao multi-repo.
 
 ## Itens
 - `J1_exportacao_csv_xlsx.md`
@@ -12,6 +12,9 @@ Consolidar discovery orientado a execucao para os itens J1..J8 antes da migracao
 - `J6_web_paginas_publicas_privadas_seo.md`
 - `J7_ferramentas_publica_privada_simulacao.md`
 - `J8_newsletter_growth_loop.md`
+- `J9_integracao_meios_pagamento.md`
+- `J10_feed_noticias_economia_ia_scrapers.md`
+- `J11_alertas_email_pendencias_vencimentos.md`
 - `discovery_execucao_roadmap.md`
 
 ## Regra de prioridade
@@ -23,6 +26,9 @@ Consolidar discovery orientado a execucao para os itens J1..J8 antes da migracao
 6. J6 (arquitetura de paginas publicas/privadas + SEO)
 7. J7 (ferramentas hibridas publico/logado + simulacao persistivel)
 8. J8 (newsletter e growth loop)
+9. J9 (integracao de meios de pagamento no Brasil)
+10. J10 (feed de noticias de economia com IA/scrapers)
+11. J11 (alertas por email de pendencias e vencimentos)
 
 ## Criterio de saida do discovery
 - Problema, escopo v1 e criterios de aceite definidos.

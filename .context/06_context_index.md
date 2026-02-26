@@ -113,6 +113,9 @@ Este índice organiza a leitura mínima para qualquer pessoa ou agente retomar o
 | `discovery/J6_web_paginas_publicas_privadas_seo.md` | Arquitetura web pública/privada + SEO |
 | `discovery/J7_ferramentas_publica_privada_simulacao.md` | Ferramentas híbridas (público/logado) |
 | `discovery/J8_newsletter_growth_loop.md` | Newsletter e growth loop |
+| `discovery/J9_integracao_meios_pagamento.md` | Integração de meios de pagamento no Brasil |
+| `discovery/J10_feed_noticias_economia_ia_scrapers.md` | Feed de notícias econômicas com IA/scrapers |
+| `discovery/J11_alertas_email_pendencias_vencimentos.md` | Alertas por email de pendências/vencimentos |
 | `discovery/discovery_execucao_roadmap.md` | Roadmap consolidado de discovery |
 
 ---

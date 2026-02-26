@@ -4,10 +4,10 @@ Atualizado: 2026-02-25
 
 ## Estado dos blocos de plataforma
 
-1. `PLT2` (stores app + PWA): **45%**
+1. `PLT2` (stores app + PWA): **45% — DEFERRED**
 2. `PLT3` (versionamento automático multi-repo): **65%**
 3. `PLT4` (feature toggles OSS): **55%**
-4. `PLT5` (deploy mínimo frontends): **60%**
+4. `PLT5` (deploy mínimo frontends): **60% — DEFERRED (publicação externa)**
 
 ## Entregas concluídas sem ação manual
 
@@ -23,19 +23,25 @@ Atualizado: 2026-02-25
 2. **PLT3.1** — Fechar policy de release cut
 - Consolidar política operacional de release (cadência, freeze, hotfix) e checklist de aprovação de PR de release.
 
-3. **PLT5.1** — Hardening de smoke checks pós-deploy
-- Automatizar smoke mínimo (`/` e `/health`) após deploy baseline no web/app.
+3. **BLK-BACKEND-FEATURES** — Fechar bloco funcional backend atual
+- Concluir backlog funcional ativo do backend antes de retomar publicação externa.
 
 4. **API-local-resilience** — Fechar fricção de ambiente local
 - Normalizar entrypoints Python da `.venv` (shebang legado) para evitar execução inconsistente em máquinas novas.
 
-## Pendências manuais (executar quando disponível)
+## Pendências manuais (DEFERRED para pós-bloco backend)
 
 1. Credenciais e cadastros de loja (Play Store / App Store Connect).
 2. Secrets finais para release/submissão (`EXPO_TOKEN`, IDs de store, assinaturas).
-3. Habilitação operacional final de ambientes de deploy público.
+3. Habilitação operacional final de ambientes de deploy público (AWS web).
 
 Referência operacional: `tasks_status/PLT2-PLT5_manual_steps.md`.
+
+## Política operacional vigente
+
+1. Até fechar o bloco funcional backend atual, o fluxo é **local-first**:
+- app: Android Studio/Xcode + builds locais/EAS preview sem submissão.
+- web: execução local e validação técnica sem publicação externa.
 
 ## Backlog funcional (produto)
 
@@ -51,6 +57,9 @@ Referência operacional: `tasks_status/PLT2-PLT5_manual_steps.md`.
 1. `J6` — Web: paginas publicas/privadas e SEO institucional.
 2. `J7` — Ferramentas hibridas (publico + logado) com simulacao persistivel.
 3. `J8` — Newsletter e growth loop.
+4. `J9` — Integracao de meios de pagamento (BRL, parcelamento, baixa taxa).
+5. `J10` — Feed de noticias de economia com IA/scrapers.
+6. `J11` — Alertas por email de pendencias e contas a vencer.
 
 ## Tech debt estrutural
 

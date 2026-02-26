@@ -13,6 +13,7 @@ References:
 """
 
 import fnmatch
+import re
 from pathlib import Path
 
 from crewai.tools import BaseTool
@@ -53,6 +54,7 @@ GOVERNANCE_ALLOWLIST: list[str] = ["product.md", "steering.md"]
 # ---------------------------------------------------------------------------
 
 _PENDING_STATUSES = ("| Todo", "| In Progress", "| Blocked")
+_PENDING_CHECKLIST_MARKERS = ("- [ ]", "- [~]", "- [!]")
 _ORDERED_LIST_PREFIXES = ("1.", "2.", "3.", "4.", "5.")
 _PENDING_BLOCK_MARKER = "Pendencias de execucao imediata"
 
@@ -64,6 +66,17 @@ def _extract_pending_rows(lines: list[str]) -> list[str]:
         for line in lines
         if line.startswith("|") and any(s in line for s in _PENDING_STATUSES)
     ]
+
+
+def _extract_pending_checklist(lines: list[str]) -> list[str]:
+    """Return checklist tasks marked as todo/in-progress/blocked."""
+    extracted: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if not any(stripped.startswith(prefix) for prefix in _PENDING_CHECKLIST_MARKERS):
+            continue
+        extracted.append(line)
+    return extracted
 
 
 def _extract_pending_block(lines: list[str]) -> list[str]:
@@ -114,6 +127,7 @@ class ReadPendingTasksTool(BaseTool):
 
         lines = path.read_text(encoding="utf-8").splitlines()
         pending_lines = _extract_pending_rows(lines)
+        pending_checklist = _extract_pending_checklist(lines)
         pending_block = _extract_pending_block(lines)
 
         result_parts: list[str] = [
@@ -127,14 +141,25 @@ class ReadPendingTasksTool(BaseTool):
             result_parts.append("| ID | Area | Tarefa | Status | Progresso | Risco |")
             result_parts.append("|---|---|---|---|---|---|")
             result_parts.extend(pending_lines)
-        else:
+        if pending_checklist:
+            if pending_lines:
+                result_parts.append("")
+            result_parts.append("Checklist pending tasks:")
+            result_parts.extend(pending_checklist)
+        if not pending_lines and not pending_checklist:
             result_parts.append("No pending tasks found — all tasks are Done.")
 
         output = "\n".join(result_parts)
         audit_log(
             "read_pending_tasks",
-            {"pending_count": len(pending_lines)},
-            f"returned {len(pending_lines)} pending tasks",
+            {
+                "pending_table_count": len(pending_lines),
+                "pending_checklist_count": len(pending_checklist),
+            },
+            (
+                "returned pending tasks: "
+                f"table={len(pending_lines)} checklist={len(pending_checklist)}"
+            ),
             status="OK",
         )
         return output
@@ -581,6 +606,51 @@ class RunTestsTool(BaseTool):
         return output
 
 
+class RunRepoQualityGatesTool(BaseTool):
+    name: str = "run_repo_quality_gates"
+    description: str = (
+        "Runs the canonical quality gates for the target repository.\n"
+        "- auraxis-api: pytest --tb=short -q\n"
+        "- auraxis-web: pnpm quality-check\n"
+        "- auraxis-app: npm run quality-check\n"
+        "Returns stdout/stderr and command used."
+    )
+
+    def _run(self, query: str = None) -> str:
+        repo_name = PROJECT_ROOT.name
+        command: list[str]
+        if repo_name == "auraxis-web":
+            command = ["pnpm", "quality-check"]
+        elif repo_name == "auraxis-app":
+            command = ["npm", "run", "quality-check"]
+        else:
+            pytest_path = str(PROJECT_ROOT / ".venv" / "bin" / "pytest")
+            import os
+
+            if not os.path.exists(pytest_path):
+                pytest_path = "pytest"
+            command = [pytest_path, "--tb=short", "-q"]
+
+        result = safe_subprocess(
+            command,
+            timeout=600,
+            cwd=str(PROJECT_ROOT),
+        )
+        output = (
+            f"COMMAND: {' '.join(command)}\n"
+            f"RETURN_CODE: {result['returncode']}\n"
+            f"STDOUT:\n{result['stdout']}\n"
+            f"STDERR:\n{result['stderr']}"
+        )
+        audit_log(
+            "run_repo_quality_gates",
+            {"repo": repo_name, "command": command},
+            output[:200],
+            status="OK" if result["returncode"] == 0 else "ERROR",
+        )
+        return output
+
+
 # ---------------------------------------------------------------------------
 # Integration test tool — E2E testing with real HTTP requests
 #
@@ -711,6 +781,29 @@ def _rebuild_task_row(cells: list[str]) -> str:
     return "| " + " | ".join(cells) + " |"
 
 
+def _status_to_check_marker(status: str) -> str:
+    normalized = status.strip().lower()
+    if normalized in ("done", "completed"):
+        return "x"
+    if normalized in ("in progress", "in_progress", "progress"):
+        return "~"
+    if normalized in ("blocked", "block"):
+        return "!"
+    return " "
+
+
+def _update_checklist_task_line(line: str, task_id: str, status: str) -> tuple[str, bool]:
+    """Update checklist marker for a specific task ID line."""
+    marker = _status_to_check_marker(status)
+    pattern = re.compile(
+        rf"^(\s*-\s*\[)([ x~!])(\]\s+\*\*{re.escape(task_id)}\b.*)$"
+    )
+    match = pattern.match(line)
+    if not match:
+        return line, False
+    return f"{match.group(1)}{marker}{match.group(3)}", True
+
+
 class UpdateTaskStatusTool(BaseTool):
     name: str = "update_task_status"
     description: str = (
@@ -742,7 +835,7 @@ class UpdateTaskStatusTool(BaseTool):
         content = tasks_path.read_text(encoding="utf-8")
         lines = content.splitlines()
 
-        # Find the row matching task_id
+        # Find table row format (backend TASKS.md)
         updated = False
         for i, line in enumerate(lines):
             if not line.startswith("|"):
@@ -763,6 +856,19 @@ class UpdateTaskStatusTool(BaseTool):
             updated = True
             break
 
+        # Fallback: checklist format (app/web tasks.md)
+        if not updated:
+            for i, line in enumerate(lines):
+                new_line, line_updated = _update_checklist_task_line(
+                    line=line,
+                    task_id=task_id,
+                    status=status,
+                )
+                if line_updated:
+                    lines[i] = new_line
+                    updated = True
+                    break
+
         if not updated:
             msg = f"Task '{task_id}' not found in {tasks_path.name}."
             audit_log(
@@ -780,6 +886,13 @@ class UpdateTaskStatusTool(BaseTool):
                 lines[i] = re.sub(
                     r"Ultima atualizacao: [\d-]+",
                     f"Ultima atualizacao: {today_str}",
+                    line,
+                )
+                break
+            if line.startswith("Última atualização:"):
+                lines[i] = re.sub(
+                    r"Última atualização: [\d-]+",
+                    f"Última atualização: {today_str}",
                     line,
                 )
                 break

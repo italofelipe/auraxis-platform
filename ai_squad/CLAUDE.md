@@ -73,6 +73,16 @@ O agente PM deve ler, nesta ordem, antes de planejar:
 7. `tasks.md` ou `TASKS.md` (repo alvo)
 8. `steering.md` (repo alvo)
 
+### Orquestração multi-repo
+
+Para disparar execução paralela (api/web/app) com comando único:
+
+```bash
+export AURAXIS_TARGET_REPO=all
+export AURAXIS_BRIEFING="Execute a próxima tarefa"
+python3 main.py
+```
+
 ## Guardrails obrigatórios
 
 | Regra | Detalhe |

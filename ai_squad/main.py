@@ -36,7 +36,10 @@ References:
 """
 
 import os
+import subprocess
+import sys
 import traceback
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from crewai import Agent, Crew, Process, Task
 from dotenv import load_dotenv
@@ -55,6 +58,7 @@ from tools.project_tools import (
     ReadSchemaTool,
     ReadTasksSectionTool,
     RunTestsTool,
+    RunRepoQualityGatesTool,
     UpdateTaskStatusTool,
     ValidateMigrationConsistencyTool,
     WriteFileTool,
@@ -98,6 +102,7 @@ class AuraxisSquad:
 
         # Execution tools
         self.rtst = RunTestsTool()
+        self.rqg = RunRepoQualityGatesTool()
         self.rit = IntegrationTestTool()
 
         # Documentation tools
@@ -463,6 +468,207 @@ class AuraxisSquad:
 
         return crew.kickoff()
 
+    def run_frontend_workflow(self, briefing: str):
+        """
+        6-task generic workflow for app/web repositories:
+          Plan -> Read -> Write -> Review/Commit -> Quality -> Docs
+        """
+        manager = Agent(
+            role="Gerente de Projeto Frontend",
+            goal=(
+                "Select the next pending task, produce a concrete file-level "
+                "plan, and avoid duplicate implementation."
+            ),
+            backstory=(
+                "You coordinate feature delivery by reading pending tasks, "
+                "governance and current code before planning."
+            ),
+            tools=[self.rpt, self.rts, self.rcf, self.rgf, self.rpf],
+            verbose=True,
+            allow_delegation=True,
+        )
+
+        frontend_dev = Agent(
+            role="Senior Frontend Engineer",
+            goal=(
+                "Implement the planned task with minimal, reversible changes "
+                "while preserving existing behavior."
+            ),
+            backstory=(
+                "You always read files before writing, avoid broad rewrites, "
+                "and follow repository coding standards."
+            ),
+            tools=[self.rpf, self.lpf, self.rcf, self.wf, self.git, self.uts],
+            verbose=True,
+        )
+
+        qa_engineer = Agent(
+            role="Frontend QA Engineer",
+            goal=(
+                "Run repository quality gates and block completion on failures."
+            ),
+            backstory=(
+                "You execute canonical quality checks and report exact command "
+                "outputs and pass/fail status."
+            ),
+            tools=[self.rqg, self.rcf],
+            verbose=True,
+        )
+
+        task_plan = Task(
+            description=(
+                "BOOTSTRAP:\n"
+                "1. read_pending_tasks()\n"
+                "2. read_tasks_section('<task_id or area>')\n"
+                "3. read_governance_file('product.md')\n"
+                "4. read_governance_file('steering.md')\n\n"
+                f'USER BRIEFING: "{briefing}"\n\n'
+                "DUPLICATE WORK GUARD:\n"
+                "If task is already done or code already exists, output "
+                "'ALREADY IMPLEMENTED — no changes needed.'\n\n"
+                "Produce concrete plan with:\n"
+                "- task ID\n"
+                "- files to modify/create\n"
+                "- expected code additions\n"
+                "- implementation order"
+            ),
+            expected_output=(
+                "Numbered plan including task ID, file list, and sequence."
+            ),
+            agent=manager,
+        )
+
+        task_read = Task(
+            description=(
+                "READ PHASE:\n"
+                "1. list_project_files('<relevant dir>')\n"
+                "2. read_project_file('<each target file>')\n"
+                "3. report existing structures and risks.\n"
+                "Do not write code in this phase."
+            ),
+            expected_output=(
+                "Reading report with files analyzed and integration risks."
+            ),
+            agent=frontend_dev,
+            context=[task_plan],
+        )
+
+        task_code = Task(
+            description=(
+                "WRITE PHASE:\n"
+                "- Implement only planned changes.\n"
+                "- Preserve existing code and non-ASCII characters.\n"
+                "- Write complete file content when updating files.\n"
+                "- Do not commit yet."
+            ),
+            expected_output="List of changed files and summary of changes.",
+            agent=frontend_dev,
+            context=[task_plan, task_read],
+        )
+
+        task_review = Task(
+            description=(
+                "REVIEW/COMMIT PHASE:\n"
+                "1. git_operations(command='status')\n"
+                "2. create conventional branch:\n"
+                "   git_operations(command='create_branch', "
+                "branch_name='feat/<task-id>-<short-description>')\n"
+                "3. commit with conventional commit message:\n"
+                "   git_operations(command='commit', "
+                "message='feat(<scope>): <summary>')\n"
+                "Block completion if commit cannot be created."
+            ),
+            expected_output="Branch name, commit result, and git status.",
+            agent=frontend_dev,
+            context=[task_code],
+        )
+
+        task_quality = Task(
+            description=(
+                "QUALITY PHASE:\n"
+                "Run run_repo_quality_gates() and report pass/fail.\n"
+                "If failed, include exact stderr/stdout summary."
+            ),
+            expected_output=(
+                "Quality gate command used, result, and failure details if any."
+            ),
+            agent=qa_engineer,
+            context=[task_review],
+        )
+
+        task_docs = Task(
+            description=(
+                "DOCUMENTATION PHASE:\n"
+                "If quality passed, update task status using:\n"
+                "update_task_status(task_id='<task_id>', status='Done', "
+                "progress='100%', commit_hash='<hash>').\n"
+                "If quality failed, mark as In Progress with realistic progress."
+            ),
+            expected_output="Task board update confirmation.",
+            agent=frontend_dev,
+            context=[task_plan, task_review, task_quality],
+        )
+
+        crew = Crew(
+            agents=[manager, frontend_dev, qa_engineer],
+            tasks=[
+                task_plan,
+                task_read,
+                task_code,
+                task_review,
+                task_quality,
+                task_docs,
+            ],
+            process=Process.sequential,
+            verbose=True,
+        )
+        return crew.kickoff()
+
+
+def run_multi_repo_orchestration(briefing: str) -> int:
+    """Run one squad execution per product repo in parallel."""
+    targets = ("auraxis-api", "auraxis-web", "auraxis-app")
+    script_path = str((SQUAD_ROOT / "main.py").resolve())
+    env_base = os.environ.copy()
+    results: dict[str, tuple[int, str, str]] = {}
+
+    def _run_target(repo: str) -> tuple[int, str, str]:
+        env = env_base.copy()
+        env["AURAXIS_TARGET_REPO"] = repo
+        env["AURAXIS_BRIEFING"] = briefing
+        env["AURAXIS_MULTI_CHILD"] = "1"
+        completed = subprocess.run(
+            [sys.executable, script_path],
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        return completed.returncode, completed.stdout, completed.stderr
+
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        future_map = {executor.submit(_run_target, repo): repo for repo in targets}
+        for future in as_completed(future_map):
+            repo = future_map[future]
+            try:
+                results[repo] = future.result()
+            except Exception as exc:  # pragma: no cover - defensive fallback
+                results[repo] = (1, "", str(exc))
+
+    print("=== AURAXIS MULTI-REPO ORCHESTRATION SUMMARY ===")
+    overall_rc = 0
+    for repo in targets:
+        rc, out, err = results.get(repo, (1, "", "missing result"))
+        if rc != 0:
+            overall_rc = 1
+        print(f"[{repo}] return_code={rc}")
+        if out.strip():
+            print(f"[{repo}] stdout (tail):")
+            print("\n".join(out.strip().splitlines()[-20:]))
+        if err.strip():
+            print(f"[{repo}] stderr (tail):")
+            print("\n".join(err.strip().splitlines()[-20:]))
+    return overall_rc
+
 
 # =================================================================
 # BRIEFING — Edit this to tell the squad what to implement.
@@ -475,9 +681,10 @@ class AuraxisSquad:
 # =================================================================
 
 if __name__ == "__main__":
+    target_env = os.getenv("AURAXIS_TARGET_REPO", TARGET_REPO_NAME).strip()
     print("### Auraxis AI Squad — Workspace Orchestrator ###")
     print(f"Platform root: {PLATFORM_ROOT}")
-    print(f"Target repo: {TARGET_REPO_NAME}")
+    print(f"Target repo: {target_env}")
     print(f"Target project root: {PROJECT_ROOT}")
     print()
 
@@ -491,6 +698,38 @@ if __name__ == "__main__":
     )
     task_id = infer_task_id(briefing)
 
+    if target_env.lower() in ("all", "auraxis-all", "*"):
+        write_status_entry(
+            task_id=task_id,
+            status="in_progress",
+            phase="multi-run-start",
+            implemented="Multi-repo orchestration requested.",
+            next_task_suggestion="Wait for per-repo execution summary.",
+            details=f"Briefing: {briefing}",
+        )
+        rc = run_multi_repo_orchestration(briefing)
+        final_status = "done" if rc == 0 else "blocked"
+        status_file = write_status_entry(
+            task_id=task_id,
+            status=final_status,
+            phase="multi-run-end",
+            implemented="Parallel execution triggered for api/web/app repositories.",
+            next_task_suggestion=(
+                "Advance to next orchestration block."
+                if rc == 0
+                else "Fix blockers in failed repository run(s) and retry."
+            ),
+            details=f"overall_return_code={rc}",
+            notify_manager=True,
+            notify_parallel_agents=True,
+        )
+        print("=== AI_SQUAD MULTI-RUN SUMMARY ===")
+        print(f"task_id: {task_id}")
+        print(f"status: {final_status}")
+        print("implemented: parallel dispatch to auraxis-api, auraxis-web, auraxis-app")
+        print(f"status_file: {status_file}")
+        sys.exit(rc)
+
     write_status_entry(
         task_id=task_id,
         status="in_progress",
@@ -502,7 +741,10 @@ if __name__ == "__main__":
 
     squad = AuraxisSquad()
     try:
-        result = squad.run_backend_workflow(briefing)
+        if TARGET_REPO_NAME == "auraxis-api":
+            result = squad.run_backend_workflow(briefing)
+        else:
+            result = squad.run_frontend_workflow(briefing)
         result_text = str(result)
         normalized = result_text.upper()
         is_blocked = any(
@@ -530,7 +772,7 @@ if __name__ == "__main__":
         print(f"task_id: {task_id}")
         print(f"status: {final_status}")
         print(
-            "implemented: PM->Dev->QA workflow with tests and documentation status update."
+            "implemented: PM->Dev->QA workflow with planning, implementation, quality and docs phases."
         )
         print(f"next_task_suggestion: {next_task}")
         print(f"status_file: {status_file}")

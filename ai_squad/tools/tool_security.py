@@ -81,19 +81,56 @@ def _resolve_project_root() -> Path:
 PROJECT_ROOT: Path = _resolve_project_root()
 TARGET_REPO_NAME: str = PROJECT_ROOT.name
 
+def _build_writable_dirs(project_root: Path, repo_name: str) -> list[Path]:
+    """Return writable directory allowlist per target repository."""
+    common = [
+        project_root,
+        project_root / "app",
+        project_root / "tests",
+        project_root / "scripts",
+        project_root / "docs",
+        project_root / ".github",
+        project_root / ".context",
+        project_root / ".context" / "handoffs",
+        project_root / ".context" / "reports",
+        project_root / "config",
+    ]
+    if repo_name == "auraxis-api":
+        return common + [
+            project_root / "migrations",
+        ]
+    if repo_name == "auraxis-web":
+        return common + [
+            project_root / "components",
+            project_root / "composables",
+            project_root / "layouts",
+            project_root / "middleware",
+            project_root / "pages",
+            project_root / "plugins",
+            project_root / "public",
+            project_root / "server",
+            project_root / "stores",
+            project_root / "types",
+            project_root / "assets",
+        ]
+    if repo_name == "auraxis-app":
+        return common + [
+            project_root / "components",
+            project_root / "hooks",
+            project_root / "lib",
+            project_root / "constants",
+            project_root / "assets",
+            project_root / "__mocks__",
+            project_root / "e2e",
+        ]
+    return common
+
+
 # ---------------------------------------------------------------------------
 # WRITABLE_DIRS — directories where agents are ALLOWED to write files.
 # Everything outside this list is implicitly DENIED.
 # ---------------------------------------------------------------------------
-WRITABLE_DIRS: list[Path] = [
-    PROJECT_ROOT / "app",
-    PROJECT_ROOT / "tests",
-    PROJECT_ROOT / "migrations",
-    PROJECT_ROOT / "scripts",
-    PROJECT_ROOT / "docs",
-    PROJECT_ROOT / ".context" / "handoffs",
-    PROJECT_ROOT / ".context" / "reports",
-]
+WRITABLE_DIRS: list[Path] = _build_writable_dirs(PROJECT_ROOT, TARGET_REPO_NAME)
 
 # ---------------------------------------------------------------------------
 # PROTECTED_FILES — files that must NEVER be written by an agent,
@@ -103,17 +140,6 @@ PROTECTED_FILES: list[Path] = [
     PROJECT_ROOT / ".env",
     PROJECT_ROOT / ".env.dev",
     PROJECT_ROOT / ".env.prod",
-    PROJECT_ROOT / "run.py",
-    PROJECT_ROOT / "run_without_db.py",
-    PROJECT_ROOT / "config" / "__init__.py",
-    PROJECT_ROOT / "pyproject.toml",
-    PROJECT_ROOT / "requirements.txt",
-    PROJECT_ROOT / "requirements-dev.txt",
-    PROJECT_ROOT / "docker-compose.yml",
-    PROJECT_ROOT / "docker-compose.dev.yml",
-    PROJECT_ROOT / "docker-compose.prod.yml",
-    PROJECT_ROOT / "Dockerfile",
-    PROJECT_ROOT / "Dockerfile.prod",
     PROJECT_ROOT / ".pre-commit-config.yaml",
     PROJECT_ROOT / ".gitignore",
     PROJECT_ROOT / ".gitleaks.toml",
@@ -121,6 +147,22 @@ PROTECTED_FILES: list[Path] = [
     PROJECT_ROOT / "product.md",
     PROJECT_ROOT / "CLAUDE.md",
 ]
+if TARGET_REPO_NAME == "auraxis-api":
+    PROTECTED_FILES.extend(
+        [
+            PROJECT_ROOT / "run.py",
+            PROJECT_ROOT / "run_without_db.py",
+            PROJECT_ROOT / "config" / "__init__.py",
+            PROJECT_ROOT / "pyproject.toml",
+            PROJECT_ROOT / "requirements.txt",
+            PROJECT_ROOT / "requirements-dev.txt",
+            PROJECT_ROOT / "docker-compose.yml",
+            PROJECT_ROOT / "docker-compose.dev.yml",
+            PROJECT_ROOT / "docker-compose.prod.yml",
+            PROJECT_ROOT / "Dockerfile",
+            PROJECT_ROOT / "Dockerfile.prod",
+        ]
+    )
 
 # ---------------------------------------------------------------------------
 # BLOCKED_EXTENSIONS — file extensions agents must NEVER write,
