@@ -112,7 +112,7 @@ class AuraxisSquad:
         self.wf = WriteFileTool()
         self.git = GitOpsTool()
 
-    def run_backend_workflow(self, briefing: str):
+    def run_backend_workflow(self, briefing: str, plan_only: bool = False):
         """
         7-task pipeline:
           Plan -> Read -> Write -> Review -> Unit Test
@@ -244,6 +244,15 @@ class AuraxisSquad:
             ),
             agent=manager,
         )
+
+        if plan_only:
+            crew = Crew(
+                agents=[manager],
+                tasks=[task_plan],
+                process=Process.sequential,
+                verbose=True,
+            )
+            return crew.kickoff()
 
         # --- TASK 2: READ (guard against blind overwrites) ---
         task_read = Task(
@@ -468,7 +477,7 @@ class AuraxisSquad:
 
         return crew.kickoff()
 
-    def run_frontend_workflow(self, briefing: str):
+    def run_frontend_workflow(self, briefing: str, plan_only: bool = False):
         """
         6-task generic workflow for app/web repositories:
           Plan -> Read -> Write -> Review/Commit -> Quality -> Docs
@@ -537,6 +546,15 @@ class AuraxisSquad:
             ),
             agent=manager,
         )
+
+        if plan_only:
+            crew = Crew(
+                agents=[manager],
+                tasks=[task_plan],
+                process=Process.sequential,
+                verbose=True,
+            )
+            return crew.kickoff()
 
         task_read = Task(
             description=(
@@ -625,7 +643,7 @@ class AuraxisSquad:
         return crew.kickoff()
 
 
-def run_multi_repo_orchestration(briefing: str) -> int:
+def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
     """Run one squad execution per product repo in parallel."""
     targets = ("auraxis-api", "auraxis-web", "auraxis-app")
     script_path = str((SQUAD_ROOT / "main.py").resolve())
@@ -636,6 +654,7 @@ def run_multi_repo_orchestration(briefing: str) -> int:
         env = env_base.copy()
         env["AURAXIS_TARGET_REPO"] = repo
         env["AURAXIS_BRIEFING"] = briefing
+        env["AURAXIS_EXECUTION_MODE"] = execution_mode
         env["AURAXIS_MULTI_CHILD"] = "1"
         completed = subprocess.run(
             [sys.executable, script_path],
@@ -682,10 +701,13 @@ def run_multi_repo_orchestration(briefing: str) -> int:
 
 if __name__ == "__main__":
     target_env = os.getenv("AURAXIS_TARGET_REPO", TARGET_REPO_NAME).strip()
+    execution_mode = os.getenv("AURAXIS_EXECUTION_MODE", "run").strip().lower()
+    plan_only = execution_mode == "plan_only"
     print("### Auraxis AI Squad — Workspace Orchestrator ###")
     print(f"Platform root: {PLATFORM_ROOT}")
     print(f"Target repo: {target_env}")
     print(f"Target project root: {PROJECT_ROOT}")
+    print(f"Execution mode: {execution_mode}")
     print()
 
     briefing = os.getenv(
@@ -707,7 +729,7 @@ if __name__ == "__main__":
             next_task_suggestion="Wait for per-repo execution summary.",
             details=f"Briefing: {briefing}",
         )
-        rc = run_multi_repo_orchestration(briefing)
+        rc = run_multi_repo_orchestration(briefing, execution_mode)
         final_status = "done" if rc == 0 else "blocked"
         status_file = write_status_entry(
             task_id=task_id,
@@ -726,7 +748,9 @@ if __name__ == "__main__":
         print("=== AI_SQUAD MULTI-RUN SUMMARY ===")
         print(f"task_id: {task_id}")
         print(f"status: {final_status}")
-        print("implemented: parallel dispatch to auraxis-api, auraxis-web, auraxis-app")
+        print(
+            "implemented: parallel dispatch to auraxis-api, auraxis-web, auraxis-app"
+        )
         print(f"status_file: {status_file}")
         sys.exit(rc)
 
@@ -742,9 +766,9 @@ if __name__ == "__main__":
     squad = AuraxisSquad()
     try:
         if TARGET_REPO_NAME == "auraxis-api":
-            result = squad.run_backend_workflow(briefing)
+            result = squad.run_backend_workflow(briefing, plan_only=plan_only)
         else:
-            result = squad.run_frontend_workflow(briefing)
+            result = squad.run_frontend_workflow(briefing, plan_only=plan_only)
         result_text = str(result)
         normalized = result_text.upper()
         is_blocked = any(
@@ -772,7 +796,12 @@ if __name__ == "__main__":
         print(f"task_id: {task_id}")
         print(f"status: {final_status}")
         print(
-            "implemented: PM->Dev->QA workflow with planning, implementation, quality and docs phases."
+            "implemented: "
+            + (
+                "planning-only workflow."
+                if plan_only
+                else "PM->Dev->QA workflow with planning, implementation, quality and docs phases."
+            )
         )
         print(f"next_task_suggestion: {next_task}")
         print(f"status_file: {status_file}")
