@@ -91,6 +91,41 @@ Modelos prontos em `.context/templates` para inicializar novos repositórios:
 4. Atualizar contexto e backlog.
 5. Registrar handoff para continuidade.
 
+## DX rápida (orquestrador)
+
+Comandos curtos para executar agentes sem export manual:
+
+```bash
+cd /Users/italochagas/Desktop/projetos/auraxis-platform
+make help
+```
+
+Setup inicial do `ai_squad`:
+
+```bash
+make squad-setup
+```
+
+Executar "próxima tarefa" em todos os repos (api/web/app):
+
+```bash
+make next-task
+```
+
+Executar em repo específico:
+
+```bash
+make next-task-api
+make next-task-web
+make next-task-app
+```
+
+Com briefing custom:
+
+```bash
+BRIEFING="Execute a próxima tarefa e reporte riscos" make next-task
+```
+
 ## Próximo passo sugerido
 1. Rodar `./scripts/verify-agent-session.sh`.
 2. Rodar `./scripts/check-health.sh`.
