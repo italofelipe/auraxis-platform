@@ -112,6 +112,18 @@ Executar "próxima tarefa" em todos os repos (api/web/app):
 make next-task
 ```
 
+Execução com lock automático (safe mode):
+
+```bash
+make next-task-safe
+```
+
+Dry-run de planejamento (sem escrita/commit):
+
+```bash
+make next-task-plan
+```
+
 Executar em repo específico:
 
 ```bash
