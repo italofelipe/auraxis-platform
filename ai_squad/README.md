@@ -30,15 +30,32 @@ Ela agora fica no repositório de plataforma (`auraxis-platform`) e seleciona o 
     export AURAXIS_TARGET_REPO=auraxis-api   # auraxis-api | auraxis-web | auraxis-app
     ```
 
+    Para orquestração paralela nos 3 repos:
+    ```bash
+    export AURAXIS_TARGET_REPO=all
+    ```
+
 4.  **Briefing da execução:**
     ```bash
-    export AURAXIS_BRIEFING="Implementar task B9 ..."
+    export AURAXIS_BRIEFING="Execute a próxima tarefa"
     ```
 
 5.  **Execução:**
     ```bash
     python3 main.py
     ```
+
+## Interface curta (orquestrador)
+
+Você pode operar somente com o orquestrador usando comandos curtos:
+
+```bash
+export AURAXIS_TARGET_REPO=all
+export AURAXIS_BRIEFING="Execute a próxima tarefa"
+python3 main.py
+```
+
+Com isso, o gestor dispara execução para `auraxis-api`, `auraxis-web` e `auraxis-app` em paralelo e imprime um resumo consolidado no terminal.
 
 ## Status operacional e bloqueios
 
