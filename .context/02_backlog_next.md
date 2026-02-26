@@ -57,6 +57,9 @@ Referência operacional: `tasks_status/PLT2-PLT5_manual_steps.md`.
 1. `J6` — Web: paginas publicas/privadas e SEO institucional.
 2. `J7` — Ferramentas hibridas (publico + logado) com simulacao persistivel.
 3. `J8` — Newsletter e growth loop.
+4. `J9` — Integracao de meios de pagamento (BRL, parcelamento, baixa taxa).
+5. `J10` — Feed de noticias de economia com IA/scrapers.
+6. `J11` — Alertas por email de pendencias e contas a vencer.
 
 ## Tech debt estrutural
 

@@ -1,4 +1,4 @@
-# Discovery Execution Roadmap (J1..J8)
+# Discovery Execution Roadmap (J1..J11)
 
 ## Objetivo
 Transformar ideias em backlog executavel com risco controlado.
@@ -42,6 +42,16 @@ Saida esperada:
 - backlog de growth com criterios de aceite e custo controlado
 - plano de implementacao sem bloquear ciclo atual
 
+## Fase 6 - Monetizacao e notificacao inteligente (pos ciclo atual)
+- J9: integracao de meios de pagamento (BRL, parcelamento, menor taxa)
+- J10: feed de noticias economicas com IA/scrapers
+- J11: alertas por email de pendencias e vencimentos
+
+Saida esperada:
+- estrategia de monetizacao com PSP recomendado por fase
+- arquitetura do feed de noticias com custo/risco controlado
+- desenho de notificacoes por email com compliance e anti-spam
+
 ## Matriz resumida
 | Item | Valor | Esforco | Risco | Prioridade |
 |---|---|---|---|---|
@@ -53,6 +63,9 @@ Saida esperada:
 | J6 | Alto | Medio | Medio | P2 (pos ciclo) |
 | J7 | Alto | Medio/Alto | Medio | P2 (pos ciclo) |
 | J8 | Medio/Alto | Medio | Medio | P2 (pos ciclo) |
+| J9 | Alto | Medio | Medio | P2 (pos ciclo) |
+| J10 | Medio/Alto | Medio/Alto | Alto | P2 (pos ciclo) |
+| J11 | Alto | Medio | Medio | P2 (pos ciclo) |
 
 ## Criterio de encerramento desta rodada de discovery
 - Todos os itens com escopo v1, risco, dependencia e aceite definidos.

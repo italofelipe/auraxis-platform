@@ -370,6 +370,25 @@ Para `auraxis-api`, manter sem `ci-passed` (já inexistente no workflow) e remov
 
 ---
 
+### DEC-028 — Checkpoint de validação do app antes da próxima major feature backend (sem freeze)
+
+**Decisão:** não adotar freeze formal do backlog backend. Em vez disso, sempre que um bloco backend atual for concluído, a próxima major feature backend só inicia após subir/validar uma versão do app (preview/internal) para verificação integrada.
+
+**Racional:** evita acúmulo de drift entre backend e app sem travar a evolução contínua do backlog backend. Mantém cadência de validação real em dispositivo sem impor overhead de congelamento.
+
+**Alternativas rejeitadas:**
+- congelar backend antes de cada ciclo de validação do app;
+- adiar validações do app para milestones longos;
+- validar apenas por testes locais sem build/install real.
+
+**Dono:** maintainer + plataforma.
+**Impacto:** política de execução:
+- backend segue com backlog próprio sem freeze;
+- checkpoint obrigatório de app release/preview antes de iniciar próxima major feature backend;
+- novos itens adicionados ao backend podem coexistir, respeitando o checkpoint entre blocos maiores.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |
