@@ -351,6 +351,25 @@ Para `auraxis-api`, manter sem `ci-passed` (já inexistente no workflow) e remov
 
 ---
 
+### DEC-027 — Postergar publicação externa até fechar bloco funcional backend atual
+
+**Decisão:** postergar o ciclo de publicação externa (Play Store/App Store para app e publicação web pública) para depois do fechamento do bloco funcional backend atualmente em execução.
+
+**Racional:** o setup de publicação em lojas exige custos e overhead operacional neste momento. O foco imediato é estabilidade de fundação + entrega de features backend com validação local de frontend/mobile.
+
+**Alternativas rejeitadas:**
+- manter trilha de publicação externa em paralelo com backend;
+- avançar com App Store neste ciclo (custo imediato sem ganho de curto prazo);
+- forçar release público antecipado da web antes do fechamento funcional backend.
+
+**Dono:** maintainer + plataforma.
+**Impacto:** estratégia operacional passa a ser local-first temporariamente:
+- app: Android Studio/Xcode e builds de preview sem submissão;
+- web: execução/validação local sem release público;
+- retomada de PLT2/PLT5 externo somente após conclusão do bloco backend.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

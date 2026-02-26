@@ -2,6 +2,14 @@
 
 Data: 2026-02-25
 
+## Atualizacao de priorizacao (2026-02-25 — local-first)
+- Publicacao externa (stores/app e release web publica) foi postergada por decisao de custo e foco.
+- Fluxo vigente ate o fechamento do bloco funcional backend atual:
+  - app: desenvolvimento/validacao local (Android Studio/Xcode), sem submissao em loja;
+  - web: desenvolvimento/validacao local, sem publicacao externa.
+- Validacao tecnica do app em dispositivo real concluida:
+  - APK de preview instalado com sucesso em Samsung Z Fold 7.
+
 ## Atualização PLT4.1 (2026-02-25 — hygiene gate de flags)
 - `auraxis-web`:
   - catálogo versionado em `config/feature-flags.json`;
