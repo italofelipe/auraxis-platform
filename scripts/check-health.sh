@@ -50,6 +50,21 @@ fail() {
 }
 section() { echo ""; echo "── $* ──────────────────────────────────────────"; }
 
+resolve_expected_ci_node_major() {
+  local repo_path="$1"
+  local workflow="$repo_path/.github/workflows/ci.yml"
+  if [[ ! -f "$workflow" ]]; then
+    printf ""
+    return 0
+  fi
+  local raw
+  raw="$(rg -n "NODE_VERSION:\\s*['\"]?[0-9]+" "$workflow" -o 2>/dev/null | head -n1 | awk -F: '{print $NF}' | tr -d " '\"")"
+  if [[ -z "$raw" ]]; then
+    raw="$(rg -n "node-version:\\s*['\"]?[0-9]+" "$workflow" -o 2>/dev/null | head -n1 | awk -F: '{print $NF}' | tr -d " '\"")"
+  fi
+  printf "%s" "$raw"
+}
+
 # ── Platform checks ────────────────────────────────────────────────────────────
 
 check_platform() {
@@ -159,7 +174,11 @@ check_repo() {
     fi
 
     BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    ok "Branch: $BRANCH"
+    if [[ "$BRANCH" == "HEAD" ]]; then
+      warn "Branch: detached HEAD (run scripts/prepare-repo-for-agent-run.sh $repo_name)"
+    else
+      ok "Branch: $BRANCH"
+    fi
 
     REMOTE=$(git remote get-url origin 2>/dev/null || echo "")
     if [[ -z "$REMOTE" ]]; then
@@ -226,7 +245,14 @@ check_web() {
   if [[ -f "$path/package.json" ]]; then
     ok "package.json present"
     if command -v node &>/dev/null; then
-      ok "Node: $(node --version)"
+      NODE_VERSION_RAW="$(node --version)"
+      ok "Node: ${NODE_VERSION_RAW}"
+      NODE_MAJOR="${NODE_VERSION_RAW#v}"
+      NODE_MAJOR="${NODE_MAJOR%%.*}"
+      EXPECTED_NODE_MAJOR="$(resolve_expected_ci_node_major "$path")"
+      if [[ -n "$EXPECTED_NODE_MAJOR" && "$NODE_MAJOR" != "$EXPECTED_NODE_MAJOR" ]]; then
+        warn "Node major mismatch vs CI: local=${NODE_MAJOR}, ci=${EXPECTED_NODE_MAJOR}"
+      fi
     else
       warn "node not found in PATH"
     fi
@@ -272,7 +298,14 @@ check_mobile() {
   if [[ -f "$path/package.json" ]]; then
     ok "package.json present"
     if command -v node &>/dev/null; then
-      ok "Node: $(node --version)"
+      NODE_VERSION_RAW="$(node --version)"
+      ok "Node: ${NODE_VERSION_RAW}"
+      NODE_MAJOR="${NODE_VERSION_RAW#v}"
+      NODE_MAJOR="${NODE_MAJOR%%.*}"
+      EXPECTED_NODE_MAJOR="$(resolve_expected_ci_node_major "$path")"
+      if [[ -n "$EXPECTED_NODE_MAJOR" && "$NODE_MAJOR" != "$EXPECTED_NODE_MAJOR" ]]; then
+        warn "Node major mismatch vs CI: local=${NODE_MAJOR}, ci=${EXPECTED_NODE_MAJOR}"
+      fi
     else
       warn "node not found in PATH"
     fi

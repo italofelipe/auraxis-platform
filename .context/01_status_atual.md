@@ -2,6 +2,18 @@
 
 Data: 2026-02-27
 
+## Atualizacao Sprint A (2026-02-27 — autonomia operacional P0)
+- `scripts/ai-next-task.sh` agora executa preparação automática de repositório antes da orquestração (`AURAXIS_AUTO_PREP_REPOS=true` por padrão).
+- Novo script `scripts/prepare-repo-for-agent-run.sh`:
+  - faz `fetch --prune`;
+  - remove estado `detached HEAD` fazendo checkout da branch default remota;
+  - sincroniza `main/master` com `pull --rebase` quando aplicável.
+- `ai_squad/main.py` endurecido com bloqueio explícito de drift:
+  - se o run reportar `task_id` diferente do `task_id` resolvido no preflight, o status final é `blocked` com motivo explícito.
+- `scripts/check-health.sh` ampliado:
+  - alerta para `detached HEAD` por repositório;
+  - alerta de mismatch de major de Node local vs CI (`NODE_VERSION` em workflow).
+
 ## Atualizacao Contratos + PR Governance + Lead Time (2026-02-27)
 - `auraxis-web`:
   - adicionados `contracts:sync` e `contracts:check` com geração tipada OpenAPI em

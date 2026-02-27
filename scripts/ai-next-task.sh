@@ -3,14 +3,25 @@ set -euo pipefail
 
 PLATFORM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SQUAD_DIR="${PLATFORM_ROOT}/ai_squad"
+PREP_SCRIPT="${PLATFORM_ROOT}/scripts/prepare-repo-for-agent-run.sh"
 
 TARGET_REPO="${1:-all}"
 BRIEFING="${2:-Execute a tarefa}"
 MODE="${3:-run}"
+AUTO_PREP="${AURAXIS_AUTO_PREP_REPOS:-true}"
 
 if [[ ! -d "${SQUAD_DIR}" ]]; then
   echo "ai_squad directory not found at: ${SQUAD_DIR}" >&2
   exit 1
+fi
+
+if [[ "${AUTO_PREP}" == "true" ]]; then
+  if [[ ! -x "${PREP_SCRIPT}" ]]; then
+    echo "repo prep script missing or not executable: ${PREP_SCRIPT}" >&2
+    exit 1
+  fi
+  echo "[ai-next-task] Preparing repository state for autonomous run..."
+  "${PREP_SCRIPT}" "${TARGET_REPO}"
 fi
 
 if [[ ! -d "${SQUAD_DIR}/.venv" ]]; then

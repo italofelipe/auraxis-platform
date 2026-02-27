@@ -732,6 +732,29 @@ autônomos, mantendo payloads humanos, compactos e fáceis de revisar.
 
 ---
 
+### DEC-043 — Auto-prepare de repositório + bloqueio hard de task_id drift
+
+**Decisão:** toda execução via `ai-next-task.sh` deve preparar o estado dos repositórios-alvo
+antes de rodar agentes (fetch, saída de `detached HEAD`, sync de branch base), e o
+orquestrador deve bloquear o run quando houver divergência entre `task_id` resolvido no
+preflight e `task_id` reportado ao final.
+
+**Racional:** reduzir bloqueios recorrentes observados em runs paralelos por
+`detached HEAD`, branch desatualizada e mudança implícita de task durante execução.
+
+**Alternativas rejeitadas:**
+- manter preparação manual por operador;
+- aceitar drift de task e corrigir somente via revisão humana posterior;
+- permitir execução com `HEAD` detached e resolver apenas no momento do push.
+
+**Dono:** platform/ai-squad.
+**Impacto:**
+- novo script `scripts/prepare-repo-for-agent-run.sh`;
+- `scripts/ai-next-task.sh` passa a chamar auto-prep por padrão;
+- `ai_squad/main.py` bloqueia run com `task_id drift detected`.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

@@ -2,6 +2,14 @@
 
 Atualizado: 2026-02-25
 
+## Sprint A — Autonomia operacional (P0)
+
+Status:
+- ✅ Auto-prepare de repositórios antes do run (`scripts/prepare-repo-for-agent-run.sh` + integração no `ai-next-task.sh`).
+- ✅ Bloqueio hard de `task_id drift` no orquestrador multi-repo.
+- ✅ Health check ampliado para detectar `detached HEAD` e mismatch de Node local vs CI.
+- ⏳ Pendência imediata: padronizar runtime local Node `22.x` em app/web (paridade com CI).
+
 ## Estado dos blocos de plataforma
 
 1. `PLT2` (stores app + PWA): **45% — DEFERRED**

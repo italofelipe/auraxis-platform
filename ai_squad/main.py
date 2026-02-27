@@ -1249,6 +1249,24 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
             **extracted,
             "status": status,
         }
+        resolved_task_id = inferred_task_id.upper()
+        reported_task_id = str(result.get("task_id", "")).strip().upper()
+        if reported_task_id and reported_task_id != resolved_task_id:
+            result["status"] = "blocked"
+            drift_message = (
+                "task_id drift detected: "
+                f"resolved={resolved_task_id}, reported={reported_task_id}"
+            )
+            hints = list(result.get("tech_debt_hints", []))
+            hints.append(drift_message)
+            result["tech_debt_hints"] = hints[:5]
+            stderr = str(result.get("stderr", "")).strip()
+            if stderr:
+                result["stderr"] = f"{stderr}\n{drift_message}"
+            else:
+                result["stderr"] = drift_message
+            result["task_id"] = resolved_task_id
+
         append_ledger_entry(
             {
                 "repo": repo,
