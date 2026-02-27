@@ -54,7 +54,14 @@ from tools.task_status import (
     infer_task_id,
     write_status_entry,
 )
-from tools.tool_security import PLATFORM_ROOT, PROJECT_ROOT, SQUAD_ROOT, TARGET_REPO_NAME
+from tools.tool_security import (
+    PLATFORM_ROOT,
+    PROJECT_ROOT,
+    SQUAD_ROOT,
+    TARGET_REPO_NAME,
+    get_tool_audit_snapshot,
+    reset_tool_audit_snapshot,
+)
 from tools.project_tools import (
     GetLatestMigrationTool,
     GitOpsTool,
@@ -98,10 +105,30 @@ _CHECKLIST_RE = re.compile(r"^\s*-\s*\[(?P<status>[ x~!])\]\s+\*\*(?P<id>[A-Z]+-
 _TABLE_ID_RE = re.compile(r"^[A-Z]+-\d+$|^[A-Z]+\d+$")
 _STATUS_VALUES = {"todo", "in progress", "blocked", "done"}
 _COMMIT_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
+_CRITICAL_AUDIT_TOOLS = {
+    "run_repo_quality_gates",
+    "run_backend_tests",
+    "run_frontend_tests",
+    "run_integration_tests",
+    "git_operations",
+    "update_task_status",
+}
+_POLICY_FINGERPRINT_FILES: tuple[Path, ...] = (
+    PLATFORM_ROOT / ".context" / "07_steering_global.md",
+    PLATFORM_ROOT / ".context" / "08_agent_contract.md",
+    PLATFORM_ROOT / "product.md",
+)
 
 
 def _briefing_hash(briefing: str) -> str:
     return hashlib.sha256((briefing or "").strip().encode("utf-8")).hexdigest()[:16]
+
+
+def _resolve_orchestration_task_id(briefing: str) -> str:
+    explicit = infer_task_id(briefing)
+    if explicit != "UNSPECIFIED":
+        return explicit
+    return f"ORCH-{_briefing_hash(briefing).upper()[:8]}"
 
 
 def _task_board_path(repo: str) -> Path | None:
@@ -162,6 +189,58 @@ def _resolve_task_id_for_repo(repo: str, briefing: str) -> str:
     return "UNSPECIFIED"
 
 
+def _compute_policy_fingerprint() -> str:
+    digest = hashlib.sha256()
+    for file_path in _POLICY_FINGERPRINT_FILES:
+        if not file_path.exists():
+            continue
+        digest.update(file_path.read_bytes())
+    return digest.hexdigest()[:16]
+
+
+def _validate_policy_fingerprint(expected_fingerprint: str) -> tuple[bool, str]:
+    expected = (expected_fingerprint or "").strip().lower()
+    if not expected:
+        return True, ""
+    current = _compute_policy_fingerprint().lower()
+    if current == expected:
+        return True, current
+    msg = (
+        "policy fingerprint drift detected. "
+        f"expected={expected}, current={current}. "
+        "Re-run orchestration after syncing context files."
+    )
+    return False, msg
+
+
+def _check_repo_worktree_clean(repo: str) -> tuple[bool, str]:
+    repo_root = PLATFORM_ROOT / "repos" / repo
+    if not repo_root.exists():
+        return False, f"repository path not found: {repo_root}"
+
+    result = subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        message = result.stderr.strip() or result.stdout.strip() or "unknown git error"
+        return False, f"unable to inspect worktree: {message}"
+
+    dirty_entries = [line for line in result.stdout.splitlines() if line.strip()]
+    if not dirty_entries:
+        return True, ""
+
+    preview = "\n".join(dirty_entries[:20])
+    return False, (
+        "repository has uncommitted changes. "
+        "Clean the worktree before autonomous run.\n"
+        f"{preview}"
+    )
+
+
 def _extract_summary_from_output(
     default_task_id: str,
     stdout_text: str,
@@ -175,7 +254,19 @@ def _extract_summary_from_output(
             break
 
     merged = f"{stdout_text}\n{stderr_text}"
-    commit_hashes = sorted(set(_COMMIT_RE.findall(merged)))
+    hash_candidates: list[str] = []
+    for line in merged.splitlines():
+        stripped = line.strip()
+        lowered = stripped.lower()
+        if (
+            "commit" in lowered
+            or "committed" in lowered
+            or "head is now at" in lowered
+            or stripped.startswith("[")
+        ):
+            hash_candidates.extend(_COMMIT_RE.findall(stripped))
+
+    commit_hashes = sorted(set(hash_candidates))
     if len(commit_hashes) > 10:
         commit_hashes = commit_hashes[-10:]
 
@@ -206,12 +297,85 @@ def _extract_summary_from_output(
         if len(tech_debt_hints) >= 5:
             break
 
+    quality_gate_failed = "tool=run_repo_quality_gates | status=error" in merged_lower
+    explicit_error_tools = (
+        "tool=run_backend_tests | status=error",
+        "tool=run_frontend_tests | status=error",
+        "tool=run_integration_tests | status=error",
+        "tool=run_repo_quality_gates | status=error",
+    )
+    tool_error_detected = any(marker in merged_lower for marker in explicit_error_tools)
+
     return {
         "task_id": task_id,
         "commit_hashes": commit_hashes,
         "precommit_status": precommit_status,
+        "quality_gate_failed": quality_gate_failed,
+        "tool_error_detected": tool_error_detected,
         "tech_debt_hints": tech_debt_hints,
     }
+
+
+def _derive_single_run_status(
+    result_text: str,
+    *,
+    repo_name: str,
+    execution_mode: str,
+) -> tuple[bool, list[str]]:
+    reasons: list[str] = []
+    normalized = result_text.upper()
+    if any(marker in normalized for marker in ("FAIL", "ERROR", "BLOCKED", "ISSUES")):
+        reasons.append("result_text_markers")
+
+    audit_events = get_tool_audit_snapshot()
+    saw_update_task_status_ok = False
+    saw_repo_quality_gate_ok = False
+    saw_backend_tests_ok = False
+    saw_integration_tests_ok = False
+    saw_integration_tests_error = False
+    for event in audit_events:
+        tool = str(event.get("tool", ""))
+        status = str(event.get("status", "")).upper()
+        preview = str(event.get("result_preview", "")).lower()
+        if tool == "update_task_status" and status == "OK":
+            saw_update_task_status_ok = True
+        if (
+            tool == "run_repo_quality_gates"
+            and status == "OK"
+            and "return_code: 0" in preview
+        ):
+            saw_repo_quality_gate_ok = True
+        if tool == "run_backend_tests" and status == "OK":
+            saw_backend_tests_ok = True
+        if tool == "run_integration_tests":
+            if status == "OK":
+                saw_integration_tests_ok = True
+            if status == "ERROR":
+                saw_integration_tests_error = True
+        if status == "ERROR" and tool in _CRITICAL_AUDIT_TOOLS:
+            reasons.append(f"audit_error:{tool}")
+            continue
+        if tool == "run_repo_quality_gates" and "return_code: 0" not in preview:
+            reasons.append("quality_gate_nonzero")
+            continue
+        if tool == "git_operations" and "commit error" in preview:
+            reasons.append("git_commit_error")
+            continue
+
+    if execution_mode == "run":
+        if not saw_update_task_status_ok:
+            reasons.append("missing_task_status_update")
+        if repo_name in ("auraxis-web", "auraxis-app") and not saw_repo_quality_gate_ok:
+            reasons.append("missing_or_failed_repo_quality_gate")
+        if repo_name == "auraxis-api" and not saw_backend_tests_ok:
+            reasons.append("missing_or_failed_backend_tests")
+        if repo_name == "auraxis-api" and (
+            not saw_integration_tests_ok or saw_integration_tests_error
+        ):
+            reasons.append("missing_or_failed_integration_tests")
+
+    deduped = list(dict.fromkeys(reasons))
+    return (len(deduped) > 0, deduped)
 
 
 def _stream_subprocess(
@@ -842,11 +1006,86 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
     env_base = os.environ.copy()
     child_timeout_seconds = int(os.getenv("AURAXIS_CHILD_TIMEOUT_SECONDS", "3600"))
     force_rerun = os.getenv("AURAXIS_FORCE_RERUN", "false").strip().lower() == "true"
+    allow_dirty_worktree = (
+        os.getenv("AURAXIS_ALLOW_DIRTY_WORKTREE", "false").strip().lower() == "true"
+    )
+    policy_fingerprint = _compute_policy_fingerprint()
     results: dict[str, dict[str, object]] = {}
     briefing_hash = _briefing_hash(briefing)
 
     def _run_target(repo: str) -> dict[str, object]:
         inferred_task_id = _resolve_task_id_for_repo(repo, briefing)
+        if inferred_task_id == "UNSPECIFIED":
+            reason = (
+                "preflight blocked: no task ID could be resolved from tasks board. "
+                "Set explicit task ID in briefing or fix tasks file markers."
+            )
+            print(f"[{repo}][orchestrator] {reason}")
+            blocked_result = {
+                "returncode": 1,
+                "timed_out": False,
+                "duration_seconds": 0.0,
+                "stdout": "",
+                "stderr": reason,
+                "task_id": "UNRESOLVED",
+                "status": "blocked",
+                "commit_hashes": [],
+                "precommit_status": "failed",
+                "tech_debt_hints": [reason],
+            }
+            append_ledger_entry(
+                {
+                    "repo": repo,
+                    "task_id": blocked_result["task_id"],
+                    "briefing_hash": briefing_hash,
+                    "execution_mode": execution_mode,
+                    "status": "blocked",
+                    "returncode": 1,
+                    "timed_out": False,
+                    "duration_seconds": 0.0,
+                    "commit_hashes": [],
+                    "precommit_status": "failed",
+                    "skip_reason": reason,
+                },
+                repo=repo,
+            )
+            return blocked_result
+
+        if not allow_dirty_worktree:
+            is_clean, clean_message = _check_repo_worktree_clean(repo)
+            if not is_clean:
+                reason = f"preflight blocked: {clean_message}"
+                print(f"[{repo}][orchestrator] {reason}")
+                blocked_result = {
+                    "returncode": 1,
+                    "timed_out": False,
+                    "duration_seconds": 0.0,
+                    "stdout": "",
+                    "stderr": reason,
+                    "task_id": inferred_task_id,
+                    "status": "blocked",
+                    "commit_hashes": [],
+                    "precommit_status": "failed",
+                    "tech_debt_hints": [reason],
+                }
+                append_ledger_entry(
+                    {
+                        "repo": repo,
+                        "task_id": inferred_task_id,
+                        "briefing_hash": briefing_hash,
+                        "execution_mode": execution_mode,
+                        "status": "blocked",
+                        "returncode": 1,
+                        "timed_out": False,
+                        "duration_seconds": 0.0,
+                        "commit_hashes": [],
+                        "precommit_status": "failed",
+                        "skip_reason": reason,
+                    },
+                    repo=repo,
+                )
+                return blocked_result
+
         if not force_rerun and inferred_task_id != "UNSPECIFIED":
             latest = get_latest_ledger_entry(
                 repo=repo,
@@ -891,8 +1130,17 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
                 return skipped_result
 
         env = env_base.copy()
+        child_briefing = briefing
+        if infer_task_id(briefing) == "UNSPECIFIED" and inferred_task_id != "UNSPECIFIED":
+            child_briefing = (
+                f"{briefing}\n\n"
+                f"Task obrigatoria deste repositorio: {inferred_task_id}.\n"
+                "Implemente somente essa task e nao troque para outra."
+            )
         env["AURAXIS_TARGET_REPO"] = repo
-        env["AURAXIS_BRIEFING"] = briefing
+        env["AURAXIS_BRIEFING"] = child_briefing
+        env["AURAXIS_RESOLVED_TASK_ID"] = inferred_task_id
+        env["AURAXIS_POLICY_FINGERPRINT"] = policy_fingerprint
         env["AURAXIS_EXECUTION_MODE"] = execution_mode
         env["AURAXIS_MULTI_CHILD"] = "1"
         raw = _stream_subprocess(
@@ -912,6 +1160,12 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
         elif raw["returncode"] != 0:
             status = "blocked"
         elif "status: blocked" in raw["stdout"].lower():
+            status = "blocked"
+        elif extracted.get("precommit_status") == "failed":
+            status = "blocked"
+        elif extracted.get("quality_gate_failed"):
+            status = "blocked"
+        elif extracted.get("tool_error_detected"):
             status = "blocked"
 
         result = {
@@ -1005,6 +1259,7 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
                 print(f"  - {hint}")
     print("=== MASTER CONSOLIDATED SUMMARY ===")
     print(f"briefing_hash: {briefing_hash}")
+    print(f"policy_fingerprint: {policy_fingerprint}")
     print(f"execution_mode: {execution_mode}")
     print(f"repos_done: {done_count}")
     print(f"repos_skipped: {skipped_count}")
@@ -1039,6 +1294,7 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
 # =================================================================
 
 if __name__ == "__main__":
+    reset_tool_audit_snapshot()
     target_env = os.getenv("AURAXIS_TARGET_REPO", "all").strip()
     execution_mode = os.getenv("AURAXIS_EXECUTION_MODE", "run").strip().lower()
     plan_only = execution_mode == "plan_only"
@@ -1057,15 +1313,60 @@ if __name__ == "__main__":
         "Execute a tarefa",
     )
     task_id = infer_task_id(briefing)
+    task_id_hint = os.getenv("AURAXIS_RESOLVED_TASK_ID", "").strip().upper()
+    if task_id == "UNSPECIFIED" and _TABLE_ID_RE.match(task_id_hint):
+        task_id = task_id_hint
+    if task_id == "UNSPECIFIED" and target_env.lower() not in ("all", "auraxis-all", "*"):
+        task_id = _resolve_task_id_for_repo(TARGET_REPO_NAME, briefing)
+
+    def _exit_preflight_block(blocked_task_id: str, details: str) -> None:
+        safe_task_id = blocked_task_id
+        if safe_task_id == "UNSPECIFIED":
+            safe_task_id = f"UNRESOLVED-{TARGET_REPO_NAME.upper()}"
+        status_file = write_status_entry(
+            task_id=safe_task_id,
+            status="blocked",
+            phase="preflight-blocked",
+            implemented="Preflight validation blocked execution before Crew kickoff.",
+            next_task_suggestion="Fix preflight blockers and rerun with the same briefing.",
+            details=details,
+            notify_manager=True,
+            notify_parallel_agents=True,
+        )
+        print("=== AI_SQUAD RUN SUMMARY ===")
+        print(f"task_id: {safe_task_id}")
+        print("status: blocked")
+        print("implemented: preflight validation gate.")
+        print(
+            "next_task_suggestion: fix preflight blockers and rerun with the same briefing."
+        )
+        print(f"status_file: {status_file}")
+        print("[NOTIFY_MANAGER] Preflight blocker detected. Check tasks_status file.")
+        print(
+            "[NOTIFY_PARALLEL_AGENTS] Hold dependent tasks until preflight blockers are resolved."
+        )
+        sys.exit(1)
 
     if target_env.lower() in ("all", "auraxis-all", "*"):
+        task_id = _resolve_orchestration_task_id(briefing)
+        planned_task_ids = {
+            repo: _resolve_task_id_for_repo(repo, briefing)
+            for repo in ("auraxis-api", "auraxis-web", "auraxis-app")
+        }
+        planned_details = (
+            f"Briefing: {briefing}\n\n"
+            "Resolved per-repo task IDs:\n"
+            f"- auraxis-api: {planned_task_ids['auraxis-api']}\n"
+            f"- auraxis-web: {planned_task_ids['auraxis-web']}\n"
+            f"- auraxis-app: {planned_task_ids['auraxis-app']}"
+        )
         write_status_entry(
             task_id=task_id,
             status="in_progress",
             phase="multi-run-start",
             implemented="Multi-repo orchestration requested.",
             next_task_suggestion="Wait for per-repo execution summary.",
-            details=f"Briefing: {briefing}",
+            details=planned_details,
         )
         rc = run_multi_repo_orchestration(briefing, execution_mode)
         final_status = "done" if rc == 0 else "blocked"
@@ -1079,7 +1380,13 @@ if __name__ == "__main__":
                 if rc == 0
                 else "Fix blockers in failed repository run(s) and retry."
             ),
-            details=f"overall_return_code={rc}",
+            details=(
+                f"overall_return_code={rc}\n\n"
+                "Resolved per-repo task IDs:\n"
+                f"- auraxis-api: {planned_task_ids['auraxis-api']}\n"
+                f"- auraxis-web: {planned_task_ids['auraxis-web']}\n"
+                f"- auraxis-app: {planned_task_ids['auraxis-app']}"
+            ),
             notify_manager=True,
             notify_parallel_agents=True,
         )
@@ -1091,6 +1398,43 @@ if __name__ == "__main__":
         )
         print(f"status_file: {status_file}")
         sys.exit(rc)
+
+    policy_expected = os.getenv("AURAXIS_POLICY_FINGERPRINT", "").strip()
+    policy_ok, policy_details = _validate_policy_fingerprint(policy_expected)
+    if not policy_ok:
+        _exit_preflight_block(
+            task_id,
+            (
+                f"repo={TARGET_REPO_NAME}\n"
+                f"briefing={briefing}\n"
+                f"error={policy_details}"
+            ),
+        )
+
+    if task_id == "UNSPECIFIED":
+        _exit_preflight_block(
+            task_id,
+            (
+                f"repo={TARGET_REPO_NAME}\n"
+                f"briefing={briefing}\n"
+                "error=unable to resolve task id from briefing/tasks board."
+            ),
+        )
+
+    allow_dirty_worktree = (
+        os.getenv("AURAXIS_ALLOW_DIRTY_WORKTREE", "false").strip().lower() == "true"
+    )
+    if not allow_dirty_worktree:
+        is_clean, clean_message = _check_repo_worktree_clean(TARGET_REPO_NAME)
+        if not is_clean:
+            _exit_preflight_block(
+                task_id,
+                (
+                    f"repo={TARGET_REPO_NAME}\n"
+                    f"briefing={briefing}\n"
+                    f"error={clean_message}"
+                ),
+            )
 
     write_status_entry(
         task_id=task_id,
@@ -1108,9 +1452,10 @@ if __name__ == "__main__":
         else:
             result = squad.run_frontend_workflow(briefing, plan_only=plan_only)
         result_text = str(result)
-        normalized = result_text.upper()
-        is_blocked = any(
-            marker in normalized for marker in ("FAIL", "ERROR", "BLOCKED", "ISSUES")
+        is_blocked, block_reasons = _derive_single_run_status(
+            result_text,
+            repo_name=TARGET_REPO_NAME,
+            execution_mode=execution_mode,
         )
         final_status = "blocked" if is_blocked else "done"
         next_task = (
@@ -1118,6 +1463,9 @@ if __name__ == "__main__":
             if is_blocked
             else "Advance to the next pending task in tasks.md/TASKS.md."
         )
+        details = result_text
+        if block_reasons:
+            details = f"block_reasons={', '.join(block_reasons)}\n\n{result_text}"
         status_file = write_status_entry(
             task_id=task_id,
             status=final_status,
@@ -1126,7 +1474,7 @@ if __name__ == "__main__":
                 "PM->Dev->QA workflow executed with planning, code review and validation phases."
             ),
             next_task_suggestion=next_task,
-            details=result_text,
+            details=details,
             notify_manager=True,
             notify_parallel_agents=True,
         )

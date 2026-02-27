@@ -2,6 +2,20 @@
 
 Data: 2026-02-26
 
+## Atualizacao Guardrails (2026-02-27 — anti-drift operacional + saneamento app/api)
+- Verificacao de estado dos repos de produto antes da rodada:
+  - `auraxis-api`: alterações de B11 validadas e consolidadas em commit único (`feat(user): persist investor profile suggestion fields`), removendo commit extra fora de escopo.
+  - `auraxis-app`: alterações inconsistentes prévias descartadas; baseline limpo antes da nova instrumentação.
+- Guardrails novos no `ai_squad`:
+  - preflight bloqueia execução sem `task_id` resolvido (elimina runs com `UNSPECIFIED`);
+  - preflight bloqueia execução com worktree sujo por repo (anti-contaminação de escopo);
+  - fingerprint de política global (`07_steering_global.md`, `08_agent_contract.md`, `product.md`) validado no início para detectar drift de contexto;
+  - resolução automática prioriza task `In Progress` antes de `Todo` (continuidade de bloco);
+  - validação final mais rígida: exige atualização de task e gates obrigatórios por stack.
+- Guardrails novos no `auraxis-app`:
+  - `scripts/check-frontend-governance.cjs` reforçado (TS-only + shared canônico + token-first styling);
+  - guardrail integrado em `quality-check`, lint-staged, CI (`frontend-governance`) e parity local.
+
 ## Atualizacao Orquestrador (2026-02-27 — resiliencia, idempotencia e logs detalhados)
 - `ai_squad/main.py` hardening de execucao multi-repo:
   - timeout por repo filho (`AURAXIS_CHILD_TIMEOUT_SECONDS`, default `3600s`);
@@ -608,3 +622,72 @@ Principais gaps: Jest setup real (APP2), Vitest config (WEB2), SonarCloud (APP4/
 1. Executar CI em `auraxis-app` e `auraxis-web` para confirmar verde pós-hardening.
 2. Aplicar branch protection atualizado via `scripts/apply-branch-protection.sh`.
 3. Iniciar backlog de negócio (`B10`/`B11`) com lanes paralelas consumidoras em web/app.
+
+---
+
+## 2026-02-27 — Endurecimento de governança frontend (fase inicial concluída)
+
+### Entregas feitas
+
+- `tasks.md` de `auraxis-web` e `auraxis-app` atualizados com plano em etapas para hardening (`WEB22`/`APP20`) e backlog de refinamento para:
+  - autenticação com cookie httpOnly;
+  - refresh token;
+  - logoff global em todos os dispositivos.
+- Gate técnico de governança criado em ambos os frontends:
+  - `scripts/check-frontend-governance.cjs` (web/app);
+  - integração em `quality-check`, `pre-commit`, CI e `run_ci_like_actions_local.sh`.
+- Estrutura shared inicial criada:
+  - web: `app/shared/{components,types,validators,utils}`;
+  - app: `shared/{components,types,validators,utils}`.
+- ESLint endurecido em web/app com:
+  - `@typescript-eslint/explicit-function-return-type`;
+  - `@typescript-eslint/explicit-module-boundary-types`;
+  - `eslint-plugin-jsdoc` com JSDoc obrigatório.
+- Artefatos de frontend fora do padrão removidos (arquivos JS experimentais e componentes legados de baixa qualidade) para reduzir drift imediato.
+
+### Estado atual dos gates
+
+- `policy:check` passa em web e app.
+- `lint` falha em web e app devido passivo legado (funções sem JSDoc/retorno explícito), agora visível e rastreável para correção em lotes.
+
+### Próximo passo operacional
+
+1. Remediar violações de lint em lotes pequenos por domínio (composables/hooks primeiro, depois páginas/telas).
+2. Migrar blocos de UI restantes para componentes da library + tokens, reduzindo estilos arbitrários.
+3. Avançar `WEB22.4` e `APP20.4` até zerar erros e estabilizar `quality-check`.
+
+---
+
+## 2026-02-27 — Hardening adicional do orquestrador frontend
+
+### O que mudou
+
+- Resolver automático de task no `ai_squad` passou a priorizar `Todo` antes de `In Progress` em briefing genérico.
+- Briefing enviado aos child processes agora inclui task obrigatória por repo (evita troca silenciosa de task durante execução).
+- `WriteFileTool` ganhou enforcement de design tokens no frontend:
+  - bloqueia literals de estilo em web/app fora de arquivos de tema/tokens;
+  - exemplos bloqueados: `font-size: 1rem`, `fontWeight: 600`, `border: 1px solid #ccc`, `borderRadius: 4`.
+- `update_task_status` segue com anti-drift ativo e agora converge com o resolver de task do master.
+
+### Resultado esperado
+
+- Menos divergência entre task resolvida pelo master e task atualizada pelo child.
+- Menos geração de UI com valores arbitrários fora do sistema de tokens.
+
+---
+
+## 2026-02-27 — Hard rules frontend (TS-only/JSDoc/Chakra/shared)
+
+### O que mudou
+
+- Governança frontend reforçada para reduzir necessidade de polimento manual:
+  - código de produto em `.ts`/`.tsx` (sem `.js`/`.jsx`);
+  - funções com retorno explícito e JSDoc obrigatório;
+  - no web, priorizar componentes Chakra UI e wrappers internos em vez de tags HTML cruas;
+  - código compartilhado entre features deve residir em `app/shared`.
+- `ai_squad` passou a bloquear essas violações no ponto de escrita (`WriteFileTool`).
+
+### Resultado esperado
+
+- Queda de drift de estilo/arquitetura em entregas dos agentes de frontend.
+- Menos ciclos de retrabalho por inconsistência de padrão.

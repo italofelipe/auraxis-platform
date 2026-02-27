@@ -13,6 +13,7 @@ References:
 """
 
 import fnmatch
+import os
 import re
 from pathlib import Path
 
@@ -23,6 +24,7 @@ from .tool_security import (
     DEFAULT_TIMEOUT_SECONDS,
     GIT_STAGE_BLOCKLIST,
     PROJECT_ROOT,
+    TARGET_REPO_NAME,
     audit_log,
     safe_subprocess,
     validate_write_path,
@@ -825,8 +827,24 @@ class UpdateTaskStatusTool(BaseTool):
         progress: str = "100%",
         commit_hash: str = "",
     ) -> str:
+        import os
         import re
         from datetime import date
+
+        expected_task_id = os.getenv("AURAXIS_RESOLVED_TASK_ID", "").strip().upper()
+        normalized_task_id = (task_id or "").strip().upper()
+        if expected_task_id and normalized_task_id != expected_task_id:
+            msg = (
+                f"BLOCKED: task_id drift detected. "
+                f"Expected '{expected_task_id}' but got '{normalized_task_id}'."
+            )
+            audit_log(
+                "update_task_status",
+                {"task_id": task_id, "expected_task_id": expected_task_id},
+                msg,
+                status="ERROR",
+            )
+            return msg
 
         tasks_path = _resolve_tasks_file()
         if not tasks_path.exists():
@@ -919,6 +937,252 @@ class UpdateTaskStatusTool(BaseTool):
 # Write tools
 # ---------------------------------------------------------------------------
 
+_FRONTEND_SOURCE_EXTENSIONS = {
+    ".css",
+    ".scss",
+    ".sass",
+    ".less",
+    ".vue",
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+}
+
+_FRONTEND_TS_ONLY_BLOCKED_EXTENSIONS = {".js", ".jsx"}
+
+_WEB_RAW_HTML_TAG_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"<\s*p\b", re.IGNORECASE),
+    re.compile(r"<\s*input\b", re.IGNORECASE),
+    re.compile(r"<\s*label\b", re.IGNORECASE),
+    re.compile(r"<\s*textarea\b", re.IGNORECASE),
+    re.compile(r"<\s*select\b", re.IGNORECASE),
+    re.compile(r"<\s*button\b", re.IGNORECASE),
+)
+
+_MISSING_RETURN_TYPE_FUNCTION_DECL_RE = re.compile(
+    r"^\s*(?:export\s+)?(?:async\s+)?function\s+[A-Za-z_]\w*\s*\([^)]*\)\s*\{"
+)
+_MISSING_RETURN_TYPE_ARROW_RE = re.compile(
+    r"^\s*(?:export\s+)?const\s+[A-Za-z_]\w*\s*=\s*(?:async\s+)?\([^)]*\)\s*=>"
+)
+_MISSING_RETURN_TYPE_ARROW_SINGLE_ARG_RE = re.compile(
+    r"^\s*(?:export\s+)?const\s+[A-Za-z_]\w*\s*=\s*(?:async\s+)?[A-Za-z_]\w*\s*=>"
+)
+
+_WEB_TOKEN_POLICY_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"\bfont-size\s*:\s*[0-9.]+(?:px|rem|em)\b", re.IGNORECASE),
+    re.compile(r"\bfont-weight\s*:\s*[1-9]00\b", re.IGNORECASE),
+    re.compile(r"\bborder-radius\s*:\s*[0-9.]+(?:px|rem|em)\b", re.IGNORECASE),
+    re.compile(r"\b(?:padding|margin|gap)[-\w]*\s*:\s*[0-9.]+(?:px|rem|em)\b", re.IGNORECASE),
+    re.compile(r"\bborder(?:-(?:top|right|bottom|left))?\s*:\s*[0-9.]+px\b", re.IGNORECASE),
+    re.compile(r"\b(?:color|background(?:-color)?|border-color)\s*:\s*#[0-9a-fA-F]{3,8}\b", re.IGNORECASE),
+)
+
+_APP_TOKEN_POLICY_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"\bfontSize\s*:\s*\d+(?:\.\d+)?\b"),
+    re.compile(r"\bfontWeight\s*:\s*['\"]?[1-9]00['\"]?\b"),
+    re.compile(r"\blineHeight\s*:\s*\d+(?:\.\d+)?\b"),
+    re.compile(r"\bborderRadius\s*:\s*\d+(?:\.\d+)?\b"),
+    re.compile(r"\bborderWidth\s*:\s*\d+(?:\.\d+)?\b"),
+    re.compile(r"\b(?:padding|paddingTop|paddingBottom|paddingLeft|paddingRight|paddingHorizontal|paddingVertical)\s*:\s*\d+(?:\.\d+)?\b"),
+    re.compile(r"\b(?:margin|marginTop|marginBottom|marginLeft|marginRight|marginHorizontal|marginVertical)\s*:\s*\d+(?:\.\d+)?\b"),
+    re.compile(r"\bgap\s*:\s*\d+(?:\.\d+)?\b"),
+    re.compile(r"\b(?:color|backgroundColor|borderColor)\s*:\s*['\"]#[0-9a-fA-F]{3,8}['\"]\b"),
+)
+
+
+def _is_theme_or_token_file(path: str) -> bool:
+    normalized = path.replace("\\", "/").lower()
+    token_indicators = (
+        "/theme/",
+        "/tokens/",
+        "design-tokens",
+        "styles/variables",
+        "styles/theme",
+        "theme.ts",
+        "theme.js",
+        "theme.css",
+        "tokens.ts",
+        "tokens.js",
+        "tokens.css",
+    )
+    return any(indicator in normalized for indicator in token_indicators)
+
+
+def _is_frontend_source_path(path: str) -> bool:
+    normalized = path.replace("\\", "/").strip().lower()
+    if TARGET_REPO_NAME == "auraxis-web":
+        prefixes = (
+            "app/",
+            "components/",
+            "composables/",
+            "layouts/",
+            "pages/",
+            "plugins/",
+            "stores/",
+            "shared/",
+            "types/",
+            "utils/",
+            "services/",
+        )
+    elif TARGET_REPO_NAME == "auraxis-app":
+        prefixes = (
+            "app/",
+            "src/",
+            "components/",
+            "hooks/",
+            "providers/",
+            "store/",
+            "stores/",
+            "shared/",
+            "types/",
+            "utils/",
+            "services/",
+            "config/",
+        )
+    else:
+        return False
+    return normalized.startswith(prefixes)
+
+
+def _has_jsdoc_block(lines: list[str], line_index: int) -> bool:
+    cursor = line_index - 1
+    while cursor >= 0 and not lines[cursor].strip():
+        cursor -= 1
+    if cursor < 0:
+        return False
+    if lines[cursor].strip().startswith("/**") and lines[cursor].strip().endswith("*/"):
+        return True
+    if not lines[cursor].strip().endswith("*/"):
+        return False
+    while cursor >= 0:
+        stripped = lines[cursor].strip()
+        if stripped.startswith("/**"):
+            return True
+        if stripped.startswith("/*") and not stripped.startswith("/**"):
+            return False
+        cursor -= 1
+    return False
+
+
+def _detect_frontend_language_policy_violation(path: str, content: str) -> str | None:
+    if TARGET_REPO_NAME not in {"auraxis-web", "auraxis-app"}:
+        return None
+    if not _is_frontend_source_path(path):
+        return None
+
+    suffix = Path(path).suffix.lower()
+
+    if suffix in _FRONTEND_TS_ONLY_BLOCKED_EXTENSIONS:
+        return (
+            "BLOCKED: JavaScript source files are forbidden in frontend code. "
+            "Use TypeScript only (`.ts`/`.tsx`)."
+        )
+
+    violations: list[str] = []
+    lines = content.splitlines()
+
+    if TARGET_REPO_NAME == "auraxis-web" and suffix == ".vue":
+        for line_no, raw_line in enumerate(lines, start=1):
+            stripped = raw_line.strip()
+            if not stripped:
+                continue
+            for pattern in _WEB_RAW_HTML_TAG_PATTERNS:
+                if pattern.search(stripped):
+                    violations.append(
+                        f"L{line_no}: raw HTML tag found (`{stripped[:120]}`)"
+                    )
+                    break
+
+    if suffix in {".ts", ".tsx", ".vue"} and not _is_theme_or_token_file(path):
+        for index, raw_line in enumerate(lines):
+            stripped = raw_line.strip()
+            if (
+                not stripped
+                or stripped.startswith("//")
+                or stripped.startswith("*")
+                or stripped.startswith("/*")
+            ):
+                continue
+
+            missing_return_type = (
+                _MISSING_RETURN_TYPE_FUNCTION_DECL_RE.match(stripped)
+                or _MISSING_RETURN_TYPE_ARROW_RE.match(stripped)
+                or _MISSING_RETURN_TYPE_ARROW_SINGLE_ARG_RE.match(stripped)
+            )
+            if missing_return_type:
+                line_no = index + 1
+                violations.append(
+                    f"L{line_no}: function without explicit return type (`{stripped[:120]}`)"
+                )
+                continue
+
+            has_function_signature = (
+                "function " in stripped
+                or "=> {" in stripped
+                or stripped.endswith("=>")
+            )
+            if has_function_signature and not _has_jsdoc_block(lines, index):
+                if re.search(r"\bfunction\b", stripped) or re.search(
+                    r"\bconst\s+[A-Za-z_]\w+\b", stripped
+                ):
+                    line_no = index + 1
+                    violations.append(
+                        f"L{line_no}: missing JSDoc block for function (`{stripped[:120]}`)"
+                    )
+
+    if not violations:
+        return None
+
+    preview = "\n".join(f"- {item}" for item in violations[:8])
+    return (
+        "BLOCKED: frontend language/component policy violation detected.\n"
+        "- TypeScript-only frontend source (`.ts`/`.tsx`).\n"
+        "- Explicit function return types (no implicit inference).\n"
+        "- JSDoc required for every function.\n"
+        "- Web templates must use Chakra UI components (no raw HTML controls).\n"
+        f"Detected lines:\n{preview}"
+    )
+
+
+def _detect_frontend_token_policy_violation(path: str, content: str) -> str | None:
+    if TARGET_REPO_NAME not in {"auraxis-web", "auraxis-app"}:
+        return None
+
+    suffix = Path(path).suffix.lower()
+    if suffix not in _FRONTEND_SOURCE_EXTENSIONS:
+        return None
+
+    if _is_theme_or_token_file(path):
+        return None
+
+    patterns = (
+        _WEB_TOKEN_POLICY_PATTERNS
+        if TARGET_REPO_NAME == "auraxis-web"
+        else _APP_TOKEN_POLICY_PATTERNS
+    )
+    violations: list[str] = []
+    for line_no, raw_line in enumerate(content.splitlines(), start=1):
+        line = raw_line.strip()
+        if not line or line.startswith("//") or line.startswith("/*") or line.startswith("*"):
+            continue
+        for pattern in patterns:
+            if pattern.search(line):
+                violations.append(f"L{line_no}: {line[:140]}")
+                break
+
+    if not violations:
+        return None
+
+    preview = "\n".join(f"- {item}" for item in violations[:5])
+    return (
+        "BLOCKED: front-end token policy violation detected.\n"
+        "Use theme/tokens and UI-library props (Chakra UI / RN Paper) instead of raw style literals.\n"
+        "Allowed exception: files under theme/tokens for token definition.\n"
+        f"Detected lines:\n{preview}"
+    )
+
 
 def _detect_encoding_corruption(existing_path: Path, new_content: str) -> str | None:
     """Detect if a write would corrupt non-ASCII characters.
@@ -976,6 +1240,26 @@ class WriteFileTool(BaseTool):
                 status="BLOCKED",
             )
             return msg
+
+        language_policy_msg = _detect_frontend_language_policy_violation(path, content)
+        if language_policy_msg:
+            audit_log(
+                "write_file_content",
+                {"path": path},
+                language_policy_msg,
+                status="BLOCKED",
+            )
+            return language_policy_msg
+
+        token_policy_msg = _detect_frontend_token_policy_violation(path, content)
+        if token_policy_msg:
+            audit_log(
+                "write_file_content",
+                {"path": path},
+                token_policy_msg,
+                status="BLOCKED",
+            )
+            return token_policy_msg
 
         # Guard: detect encoding corruption before writing
         corruption_msg = _detect_encoding_corruption(validated, content)
@@ -1047,6 +1331,14 @@ def _git_create_branch(branch_name: str) -> str:
         return (
             f"BLOCKED: Branch '{branch_name}' does not use a conventional "
             f"prefix. Allowed prefixes: {allowed}"
+        )
+
+    expected_task_id = os.getenv("AURAXIS_RESOLVED_TASK_ID", "").strip().upper()
+    normalized_branch = branch_name.upper()
+    if expected_task_id and expected_task_id not in normalized_branch:
+        return (
+            "BLOCKED: branch/task drift detected. "
+            f"Branch '{branch_name}' must contain task ID '{expected_task_id}'."
         )
 
     result = safe_subprocess(["git", "checkout", "-b", branch_name], timeout=15)
@@ -1157,8 +1449,6 @@ class GitOpsTool(BaseTool):
             "git_operations",
             {"command": command, "branch_name": branch_name, "message": message},
             result[:200],
-            status=(
-                "OK" if "BLOCKED" not in result and "Error" not in result else "ERROR"
-            ),
+            status=("OK" if "blocked" not in result.lower() and "error" not in result.lower() else "ERROR"),
         )
         return result

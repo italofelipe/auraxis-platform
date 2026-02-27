@@ -1,6 +1,6 @@
 # Frontend Architecture — Auraxis Platform
 
-Última atualização: 2026-02-24
+Última atualização: 2026-02-27
 
 > Documento canônico de arquitetura, padrões e diretrizes para `auraxis-app` (React Native)
 > e `auraxis-web` (Nuxt 4). Toda decisão de design de código nos frontends deriva deste
@@ -67,6 +67,7 @@ Estas definições são mandatórias para `auraxis-web` e `auraxis-app`.
 - **Web:** componentes baseados em **Chakra UI** (customizados para o tema Auraxis).
 - **Mobile:** base padrão em **React Native Paper**. Troca por outra lib só com ADR registrada.
 - **Tailwind está proibido** em ambas as plataformas (web e mobile).
+- **Web (mandatório):** telas/componentes de produto devem usar componentes Chakra UI (ou wrappers internos sobre Chakra UI). Evitar elementos HTML crus para formulário/controle/texto estrutural.
 
 ### Estado de servidor (API)
 
@@ -127,6 +128,12 @@ src/
   app/ (ou layouts/ no Nuxt)
     ← routing, providers, bootstrapping global
 ```
+
+Diretório de compartilhamento obrigatório por repo:
+- `auraxis-web`: `app/shared/components`, `app/shared/types`, `app/shared/validators`, `app/shared/utils`
+- `auraxis-app`: `shared/components`, `shared/types`, `shared/validators`, `shared/utils`
+
+Código reutilizado em múltiplos pontos não deve permanecer em feature local.
 
 ### O que pertence a `shared/`
 
@@ -227,6 +234,12 @@ interface ButtonProps {
 }
 ```
 
+### Regras mandatórias adicionais (frontend)
+
+1. Código de produto frontend deve ser escrito apenas em `.ts`/`.tsx` (sem `.js`/`.jsx`).
+2. Funções públicas e privadas devem declarar retorno explícito (sem inferência implícita).
+3. Toda função deve possuir JSDoc imediatamente acima da declaração.
+
 ---
 
 ## 5. Design Tokens — Zero valores hardcoded
@@ -234,20 +247,56 @@ interface ButtonProps {
 Nenhum valor de estilo (cor, espaçamento, tipografia, sombra, borda) pode aparecer
 diretamente em um componente. Todos os valores pertencem ao sistema de tokens.
 
+### Enforcement operacional (obrigatório)
+
+- O orquestrador (`ai_squad`) bloqueia escrita de frontend com literals de estilo fora de arquivos de tema/tokens.
+- Exemplos bloqueados:
+  - `font-size: 1rem;`
+  - `font-weight: 600;`
+  - `border: 1px solid #ccc;`
+  - `border-radius: 4px;`
+  - `fontSize: 16`, `fontWeight: "600"`, `backgroundColor: "#fff"` em RN
+- Exceção: arquivos de definição de tema/tokens (`/theme/`, `/tokens/`, `tokens.*`, `theme.*`).
+
+## 5.1 Modularidade obrigatória em hooks/composables
+
+Para qualquer hook/composable com regra de negócio (auth, sessão, integração, cálculo):
+
+```text
+<feature-or-shared>/useX/
+  index.ts      ← API pública do módulo
+  types.ts      ← contratos e aliases
+  api.ts        ← adapters/chamadas HTTP
+  mutations.ts  ← orchestration de server-state
+  forms.ts      ← validação e estado de formulário (quando aplicável)
+```
+
+Regras:
+1. `index.ts` não contém lógica de negócio, apenas exportações.
+2. `types.ts` não fica embutido em arquivos de implementação monolíticos.
+3. Dependências externas devem ser injetáveis (argumentos/factories), evitando acoplamento rígido.
+4. Monólitos como `useX.ts` com múltiplas responsabilidades são não conformidade arquitetural.
+
 ### Hierarquia de tokens
 
 ```
 shared/theme/
   tokens/
     primitives.ts    ← valores brutos (não usar diretamente em componentes)
+    colors.ts        ← paleta canônica oficial (somente cores aprovadas)
     semantic.ts      ← tokens semânticos (use estes nos componentes)
     typography.ts    ← escala tipográfica
     spacing.ts       ← escala de espaçamento
     radius.ts        ← escala de border-radius
     shadows.ts       ← elevações/sombras
     motion.ts        ← durações e easings de animação
-  index.ts           ← exporta tudo
+  index.ts           ← barrel de exportação (não define tokens)
 ```
+
+Regras mandatórias:
+1. `index.ts` não pode concentrar definição de cores/tipografia/spacing/radius/shadows.
+2. Cada domínio de token deve viver em arquivo dedicado.
+3. Não introduzir escala de brand fora da paleta oficial (`#262121`, `#ffbe4d`, `#413939`, `#0b0909`, `#ffd180`, `#ffab1a`).
 
 ### Camadas de token
 

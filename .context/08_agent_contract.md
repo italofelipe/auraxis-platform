@@ -2,7 +2,7 @@
 
 > Contrato de comportamento obrigatório para todos os agentes que operam no ecossistema Auraxis.
 > Vinculante para Claude, GPT, Gemini, CrewAI e qualquer agente futuro.
-> Atualizado: 2026-02-24
+> Atualizado: 2026-02-27
 
 ---
 
@@ -28,6 +28,14 @@ Para trabalho em produto (web, app, api), também ler:
 - `CODING_STANDARDS.md` do repo — padrões de código
 - `.context/30_design_reference.md` — obrigatorio para qualquer tarefa de UI/layout em `web`/`app`
 
+### Guardrails anti-drift (obrigatórios antes do kickoff)
+
+- `task_id` precisa estar resolvido (`AURAXIS_RESOLVED_TASK_ID` ou parsing válido em `tasks.md`/`TASKS.md`).
+- Execução com `task_id=UNSPECIFIED` é bloqueada em preflight.
+- Repo alvo deve iniciar com worktree limpo (sem staged/unstaged/untracked) para evitar contaminação de escopo.
+- Branch criada pelo agente deve conter o `task_id` ativo no nome (`feat/WEB3-...`, `fix/APP4-...`, etc.).
+- Se houver drift entre fingerprint de políticas globais (steering/contract/product) e o snapshot da execução, o run deve bloquear e pedir rerun sincronizado.
+
 ---
 
 ## Comportamento esperado
@@ -38,16 +46,31 @@ Para trabalho em produto (web, app, api), também ler:
 - Identificar riscos antes de mudanças estruturais
 - Verificar se existe teste para a lógica que será implementada
 - Em tarefas frontend, abrir os assets de `designs/` e confirmar aderencia ao blueprint visual canonico
+- Confirmar `task_id` em execução e rejeitar qualquer troca implícita de task durante o mesmo bloco.
 
 ### Ao escrever código
 - Seguir os padrões definidos em `CODING_STANDARDS.md` do repo
 - TypeScript strict em todo código TS — zero `any` implícito
+- Frontend (web/app): arquivos de código devem ser **somente TypeScript** (`.ts`/`.tsx`). `.js`/`.jsx` são proibidos para código de produto.
+- Frontend (web/app): toda função deve ter tipo explícito de retorno e JSDoc obrigatório.
 - Toda lógica nova vem acompanhada de teste
 - Comentários explicam o "por quê", não o "o quê"
+- Frontend (web/app): **proibido** usar valores arbitrários de estilo (ex.: `font-size: 1rem`, `fontWeight: 600`, `border: 1px solid #ccc`, `borderRadius: 4`). Usar somente tokens de tema e props dos componentes da UI library.
+- Frontend (web/app): composables/hooks com regra de negócio devem ser modulares (`useX/index.ts`, `useX/types.ts` e arquivos por responsabilidade), sem concentrar tipos e implementação em um único arquivo.
+- Frontend web: usar componentes Chakra UI (customizados com tokens Auraxis). Evitar tags HTML cruas de formulário/texto (`<input>`, `<label>`, `<button>`, `<textarea>`, `<select>`, `<p>`) em telas/componentes de produto.
+- Código compartilhado entre múltiplas features/telas deve obrigatoriamente ir para diretórios shared canônicos:
+  - web: `app/shared/{components,types,validators,utils}`
+  - app: `shared/{components,types,validators,utils}`
+
+### Política de estilo por tokens (frontend)
+- Web: usar tokens/vars do tema Chakra UI (ou camada de tokens equivalente) para cores, tipografia, spacing, radius, bordas e motion.
+- App: usar tokens do tema React Native Paper + mapa de tokens interno para estilos.
+- Valores crus (`px`, `rem`, hex, pesos numéricos de fonte, radius numérico) só são permitidos em arquivos de definição de tema/tokens.
 
 ### Antes de commitar
 - Executar `npm run quality-check` (app) ou `pnpm quality-check` (web) obrigatoriamente
 - Se qualquer gate falhar: **corrigir antes de commitar**
+- Em fluxos autônomos: não marcar `Done` sem `update_task_status` válido para o mesmo `task_id` do preflight.
 - Verificar checklist de segurança:
   - [ ] Nenhum secret ou token hardcoded
   - [ ] Nenhum `console.log` com dados de usuário
