@@ -711,6 +711,27 @@ sejam explicitamente verificados antes de merge.
 
 ---
 
+### DEC-042 — TOON/1 como formato padrão para payload estruturado entre agentes
+
+**Decisão:** adotar `TOON/1` como formato padrão para troca de payload estruturado
+entre agentes no `ai_squad`, mantendo JSON como fallback de compatibilidade.
+
+**Racional:** reduzir consumo de tokens e custo de processamento em workflows
+autônomos, mantendo payloads humanos, compactos e fáceis de revisar.
+
+**Alternativas rejeitadas:**
+- manter JSON como formato primário em todos os handoffs;
+- criar novo serializer binário/externo;
+- remover payload estruturado e usar apenas texto livre.
+
+**Dono:** platform/ai-squad.
+**Impacto:**
+- `publish_feature_contract_pack` aceita `payload_toon` (preferencial) e JSON (fallback);
+- `read_feature_contract_pack` passa a suportar formato `toon`;
+- prompts do backend orientam uso de TOON/1 no contract pack phase.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

@@ -63,6 +63,8 @@ Para trabalho em produto (web, app, api), também ler:
 - Código compartilhado entre múltiplas features/telas deve obrigatoriamente ir para diretórios shared canônicos:
   - web: `app/shared/{components,types,validators,utils}`
   - app: `shared/{components,types,validators,utils}`
+- Para troca de payload estruturado entre agentes (handoff técnico), usar **TOON/1** por padrão.
+  JSON é permitido apenas como fallback de compatibilidade quando TOON não for suportado.
 
 ### Política de estilo por tokens (frontend)
 - Web: usar tokens/vars do tema Chakra UI (ou camada de tokens equivalente) para cores, tipografia, spacing, radius, bordas e motion.
