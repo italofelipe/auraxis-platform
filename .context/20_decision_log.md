@@ -438,6 +438,33 @@ Manter cópia legado no repo da API gera ambiguidade e risco de desvio de execu�
 
 ---
 
+### DEC-031 — Orquestrador resiliente com timeout, idempotência e resumo consolidado
+
+**Decisão:** endurecer a execução multi-repo do master com:
+- timeout por processo filho;
+- logs em streaming por repo;
+- ledger estruturado para idempotência;
+- skip automático de reexecução equivalente já concluída;
+- resumo final consolidado com sinais de pre-commit/quality e possíveis débitos.
+
+**Racional:** quando um agente/filho engasga, o risco é travar toda a orquestração ou reexecutar
+trabalho já entregue no próximo ciclo. O hardening reduz duplicidade, melhora observabilidade em
+tempo real e facilita retomada segura após falhas.
+
+**Alternativas rejeitadas:**
+- manter captura de output apenas no final (sem streaming);
+- depender só de `tasks.md` para deduplicação;
+- exigir intervenção manual para decidir skip/retry em cada repo.
+
+**Dono:** plataforma.
+**Impacto:**
+- `ai_squad/main.py` ganhou timeout por repo (`AURAXIS_CHILD_TIMEOUT_SECONDS`), stream de logs e resumo master;
+- `ai_squad/tools/task_status.py` ganhou ledger (`_execution_ledger.jsonl`) para consulta da última execução;
+- suporte completo a task IDs no formato `WEB3`/`APP4`/`PLT1` além de `A1`/`B10` e leitura de `TASKS.md` + `tasks.md`;
+- opção de bypass de idempotência via `AURAXIS_FORCE_RERUN=true`.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

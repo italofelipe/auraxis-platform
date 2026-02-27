@@ -36,14 +36,24 @@ References:
 """
 
 import os
+import hashlib
+import re
 import subprocess
 import sys
+import threading
 import traceback
+from pathlib import Path
+from time import monotonic
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from crewai import Agent, Crew, Process, Task
 from dotenv import load_dotenv
-from tools.task_status import infer_task_id, write_status_entry
+from tools.task_status import (
+    append_ledger_entry,
+    get_latest_ledger_entry,
+    infer_task_id,
+    write_status_entry,
+)
 from tools.tool_security import PLATFORM_ROOT, PROJECT_ROOT, SQUAD_ROOT, TARGET_REPO_NAME
 from tools.project_tools import (
     GetLatestMigrationTool,
@@ -82,6 +92,188 @@ MIGRATION_RULES = (
     "- If the briefing says 'rename X to Y', the migration MUST use "
     "ALTER COLUMN RENAME, not add_column + drop_column."
 )
+
+_STATUS_LINE_TASK_ID_RE = re.compile(r"^task_id:\s*(.+)$", re.IGNORECASE)
+_CHECKLIST_RE = re.compile(r"^\s*-\s*\[(?P<status>[ x~!])\]\s+\*\*(?P<id>[A-Z]+-\d+|[A-Z]+\d+)\*\*")
+_TABLE_ID_RE = re.compile(r"^[A-Z]+-\d+$|^[A-Z]+\d+$")
+_STATUS_VALUES = {"todo", "in progress", "blocked", "done"}
+_COMMIT_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
+
+
+def _briefing_hash(briefing: str) -> str:
+    return hashlib.sha256((briefing or "").strip().encode("utf-8")).hexdigest()[:16]
+
+
+def _task_board_path(repo: str) -> Path | None:
+    candidates = (
+        PLATFORM_ROOT / "repos" / repo / "TASKS.md",
+        PLATFORM_ROOT / "repos" / repo / "tasks.md",
+    )
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _resolve_task_id_for_repo(repo: str, briefing: str) -> str:
+    explicit = infer_task_id(briefing)
+    if explicit != "UNSPECIFIED":
+        return explicit
+
+    board = _task_board_path(repo)
+    if board is None:
+        return "UNSPECIFIED"
+
+    in_progress: list[str] = []
+    todo: list[str] = []
+    lines = board.read_text(encoding="utf-8", errors="ignore").splitlines()
+    for line in lines:
+        checklist = _CHECKLIST_RE.match(line)
+        if checklist:
+            status = checklist.group("status")
+            task_id = checklist.group("id")
+            if status == "~":
+                in_progress.append(task_id)
+            elif status == " ":
+                todo.append(task_id)
+            continue
+
+        if "|" in line and line.strip().startswith("|"):
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if not cells:
+                continue
+            task_id = cells[0]
+            if not _TABLE_ID_RE.match(task_id):
+                continue
+            normalized_cells = [cell.lower() for cell in cells]
+            matched_status = next(
+                (value for value in normalized_cells if value in _STATUS_VALUES),
+                None,
+            )
+            if matched_status == "in progress":
+                in_progress.append(task_id)
+            elif matched_status == "todo":
+                todo.append(task_id)
+
+    if in_progress:
+        return in_progress[0]
+    if todo:
+        return todo[0]
+    return "UNSPECIFIED"
+
+
+def _extract_summary_from_output(
+    default_task_id: str,
+    stdout_text: str,
+    stderr_text: str,
+) -> dict[str, object]:
+    task_id = default_task_id
+    for line in stdout_text.splitlines():
+        match = _STATUS_LINE_TASK_ID_RE.match(line.strip())
+        if match:
+            task_id = match.group(1).strip().upper()
+            break
+
+    merged = f"{stdout_text}\n{stderr_text}"
+    commit_hashes = sorted(set(_COMMIT_RE.findall(merged)))
+    if len(commit_hashes) > 10:
+        commit_hashes = commit_hashes[-10:]
+
+    merged_lower = merged.lower()
+    if "pre-push checks passed" in merged_lower:
+        precommit_status = "passed"
+    elif "failed" in merged_lower and (
+        "pre-commit" in merged_lower
+        or "pre-push" in merged_lower
+        or "lint" in merged_lower
+        or "typecheck" in merged_lower
+        or "pytest" in merged_lower
+        or "vitest" in merged_lower
+        or "jest" in merged_lower
+    ):
+        precommit_status = "failed"
+    else:
+        precommit_status = "unknown"
+
+    tech_debt_hints = []
+    for line in merged.splitlines():
+        normalized = line.strip()
+        if not normalized:
+            continue
+        lower = normalized.lower()
+        if any(token in lower for token in ("risco residual", "todo", "debt", "pendente")):
+            tech_debt_hints.append(normalized)
+        if len(tech_debt_hints) >= 5:
+            break
+
+    return {
+        "task_id": task_id,
+        "commit_hashes": commit_hashes,
+        "precommit_status": precommit_status,
+        "tech_debt_hints": tech_debt_hints,
+    }
+
+
+def _stream_subprocess(
+    *,
+    repo: str,
+    command: list[str],
+    env: dict[str, str],
+    timeout_seconds: int,
+) -> dict[str, object]:
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        bufsize=1,
+        env=env,
+    )
+    stdout_lines: list[str] = []
+    stderr_lines: list[str] = []
+
+    def _drain(stream, bucket: list[str], channel: str) -> None:
+        if stream is None:
+            return
+        for line in iter(stream.readline, ""):
+            clean = line.rstrip("\n")
+            bucket.append(clean)
+            print(f"[{repo}][{channel}] {clean}")
+        stream.close()
+
+    stdout_thread = threading.Thread(
+        target=_drain,
+        args=(process.stdout, stdout_lines, "stdout"),
+        daemon=True,
+    )
+    stderr_thread = threading.Thread(
+        target=_drain,
+        args=(process.stderr, stderr_lines, "stderr"),
+        daemon=True,
+    )
+    stdout_thread.start()
+    stderr_thread.start()
+
+    started_at = monotonic()
+    timed_out = False
+    try:
+        process.wait(timeout=timeout_seconds)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        process.kill()
+        process.wait()
+
+    stdout_thread.join(timeout=2)
+    stderr_thread.join(timeout=2)
+    elapsed = round(monotonic() - started_at, 2)
+
+    return {
+        "returncode": 124 if timed_out else process.returncode,
+        "timed_out": timed_out,
+        "duration_seconds": elapsed,
+        "stdout": "\n".join(stdout_lines),
+        "stderr": "\n".join(stderr_lines),
+    }
 
 
 class AuraxisSquad:
@@ -644,25 +836,105 @@ class AuraxisSquad:
 
 
 def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
-    """Run one squad execution per product repo in parallel."""
+    """Run one squad execution per product repo in parallel with detailed telemetry."""
     targets = ("auraxis-api", "auraxis-web", "auraxis-app")
     script_path = str((SQUAD_ROOT / "main.py").resolve())
     env_base = os.environ.copy()
-    results: dict[str, tuple[int, str, str]] = {}
+    child_timeout_seconds = int(os.getenv("AURAXIS_CHILD_TIMEOUT_SECONDS", "3600"))
+    force_rerun = os.getenv("AURAXIS_FORCE_RERUN", "false").strip().lower() == "true"
+    results: dict[str, dict[str, object]] = {}
+    briefing_hash = _briefing_hash(briefing)
 
-    def _run_target(repo: str) -> tuple[int, str, str]:
+    def _run_target(repo: str) -> dict[str, object]:
+        inferred_task_id = _resolve_task_id_for_repo(repo, briefing)
+        if not force_rerun and inferred_task_id != "UNSPECIFIED":
+            latest = get_latest_ledger_entry(
+                repo=repo,
+                task_id=inferred_task_id,
+                briefing_hash=briefing_hash,
+            )
+            if latest and latest.get("status") == "done" and latest.get("commit_hashes"):
+                reason = (
+                    "idempotency skip: task already executed for same briefing hash "
+                    f"({briefing_hash}) with commits {latest.get('commit_hashes')}"
+                )
+                print(f"[{repo}][orchestrator] {reason}")
+                skipped_result = {
+                    "returncode": 0,
+                    "timed_out": False,
+                    "duration_seconds": 0.0,
+                    "stdout": "",
+                    "stderr": "",
+                    "task_id": inferred_task_id,
+                    "status": "skipped",
+                    "commit_hashes": latest.get("commit_hashes", []),
+                    "precommit_status": latest.get("precommit_status", "unknown"),
+                    "tech_debt_hints": [],
+                    "skip_reason": reason,
+                }
+                append_ledger_entry(
+                    {
+                        "repo": repo,
+                        "task_id": inferred_task_id,
+                        "briefing_hash": briefing_hash,
+                        "execution_mode": execution_mode,
+                        "status": "skipped",
+                        "returncode": 0,
+                        "timed_out": False,
+                        "duration_seconds": 0.0,
+                        "commit_hashes": skipped_result["commit_hashes"],
+                        "precommit_status": skipped_result["precommit_status"],
+                        "skip_reason": reason,
+                    },
+                    repo=repo,
+                )
+                return skipped_result
+
         env = env_base.copy()
         env["AURAXIS_TARGET_REPO"] = repo
         env["AURAXIS_BRIEFING"] = briefing
         env["AURAXIS_EXECUTION_MODE"] = execution_mode
         env["AURAXIS_MULTI_CHILD"] = "1"
-        completed = subprocess.run(
-            [sys.executable, script_path],
-            capture_output=True,
-            text=True,
+        raw = _stream_subprocess(
+            repo=repo,
+            command=[sys.executable, script_path],
             env=env,
+            timeout_seconds=child_timeout_seconds,
         )
-        return completed.returncode, completed.stdout, completed.stderr
+        extracted = _extract_summary_from_output(
+            inferred_task_id,
+            raw["stdout"],
+            raw["stderr"],
+        )
+        status = "done"
+        if raw["timed_out"]:
+            status = "blocked"
+        elif raw["returncode"] != 0:
+            status = "blocked"
+        elif "status: blocked" in raw["stdout"].lower():
+            status = "blocked"
+
+        result = {
+            **raw,
+            **extracted,
+            "status": status,
+        }
+        append_ledger_entry(
+            {
+                "repo": repo,
+                "task_id": result["task_id"],
+                "briefing_hash": briefing_hash,
+                "execution_mode": execution_mode,
+                "status": status,
+                "returncode": result["returncode"],
+                "timed_out": result["timed_out"],
+                "duration_seconds": result["duration_seconds"],
+                "commit_hashes": result["commit_hashes"],
+                "precommit_status": result["precommit_status"],
+            },
+            repo=repo,
+        )
+        return result
 
     with ThreadPoolExecutor(max_workers=3) as executor:
         future_map = {executor.submit(_run_target, repo): repo for repo in targets}
@@ -671,21 +943,88 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
             try:
                 results[repo] = future.result()
             except Exception as exc:  # pragma: no cover - defensive fallback
-                results[repo] = (1, "", str(exc))
+                results[repo] = {
+                    "returncode": 1,
+                    "stdout": "",
+                    "stderr": str(exc),
+                    "timed_out": False,
+                    "duration_seconds": 0.0,
+                    "task_id": "UNSPECIFIED",
+                    "status": "blocked",
+                    "commit_hashes": [],
+                    "precommit_status": "unknown",
+                    "tech_debt_hints": [],
+                }
 
-    print("=== AURAXIS MULTI-REPO ORCHESTRATION SUMMARY ===")
+    print("=== AURAXIS MULTI-REPO ORCHESTRATION SUMMARY (MASTER) ===")
     overall_rc = 0
+    done_count = 0
+    blocked_count = 0
+    skipped_count = 0
     for repo in targets:
-        rc, out, err = results.get(repo, (1, "", "missing result"))
-        if rc != 0:
+        result = results.get(
+            repo,
+            {
+                "returncode": 1,
+                "stdout": "",
+                "stderr": "missing result",
+                "timed_out": False,
+                "duration_seconds": 0.0,
+                "task_id": "UNSPECIFIED",
+                "status": "blocked",
+                "commit_hashes": [],
+                "precommit_status": "unknown",
+                "tech_debt_hints": [],
+            },
+        )
+        if result["status"] == "done":
+            done_count += 1
+        elif result["status"] == "skipped":
+            skipped_count += 1
+        else:
+            blocked_count += 1
             overall_rc = 1
-        print(f"[{repo}] return_code={rc}")
-        if out.strip():
-            print(f"[{repo}] stdout (tail):")
-            print("\n".join(out.strip().splitlines()[-20:]))
-        if err.strip():
-            print(f"[{repo}] stderr (tail):")
-            print("\n".join(err.strip().splitlines()[-20:]))
+        print(f"[{repo}] status={result['status']} return_code={result['returncode']}")
+        print(f"[{repo}] task_id={result['task_id']} duration={result['duration_seconds']}s")
+        print(f"[{repo}] precommit_local={result['precommit_status']}")
+        if result.get("timed_out"):
+            print(f"[{repo}] timeout=true ({child_timeout_seconds}s)")
+        if result.get("commit_hashes"):
+            print(f"[{repo}] commits={', '.join(result['commit_hashes'])}")
+        if result.get("skip_reason"):
+            print(f"[{repo}] skip_reason={result['skip_reason']}")
+        if result["stdout"].strip():
+            print(f"[{repo}] stdout_tail:")
+            print("\n".join(result["stdout"].strip().splitlines()[-20:]))
+        if result["stderr"].strip():
+            print(f"[{repo}] stderr_tail:")
+            print("\n".join(result["stderr"].strip().splitlines()[-20:]))
+        if result.get("tech_debt_hints"):
+            print(f"[{repo}] possible_tech_debt:")
+            for hint in result["tech_debt_hints"]:
+                print(f"  - {hint}")
+    print("=== MASTER CONSOLIDATED SUMMARY ===")
+    print(f"briefing_hash: {briefing_hash}")
+    print(f"execution_mode: {execution_mode}")
+    print(f"repos_done: {done_count}")
+    print(f"repos_skipped: {skipped_count}")
+    print(f"repos_blocked: {blocked_count}")
+    print(
+        "local_pipe_status: "
+        + ", ".join(
+            f"{repo}={results[repo].get('precommit_status', 'unknown')}"
+            for repo in targets
+            if repo in results
+        )
+    )
+    print(
+        "next_action: "
+        + (
+            "advance to next tasks (all repositories completed/skipped)."
+            if overall_rc == 0
+            else "resolve blocked repositories and rerun with same briefing (use AURAXIS_FORCE_RERUN=true only if necessary)."
+        )
+    )
     return overall_rc
 
 

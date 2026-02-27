@@ -2,6 +2,19 @@
 
 Data: 2026-02-26
 
+## Atualizacao Orquestrador (2026-02-27 — resiliencia, idempotencia e logs detalhados)
+- `ai_squad/main.py` hardening de execucao multi-repo:
+  - timeout por repo filho (`AURAXIS_CHILD_TIMEOUT_SECONDS`, default `3600s`);
+  - streaming de logs em tempo real com prefixo `[repo][stdout|stderr]`;
+  - resumo consolidado do master com status por repo, task, duracao, commits, precommit local e possiveis debitos tecnicos;
+  - skip idempotente por task+briefing hash quando execucao equivalente ja foi concluida (com commit registrado), com bypass opcional via `AURAXIS_FORCE_RERUN=true`.
+- `ai_squad/tools/task_status.py` expandido:
+  - ledger estruturado em `tasks_status/_execution_ledger.jsonl`;
+  - consulta da ultima execucao por `repo + task_id + briefing_hash`.
+- resolucao automatica de task por repo:
+  - parser agora suporta `TASKS.md` e `tasks.md`;
+  - regex corrigido para IDs como `WEB3`, `APP4`, `PLT1`, `B10`.
+
 ## Atualizacao Orquestrador (2026-02-27 — zero-overhead run + limpeza do legado na API)
 - `repos/auraxis-api/ai_squad` removido do repositório de API (legado descontinuado).
 - Auditoria de migração concluída:
