@@ -1,7 +1,7 @@
 # Steering Global — Auraxis Platform
 
 > Governança técnica global. Vinculante para todos os agentes, desenvolvedores e repositórios.
-> Atualizado: 2026-02-24
+> Atualizado: 2026-02-27
 
 ---
 
@@ -17,18 +17,29 @@ Entregar o produto Auraxis com previsibilidade, segurança e qualidade, usando f
 - Não commitar diretamente em `master`/`main`.
 - Branches e commits seguem `conventional branching` e `conventional commits`.
 - Prefixo `codex/` é proibido em qualquer branch local/remota publicada.
+- Em execução autônoma, cada branch deve conter o `task_id` ativo no nome (anti-drift).
 - Commits pequenos, reversíveis e com escopo claro.
 - Toda mudança relevante deve atualizar documentação de contexto.
 - Toda feature com impacto de contrato deve ter teste de regressão.
+- Toda feature backend com impacto de contrato deve publicar `Feature Contract Pack` em `.context/feature_contracts/` para consumo dos frontends.
+- Execução autônoma só inicia com `task_id` resolvido (nunca `UNSPECIFIED`) e worktree limpo.
+- Se houver drift de contexto (fingerprint de política), execução deve falhar em preflight.
 
 ### Qualidade — não negociável em nenhum repo
 - **Testes não são opcionais.** Toda lógica nova tem teste antes de merge.
 - **Quality gates devem passar antes de commitar.** Falha = não commitar.
 - **Coverage não regride.** Nenhum PR pode baixar o threshold estabelecido.
 - **Zero `any` implícito.** TypeScript strict é obrigatório em todos os projetos TS.
+- **TypeScript-only em frontend.** Código de produto em web/app deve usar `.ts`/`.tsx` (sem `.js`/`.jsx` para features).
+- **Funções explícitas e documentadas.** Toda função de frontend deve ter retorno explícito e JSDoc.
+- **Composables/hook modulares.** Lógica de negócio em frontend deve usar estrutura por módulo (`index.ts` + `types.ts` + arquivos por responsabilidade), evitando arquivos monolíticos.
 - **Zero erros de lint.** ESLint com `--max-warnings 0` em todos os repos frontend.
 - **Stack de UI padronizada.** Web usa Chakra UI customizado e app usa React Native Paper (ou ADR substituta); Tailwind é proibido em ambos.
 - **Design system único.** Paleta oficial (`#262121`, `#ffbe4d`, `#413939`, `#0b0909`, `#ffd180`, `#ffab1a`), tipografia (`Playfair Display` + `Raleway`) e grid base de 8px.
+- **Shared-first para reutilização.** Código frontend reutilizado deve viver em diretórios shared canônicos:
+  - web: `app/shared/{components,types,validators,utils}`
+  - app: `shared/{components,types,validators,utils}`
+- **Guideline frontend unificado.** Web e app devem seguir os mesmos conceitos arquiteturais, gates e convenções descritos em `.context/32_frontend_unified_guideline.md`, com variação apenas de camada/plataforma.
 
 ### Segurança — não negociável em nenhum repo
 - **Zero secrets em código.** Nenhum token, API key ou credential hardcoded.

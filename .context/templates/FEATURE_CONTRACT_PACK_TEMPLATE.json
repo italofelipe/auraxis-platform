@@ -1,0 +1,30 @@
+{
+  "task_id": "B11",
+  "feature_name": "Persistência de perfil sugerido",
+  "summary": "Frontend deve exibir perfil sugerido, score e taxonomy version no fluxo de perfil.",
+  "generated_at": "2026-02-27T00:00:00+00:00",
+  "producer_repo": "auraxis-api",
+  "rest_endpoints": [
+    {
+      "method": "GET",
+      "path": "/user/profile",
+      "description": "Retorna dados completos de perfil, incluindo novos campos sugeridos"
+    }
+  ],
+  "graphql_endpoints": [
+    {
+      "type": "query",
+      "name": "userProfile",
+      "description": "Consulta perfil completo com campos de perfil sugerido"
+    }
+  ],
+  "auth": "JWT Bearer obrigatório.",
+  "error_contract": [
+    "401 quando token ausente/inválido",
+    "422 para payload inválido"
+  ],
+  "examples": [
+    "GET /user/profile -> { investor_profile_suggested, profile_quiz_score, taxonomy_version }"
+  ],
+  "notes": "Campos opcionais durante rollout inicial; tratar null-safe no frontend."
+}

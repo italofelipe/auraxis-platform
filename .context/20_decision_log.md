@@ -149,6 +149,27 @@ Cada entrada responde: **o quê**, **por quê**, **alternativas rejeitadas**, **
 
 ---
 
+## 2026-02-27
+
+### DEC-021 — Preflight rígido no ai_squad para eliminar drift de execução
+
+**Decisão:** endurecer o orquestrador para bloquear execução autônoma quando:
+- não houver `task_id` resolvido (proibido `UNSPECIFIED`);
+- repo alvo estiver com worktree sujo (sem override explícito);
+- houver drift de fingerprint de políticas globais;
+- branch criada não contiver o `task_id` ativo.
+
+**Racional:** as últimas execuções paralelas mostraram drift de task (troca implícita durante run), commits em estado inconsistente e arquivos `tasks_status/UNSPECIFIED.md`. O preflight rígido transforma esses problemas em bloqueio imediato e determinístico.
+
+**Alternativas rejeitadas:**
+- apenas alertar no log sem bloquear: mantém risco de execução fora de escopo;
+- depender só de revisão humana pós-fato: aumenta retrabalho e inconsistência em runs paralelas.
+
+**Dono:** plataforma (`ai_squad`) + governança global.
+**Impacto:** `make next-task` passa a falhar rápido com motivo explícito quando precondições não forem atendidas.
+
+---
+
 ### DEC-015 — SonarCloud padronizado em CI scanner-only
 
 **Decisão:** os 3 repositórios de produto devem operar SonarCloud exclusivamente por scanner em CI, com Automatic Analysis desabilitado no painel.
@@ -462,6 +483,147 @@ tempo real e facilita retomada segura após falhas.
 - `ai_squad/tools/task_status.py` ganhou ledger (`_execution_ledger.jsonl`) para consulta da última execução;
 - suporte completo a task IDs no formato `WEB3`/`APP4`/`PLT1` além de `A1`/`B10` e leitura de `TASKS.md` + `tasks.md`;
 - opção de bypass de idempotência via `AURAXIS_FORCE_RERUN=true`.
+
+---
+
+### DEC-032 — Bloqueio determinístico no child + anti-drift de `task_id`
+
+**Decisão:** tornar o status final do child determinístico com base em eventos de tool audit
+(não apenas no texto de saída do Crew), e bloquear drift de `task_id` durante `update_task_status`.
+
+**Racional:** o child reportava `status: done` mesmo com `run_repo_quality_gates` falhando, pois o
+resultado textual do Crew nem sempre refletia erros de execução de tools. Além disso, em briefing
+genérico, alguns runs iniciavam em uma task e atualizavam outra (`APP4` → `APP8`), quebrando rastreabilidade.
+
+**Alternativas rejeitadas:**
+- inferir status apenas por `stdout`/`stderr` textual;
+- permitir troca livre de `task_id` durante o run;
+- resolver inconsistência somente via pós-processamento manual de logs.
+
+**Dono:** plataforma.
+**Impacto:**
+- `ai_squad/tools/tool_security.py`: snapshot em memória de eventos de auditoria (`reset/get`) por processo;
+- `ai_squad/main.py`: `single-run` agora deriva bloqueio por erros críticos de tool audit e registra razões;
+- `ai_squad/tools/project_tools.py`: `git_operations` classifica `error` case-insensitive;
+- `ai_squad/tools/project_tools.py`: `update_task_status` bloqueia drift quando `AURAXIS_RESOLVED_TASK_ID` estiver definido.
+
+---
+
+### DEC-033 — Enforcement técnico de design tokens no frontend
+
+**Decisão:** bloquear no `WriteFileTool` qualquer escrita de frontend (web/app) que inclua
+valores de estilo arbitrários fora de arquivos de tema/tokens.
+
+**Racional:** apenas documentação não foi suficiente para manter aderência; agentes continuaram
+produzindo CSS/estilos com literals (`rem`, `px`, hex, weight numérico), quebrando o design system.
+O bloqueio no ponto de escrita força conformidade com tokens e props de UI libraries.
+
+**Alternativas rejeitadas:**
+- reforçar somente via guideline textual;
+- revisar manualmente todo PR para literals visuais;
+- permitir literals em componentes e normalizar depois.
+
+**Dono:** plataforma/frontend.
+**Impacto:**
+- `ai_squad/tools/project_tools.py`: detecção e bloqueio de padrões proibidos em web/app;
+- exceção explícita para arquivos de definição de tema/tokens (`/theme/`, `/tokens/`, `theme.*`, `tokens.*`);
+- contratos atualizados em `.context/08_agent_contract.md` e `.context/26_frontend_architecture.md`.
+
+---
+
+### DEC-034 — Arquitetura de tema modular obrigatória nos repos frontend
+
+**Decisão:** padronizar nos repos `auraxis-web` e `auraxis-app` que tema/tokens devem ser
+modulares por domínio (`colors`, `typography`, `spacing`, `radii`, `shadows`, `motion`), com
+arquivo agregador (`index.ts`) atuando apenas como barrel de exportação.
+
+**Racional:** concentração de tokens em arquivo monolítico aumenta acoplamento, dificulta evolução
+por domínio e favorece drift de paleta/tipografia. Modularização melhora escalabilidade, revisão
+e governança de design system.
+
+**Alternativas rejeitadas:**
+- manter tema monolítico centralizando todos os tokens;
+- permitir paletas brand ad-hoc fora da paleta oficial;
+- validar apenas via revisão manual, sem regra explícita em docs.
+
+**Dono:** frontend/platform.
+**Impacto:**
+- docs de governança atualizadas em `repos/auraxis-web` e `repos/auraxis-app`;
+- `repos/auraxis-web/app/theme` migrado para estrutura modular com `index.ts` barrel-only;
+- paleta verde anterior removida e substituída por tokens alinhados à paleta canônica.
+
+---
+
+### DEC-035 — Frontend hard rules: TS-only, JSDoc obrigatório, Chakra-first e `app/shared`
+
+**Decisão:** elevar para regra mandatória de frontend:
+- código de produto apenas em TypeScript (`.ts`/`.tsx`);
+- todas as funções com retorno explícito + JSDoc;
+- web com componentes Chakra UI/wrappers (evitando tags HTML cruas de formulário/controle/texto estrutural);
+- reutilização obrigatória em `app/shared` (`components`, `types`, `validators`, `utils`).
+
+**Racional:** reduzir retrabalho de revisão manual (“polimento”) e eliminar drift de estilo/arquitetura entre agentes.
+Sem enforcement claro, os agentes voltam a gerar padrões inconsistentes em cada ciclo.
+
+**Alternativas rejeitadas:**
+- manter apenas guideline textual sem hardening operacional;
+- permitir `.js` para “atalhos” em features;
+- aceitar retorno inferido/JSDoc opcional e revisar manualmente após geração.
+
+**Dono:** plataforma/frontend.
+**Impacto:**
+- docs globais e locais (web/app) atualizadas com linguagem enfática;
+- `ai_squad/tools/project_tools.py` endurecido para bloquear:
+  - `.js`/`.jsx` em código frontend;
+  - funções sem retorno explícito/JSDoc;
+  - tags HTML cruas no web fora de componentes da UI library.
+
+---
+
+### DEC-036 — Gate operacional de governança frontend em Web/App
+
+**Decisão:** adicionar gate dedicado (`policy:check`) em `auraxis-web` e `auraxis-app`,
+integrado em `quality-check`, `husky pre-commit`, CI e script local de paridade.
+
+**Racional:** regras críticas (TS-only no produto, estrutura shared obrigatória) precisam de
+enforcement determinístico antes do lint/typecheck completo, evitando regressão estrutural
+mesmo em cenários com grande débito técnico legado.
+
+**Alternativas rejeitadas:**
+- depender apenas de revisão manual;
+- manter regra apenas em documentação sem bloqueio automático;
+- aplicar bloqueio apenas no CI remoto (sem parity local).
+
+**Dono:** plataforma/frontend.
+**Impacto:**
+- `repos/auraxis-web/scripts/check-frontend-governance.cjs` criado e integrado;
+- `repos/auraxis-app/scripts/check-frontend-governance.cjs` criado e integrado;
+- estrutura shared inicial criada (`app/shared/*` no web e `shared/*` no app);
+- ESLint endurecido com plugin JSDoc + retorno explícito, expondo passivo legado para
+  remediação por lotes (`WEB22`/`APP20`, subetapa 4).
+
+---
+
+### DEC-037 — Handoff de contrato backend obrigatório via Feature Contract Pack
+
+**Decisão:** toda entrega backend com impacto de contrato deve publicar, no fim da execução,
+um `Feature Contract Pack` versionado em `.context/feature_contracts/` com dois artefatos:
+`<TASK_ID>.json` e `<TASK_ID>.md`.
+
+**Racional:** os agentes frontend estavam perdendo contexto entre mudança de endpoint e início
+da integração, gerando retrabalho e drift. O pack padroniza o handoff com semântica mínima de
+consumo (`endpoints`, `auth`, `erros`, `exemplos`, `notas de rollout`) e reduz ambiguidade.
+
+**Alternativas rejeitadas:**
+- depender apenas de OpenAPI/GraphQL sem resumo operacional por task;
+- handoff manual em texto livre no terminal;
+- documentar em arquivos ad hoc por repo sem local canônico compartilhado.
+
+**Dono:** plataforma/backend.
+**Impacto:**
+- `ai_squad` backend passa a ter fase obrigatória de publicação de pack;
+- execução backend sem publicação do pack é considerada bloqueada no resumo final;
+- web/app passam a ler packs antes de implementar integrações com features recém-entregues.
 
 ---
 

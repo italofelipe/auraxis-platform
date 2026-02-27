@@ -23,6 +23,9 @@ Com isso, o master:
 - adquire lock automaticamente;
 - executa api/web/app em paralelo;
 - usa o briefing padrão `Execute a tarefa`;
+- resolve `task_id` por repo e bloqueia execução sem task resolvida;
+- bloqueia execução se o repo alvo estiver com worktree sujo (anti-contaminação);
+- para backend (`auraxis-api`), publica `Feature Contract Pack` em `.context/feature_contracts/`;
 - registra status em `tasks_status/`;
 - libera lock ao final.
 
@@ -89,6 +92,13 @@ Com isso, o gestor dispara execução para `auraxis-api`, `auraxis-web` e `aurax
 - Em caso de erro/bloqueio, o run registra o motivo e imprime notificação para gestor e agentes paralelos no terminal.
 - `tasks_status/` é telemetria local e **não deve ser commitado**.
 - A única fonte de verdade de progresso continua sendo `tasks.md`/`TASKS.md` do repositório alvo.
+- Anti-drift ativo:
+  - branch precisa conter o `task_id` resolvido;
+  - `update_task_status` deve usar o mesmo `task_id` do preflight;
+  - fingerprint de política global (`07_steering_global.md`, `08_agent_contract.md`, `product.md`) é validado no start.
+- Override explícito (somente quando necessário):
+  - `AURAXIS_ALLOW_DIRTY_WORKTREE=true` permite execução com repo sujo.
+  - `AURAXIS_FORCE_RERUN=true` ignora skip idempotente do ledger.
 
 ## Como estender
 - Adicione novos agentes (Frontend, Mobile, DevOps) no `main.py`.
