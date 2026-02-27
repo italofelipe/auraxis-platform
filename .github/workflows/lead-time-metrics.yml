@@ -1,0 +1,45 @@
+name: Lead Time Metrics
+
+on:
+  workflow_dispatch:
+    inputs:
+      window_days:
+        description: "Janela de análise em dias"
+        required: false
+        default: "30"
+  schedule:
+    - cron: "25 11 * * *"
+
+jobs:
+  lead-time:
+    name: Generate Task Lead Time Report
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout platform
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WINDOW_DAYS: ${{ github.event.inputs.window_days || '30' }}
+        run: |
+          python3 scripts/generate_task_lead_time_report.py \
+            --window-days "$WINDOW_DAYS" \
+            --output-md .context/reports/task_lead_time_latest.md \
+            --output-json .context/reports/task_lead_time_latest.json
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: task-lead-time-report
+          path: |
+            .context/reports/task_lead_time_latest.md
+            .context/reports/task_lead_time_latest.json
+          retention-days: 14

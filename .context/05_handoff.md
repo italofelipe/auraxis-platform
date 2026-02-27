@@ -2,6 +2,43 @@
 
 Data: 2026-02-25 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-27 (OpenAPI contracts + PR checklist + lead time metrics)
+
+### O que foi feito
+
+- `auraxis-web` e `auraxis-app`:
+  - automação de contrato adicionada com `contracts:sync` e `contracts:check`;
+  - tipos OpenAPI gerados em diretório shared de cada frontend;
+  - baseline de `Feature Contract Pack` versionado em `contracts/feature-contract-baseline.json`;
+  - `quality-check`, parity local e CI atualizados com job `Contract Smoke`.
+- PR governance:
+  - template obrigatório adicionado em `auraxis-web`, `auraxis-app` e `auraxis-api`.
+- `auraxis-platform`:
+  - snapshot OpenAPI canônico publicado em `.context/openapi/openapi.snapshot.json`;
+  - script de export `scripts/export-openapi-snapshot.sh` criado;
+  - script de métricas `scripts/generate_task_lead_time_report.py` criado;
+  - workflow agendado `.github/workflows/lead-time-metrics.yml` criado.
+
+### O que foi validado
+
+- web: `pnpm contracts:check` ✅
+- app: `npm run contracts:check` ✅
+- platform: `bash scripts/export-openapi-snapshot.sh` ✅
+- platform: `python3 scripts/generate_task_lead_time_report.py --window-days 14 --max-prs 120` ✅
+
+### Riscos pendentes
+
+- sincronização remota de `Feature Contract Packs` depende do conteúdo publicado em
+  `auraxis-platform/.context/feature_contracts` na branch base consumida pelo CI.
+- `contracts:sync` em frontend depende de snapshot OpenAPI disponível (ou source local informado
+  via `AURAXIS_OPENAPI_LOCAL_FILE`).
+
+### Próximo passo sugerido
+
+1. Mergear platform/web/app/api e reexecutar CI completo para validar novos jobs obrigatórios.
+2. Rodar `contracts:sync` em web/app sempre que backend publicar pack novo ou alterar contrato.
+3. Revisar relatório de lead time gerado pelo workflow e definir metas de p50/p90 por repo.
+
 ## Atualização rápida — 2026-02-27 (contract handoff backend->frontend + guideline unificado)
 
 ### O que foi feito

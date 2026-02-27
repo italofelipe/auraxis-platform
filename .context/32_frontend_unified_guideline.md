@@ -55,6 +55,13 @@ Antes de implementar integração, agentes frontend devem:
 2. ler pack relacionado;
 3. implementar integração conforme contrato (auth, erros, exemplos, rollout notes).
 
+## Gates de contrato (obrigatórios em web/app)
+
+- `contracts:sync`: atualiza snapshot OpenAPI, tipos gerados e baseline de packs.
+- `contracts:check`: bloqueia drift de contrato no CI/local parity.
+- `Contract Smoke` em CI deve ser check obrigatório para merge.
+- Template de PR deve conter checklist explícito de contrato e validação.
+
 ### Payload mínimo esperado no pack
 
 - `rest_endpoints`: lista de rotas REST alteradas/criadas.

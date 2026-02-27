@@ -30,3 +30,7 @@ ai_squad/.env
 ai_squad/.venv/
 ai_squad/__pycache__/
 ai_squad/logs/tool_audit.log
+
+# Generated operational reports (workflow artifacts are source of truth)
+.context/reports/task_lead_time_latest.md
+.context/reports/task_lead_time_latest.json

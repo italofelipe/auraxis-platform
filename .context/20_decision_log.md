@@ -627,6 +627,90 @@ consumo (`endpoints`, `auth`, `erros`, `exemplos`, `notas de rollout`) e reduz a
 
 ---
 
+### DEC-038 — Contract smoke gate em frontend (OpenAPI + Feature Contract Packs)
+
+**Decisão:** adicionar gate bloqueante de contrato em `auraxis-web` e `auraxis-app` com:
+- geração tipada por OpenAPI (`contracts:sync`);
+- validação de drift (`contracts:check`);
+- baseline versionado de packs (`contracts/feature-contract-baseline.json`);
+- validação de endpoints REST de packs contra snapshot OpenAPI.
+
+**Racional:** os frontends precisam quebrar cedo quando houver mudança de contrato backend não sincronizada.
+O gate reduz regressão silenciosa de integração e melhora previsibilidade de PR.
+
+**Alternativas rejeitadas:**
+- validação manual de contrato no review;
+- depender apenas de testes de UI/E2E;
+- gerar tipos sem baseline de pack (sem rastreabilidade por task backend).
+
+**Dono:** frontend/platform.
+**Impacto:**
+- scripts `contracts:sync` e `contracts:check` adicionados em web/app;
+- novo job `Contract Smoke` nos pipelines de CI de web/app;
+- `quality-check` e parity local passam a incluir `contracts:check`.
+
+---
+
+### DEC-039 — Snapshot OpenAPI canônico centralizado na platform
+
+**Decisão:** versionar o snapshot OpenAPI canônico em
+`.context/openapi/openapi.snapshot.json` no repositório platform, com export automatizado por
+`scripts/export-openapi-snapshot.sh`.
+
+**Racional:** evitar acoplamento direto dos frontends ao runtime da API para geração tipada, mantendo
+um artefato estável, revisável e versionado junto da governança global.
+
+**Alternativas rejeitadas:**
+- depender de endpoint remoto de docs em tempo de CI;
+- gerar snapshot isolado em cada frontend;
+- não versionar snapshot (somente geração em memória).
+
+**Dono:** platform/backend.
+**Impacto:**
+- fonte única de OpenAPI para `contracts:sync` em web/app;
+- atualização determinística do snapshot em ciclo de contrato.
+
+---
+
+### DEC-040 — Métricas automáticas de lead time por task via GitHub PR
+
+**Decisão:** instituir script e workflow de métricas de lead time (`task -> PR -> merge`) em platform:
+- `scripts/generate_task_lead_time_report.py`
+- workflow `.github/workflows/lead-time-metrics.yml`
+
+**Racional:** decisões de throughput e autonomia de agentes devem ser orientadas por métrica objetiva,
+não por percepção.
+
+**Alternativas rejeitadas:**
+- medir lead time manualmente;
+- acompanhar somente contagem de tasks concluídas;
+- depender de ferramentas externas pagas para métrica básica.
+
+**Dono:** platform/governança.
+**Impacto:**
+- relatório recorrente (`.md` + `.json`) com média/mediana/p90 por repositório e task.
+
+---
+
+### DEC-041 — PR template obrigatório nos repos de produto
+
+**Decisão:** padronizar template de PR obrigatório em `auraxis-web`, `auraxis-app` e `auraxis-api`
+com checklist de validação, contrato, riscos e rastreabilidade de task.
+
+**Racional:** reduzir variação de qualidade em revisões e garantir que requisitos de contrato/gates
+sejam explicitamente verificados antes de merge.
+
+**Alternativas rejeitadas:**
+- checklist apenas em documentação;
+- template somente para frontend;
+- revisão sem checklist explícito.
+
+**Dono:** platform + owners de repos.
+**Impacto:**
+- maior consistência na revisão e menor risco de merge incompleto.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |
