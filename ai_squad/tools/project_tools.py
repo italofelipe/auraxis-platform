@@ -13,8 +13,10 @@ References:
 """
 
 import fnmatch
+import json
 import os
 import re
+from datetime import UTC, datetime
 from pathlib import Path
 
 from crewai.tools import BaseTool
@@ -23,10 +25,12 @@ from .tool_security import (
     CONVENTIONAL_BRANCH_PREFIXES,
     DEFAULT_TIMEOUT_SECONDS,
     GIT_STAGE_BLOCKLIST,
+    SHARED_CONTRACTS_DIR,
     PROJECT_ROOT,
     TARGET_REPO_NAME,
     audit_log,
     safe_subprocess,
+    validate_shared_contract_path,
     validate_write_path,
 )
 
@@ -59,6 +63,7 @@ _PENDING_STATUSES = ("| Todo", "| In Progress", "| Blocked")
 _PENDING_CHECKLIST_MARKERS = ("- [ ]", "- [~]", "- [!]")
 _ORDERED_LIST_PREFIXES = ("1.", "2.", "3.", "4.", "5.")
 _PENDING_BLOCK_MARKER = "Pendencias de execucao imediata"
+_TASK_ID_PATTERN = re.compile(r"^[A-Z]+-\d+$|^[A-Z]+\d+$")
 
 
 def _extract_pending_rows(lines: list[str]) -> list[str]:
@@ -572,6 +577,281 @@ class ReadGovernanceFileTool(BaseTool):
         if not path.exists():
             return f"Error: {filename} not found at project root."
         return path.read_text(encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Shared feature contract pack tools (backend -> frontend handoff)
+# ---------------------------------------------------------------------------
+
+
+def _normalize_contract_task_id(task_id: str) -> str:
+    normalized = (task_id or "").strip().upper()
+    if not _TASK_ID_PATTERN.match(normalized):
+        raise ValueError(
+            "invalid task_id format. Expected pattern like 'B11', 'WEB4', 'APP19'."
+        )
+    return normalized
+
+
+def _render_contract_markdown(pack: dict[str, object]) -> str:
+    task_id = str(pack.get("task_id", "")).strip().upper()
+    feature_name = str(pack.get("feature_name", "")).strip()
+    summary = str(pack.get("summary", "")).strip()
+    generated_at = str(pack.get("generated_at", "")).strip()
+    rest_endpoints = pack.get("rest_endpoints", [])
+    graphql_endpoints = pack.get("graphql_endpoints", [])
+    auth = str(pack.get("auth", "")).strip()
+    errors = pack.get("error_contract", [])
+    examples = pack.get("examples", [])
+    notes = str(pack.get("notes", "")).strip()
+
+    lines: list[str] = [
+        f"# Feature Contract Pack — {task_id}",
+        "",
+        f"- Feature: {feature_name or 'n/a'}",
+        f"- Generated at (UTC): {generated_at or 'n/a'}",
+        f"- Producer repo: {TARGET_REPO_NAME}",
+    ]
+    if summary:
+        lines.extend(["", "## Summary", "", summary])
+
+    lines.extend(["", "## Auth", "", auth or "n/a"])
+
+    lines.extend(["", "## REST Endpoints", ""])
+    if isinstance(rest_endpoints, list) and rest_endpoints:
+        for endpoint in rest_endpoints:
+            if not isinstance(endpoint, dict):
+                continue
+            method = str(endpoint.get("method", "")).upper()
+            path = str(endpoint.get("path", ""))
+            description = str(endpoint.get("description", ""))
+            lines.append(f"- `{method} {path}` — {description}".rstrip())
+    else:
+        lines.append("- none")
+
+    lines.extend(["", "## GraphQL Endpoints", ""])
+    if isinstance(graphql_endpoints, list) and graphql_endpoints:
+        for endpoint in graphql_endpoints:
+            if not isinstance(endpoint, dict):
+                continue
+            name = str(endpoint.get("name", ""))
+            endpoint_type = str(endpoint.get("type", ""))
+            description = str(endpoint.get("description", ""))
+            lines.append(f"- `{endpoint_type}:{name}` — {description}".rstrip())
+    else:
+        lines.append("- none")
+
+    lines.extend(["", "## Error Contract", ""])
+    if isinstance(errors, list) and errors:
+        for error in errors:
+            lines.append(f"- {error}")
+    else:
+        lines.append("- n/a")
+
+    lines.extend(["", "## Request/Response Examples", ""])
+    if isinstance(examples, list) and examples:
+        for index, example in enumerate(examples, start=1):
+            lines.append(f"- Example {index}: {example}")
+    else:
+        lines.append("- n/a")
+
+    if notes:
+        lines.extend(["", "## Notes", "", notes])
+
+    return "\n".join(lines).strip() + "\n"
+
+
+class PublishFeatureContractPackTool(BaseTool):
+    name: str = "publish_feature_contract_pack"
+    description: str = (
+        "Publishes a backend->frontend handoff contract pack in the shared "
+        "platform directory `.context/feature_contracts/`.\n"
+        "Use this at the end of backend feature delivery.\n"
+        "Arguments:\n"
+        "- task_id: backlog task id (e.g., B11)\n"
+        "- feature_name: short feature title\n"
+        "- summary: functional summary for frontend agents\n"
+        "- payload_json: JSON object string with keys: rest_endpoints, "
+        "graphql_endpoints, auth, error_contract, examples, notes\n"
+    )
+
+    def _run(
+        self,
+        task_id: str,
+        feature_name: str,
+        summary: str,
+        payload_json: str,
+    ) -> str:
+        if TARGET_REPO_NAME != "auraxis-api":
+            msg = (
+                "BLOCKED: publish_feature_contract_pack is allowed only for "
+                "auraxis-api runs."
+            )
+            audit_log(
+                "publish_feature_contract_pack",
+                {"task_id": task_id},
+                msg,
+                status="BLOCKED",
+            )
+            return msg
+
+        try:
+            normalized_task_id = _normalize_contract_task_id(task_id)
+        except ValueError as error:
+            msg = f"Error: {error}"
+            audit_log(
+                "publish_feature_contract_pack",
+                {"task_id": task_id},
+                msg,
+                status="ERROR",
+            )
+            return msg
+
+        try:
+            payload = json.loads(payload_json)
+        except json.JSONDecodeError as error:
+            msg = f"Error: payload_json is not valid JSON ({error})"
+            audit_log(
+                "publish_feature_contract_pack",
+                {"task_id": normalized_task_id},
+                msg,
+                status="ERROR",
+            )
+            return msg
+
+        if not isinstance(payload, dict):
+            msg = "Error: payload_json must be a JSON object."
+            audit_log(
+                "publish_feature_contract_pack",
+                {"task_id": normalized_task_id},
+                msg,
+                status="ERROR",
+            )
+            return msg
+
+        pack = {
+            "task_id": normalized_task_id,
+            "feature_name": feature_name.strip(),
+            "summary": summary.strip(),
+            "generated_at": datetime.now(UTC).isoformat(),
+            "producer_repo": TARGET_REPO_NAME,
+            "rest_endpoints": payload.get("rest_endpoints", []),
+            "graphql_endpoints": payload.get("graphql_endpoints", []),
+            "auth": payload.get("auth", ""),
+            "error_contract": payload.get("error_contract", []),
+            "examples": payload.get("examples", []),
+            "notes": payload.get("notes", ""),
+        }
+
+        SHARED_CONTRACTS_DIR.mkdir(parents=True, exist_ok=True)
+        json_path = validate_shared_contract_path(f"{normalized_task_id}.json")
+        md_path = validate_shared_contract_path(f"{normalized_task_id}.md")
+
+        json_path.write_text(
+            json.dumps(pack, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        md_path.write_text(_render_contract_markdown(pack), encoding="utf-8")
+
+        result = (
+            "Feature contract pack published:\n"
+            f"- {json_path}\n"
+            f"- {md_path}"
+        )
+        audit_log(
+            "publish_feature_contract_pack",
+            {"task_id": normalized_task_id, "feature_name": feature_name},
+            result,
+            status="OK",
+        )
+        return result
+
+
+class ListFeatureContractPacksTool(BaseTool):
+    name: str = "list_feature_contract_packs"
+    description: str = (
+        "Lists available shared feature contract packs published by backend "
+        "agents under `.context/feature_contracts`."
+    )
+
+    def _run(self, query: str = None) -> str:
+        SHARED_CONTRACTS_DIR.mkdir(parents=True, exist_ok=True)
+        files = sorted(
+            (path for path in SHARED_CONTRACTS_DIR.glob("*.json")),
+            key=lambda path: path.stat().st_mtime,
+            reverse=True,
+        )
+        if not files:
+            result = "No feature contract packs found."
+            audit_log("list_feature_contract_packs", {}, result, status="OK")
+            return result
+
+        lines = ["Available feature contract packs (newest first):"]
+        for file_path in files[:30]:
+            lines.append(f"- {file_path.stem}")
+        result = "\n".join(lines)
+        audit_log(
+            "list_feature_contract_packs",
+            {"count": len(files)},
+            result[:200],
+            status="OK",
+        )
+        return result
+
+
+class ReadFeatureContractPackTool(BaseTool):
+    name: str = "read_feature_contract_pack"
+    description: str = (
+        "Reads a shared feature contract pack by task ID. "
+        "Parameters: task_id (e.g., B11), format ('json'|'md', default 'md')."
+    )
+
+    def _run(self, task_id: str, format: str = "md") -> str:
+        try:
+            normalized_task_id = _normalize_contract_task_id(task_id)
+        except ValueError as error:
+            msg = f"Error: {error}"
+            audit_log(
+                "read_feature_contract_pack",
+                {"task_id": task_id},
+                msg,
+                status="ERROR",
+            )
+            return msg
+
+        target_format = format.strip().lower()
+        if target_format not in {"json", "md"}:
+            msg = "Error: format must be 'json' or 'md'."
+            audit_log(
+                "read_feature_contract_pack",
+                {"task_id": normalized_task_id, "format": format},
+                msg,
+                status="ERROR",
+            )
+            return msg
+
+        path = validate_shared_contract_path(f"{normalized_task_id}.{target_format}")
+        if not path.exists():
+            msg = (
+                f"Error: contract pack not found for {normalized_task_id} "
+                f"({target_format})."
+            )
+            audit_log(
+                "read_feature_contract_pack",
+                {"task_id": normalized_task_id, "format": target_format},
+                msg,
+                status="ERROR",
+            )
+            return msg
+
+        result = path.read_text(encoding="utf-8")
+        audit_log(
+            "read_feature_contract_pack",
+            {"task_id": normalized_task_id, "format": target_format},
+            "read",
+            status="OK",
+        )
+        return result
 
 
 # ---------------------------------------------------------------------------

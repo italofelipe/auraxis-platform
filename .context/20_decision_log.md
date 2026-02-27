@@ -604,6 +604,29 @@ mesmo em cenários com grande débito técnico legado.
 
 ---
 
+### DEC-037 — Handoff de contrato backend obrigatório via Feature Contract Pack
+
+**Decisão:** toda entrega backend com impacto de contrato deve publicar, no fim da execução,
+um `Feature Contract Pack` versionado em `.context/feature_contracts/` com dois artefatos:
+`<TASK_ID>.json` e `<TASK_ID>.md`.
+
+**Racional:** os agentes frontend estavam perdendo contexto entre mudança de endpoint e início
+da integração, gerando retrabalho e drift. O pack padroniza o handoff com semântica mínima de
+consumo (`endpoints`, `auth`, `erros`, `exemplos`, `notas de rollout`) e reduz ambiguidade.
+
+**Alternativas rejeitadas:**
+- depender apenas de OpenAPI/GraphQL sem resumo operacional por task;
+- handoff manual em texto livre no terminal;
+- documentar em arquivos ad hoc por repo sem local canônico compartilhado.
+
+**Dono:** plataforma/backend.
+**Impacto:**
+- `ai_squad` backend passa a ter fase obrigatória de publicação de pack;
+- execução backend sem publicação do pack é considerada bloqueada no resumo final;
+- web/app passam a ler packs antes de implementar integrações com features recém-entregues.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

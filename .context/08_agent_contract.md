@@ -27,6 +27,7 @@ Para trabalho em produto (web, app, api), também ler:
 - `.context/quality_gates.md` do repo — gates obrigatórios
 - `CODING_STANDARDS.md` do repo — padrões de código
 - `.context/30_design_reference.md` — obrigatorio para qualquer tarefa de UI/layout em `web`/`app`
+- `.context/32_frontend_unified_guideline.md` — obrigatório para qualquer tarefa frontend (web/app)
 
 ### Guardrails anti-drift (obrigatórios antes do kickoff)
 
@@ -46,6 +47,7 @@ Para trabalho em produto (web, app, api), também ler:
 - Identificar riscos antes de mudanças estruturais
 - Verificar se existe teste para a lógica que será implementada
 - Em tarefas frontend, abrir os assets de `designs/` e confirmar aderencia ao blueprint visual canonico
+- Em tarefas frontend com dependência de backend recém-entregue, ler o `Feature Contract Pack` em `.context/feature_contracts/<TASK_ID>.md` antes de codificar integração.
 - Confirmar `task_id` em execução e rejeitar qualquer troca implícita de task durante o mesmo bloco.
 
 ### Ao escrever código
@@ -85,6 +87,7 @@ Para trabalho em produto (web, app, api), também ler:
 - Reportar no terminal: status final, o que foi implementado, tasks concluídas e próxima tarefa sugerida
 - Em erro/bloqueio: notificar gestor e agentes paralelos no terminal, e registrar detalhe técnico em `tasks_status/<TASK_ID>.md` na platform
 - `tasks_status/` é log operacional local (não versionado); o status oficial continua em `tasks.md`/`TASKS.md`
+- Em task backend com impacto de contrato (REST/GraphQL), publicar `Feature Contract Pack` (`.json` + `.md`) em `.context/feature_contracts/`.
 
 ---
 

@@ -2,6 +2,20 @@
 
 Data: 2026-02-26
 
+## Atualizacao Contrato Backend->Frontend (2026-02-27 — feature contract packs + guideline unificado)
+- `ai_squad` atualizado para incluir fase obrigatória de `Feature Contract Pack` em runs backend.
+  - publicação em `.context/feature_contracts/<TASK_ID>.json` e `.context/feature_contracts/<TASK_ID>.md`;
+  - novo critério de bloqueio no resumo backend quando o pack não for publicado.
+- Ferramentas compartilhadas adicionadas no orquestrador:
+  - `publish_feature_contract_pack` (backend);
+  - `list_feature_contract_packs` e `read_feature_contract_pack` (consumo frontend).
+- Governança sincronizada:
+  - `.context/06_context_index.md`, `.context/07_steering_global.md`, `.context/08_agent_contract.md`
+    passam a exigir leitura/uso dos packs em integrações frontend.
+  - guideline canônico cross-platform formalizado em `.context/32_frontend_unified_guideline.md`.
+- Repositórios frontend (`auraxis-web` e `auraxis-app`) atualizados para referenciar explicitamente
+  o guideline unificado e o diretório canônico de contract packs.
+
 ## Atualizacao Guardrails (2026-02-27 — anti-drift operacional + saneamento app/api)
 - Verificacao de estado dos repos de produto antes da rodada:
   - `auraxis-api`: alterações de B11 validadas e consolidadas em commit único (`feat(user): persist investor profile suggestion fields`), removendo commit extra fora de escopo.

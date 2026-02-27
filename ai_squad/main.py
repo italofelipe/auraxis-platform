@@ -3,13 +3,15 @@ Auraxis AI Squad — Workspace Orchestrator (backend workflow enabled).
 
 Pipeline:
   PM (plan) → Dev (read) → Dev (write) → Dev (review) → QA (unit test)
-  → QA (integration test) → Dev (documentation)
+  → QA (integration test) → Dev (documentation) → Dev (contract pack)
 
-The 7-task architecture builds on the 5-task pipeline with two new phases:
+The 8-task architecture builds on the 5-task pipeline with three new phases:
   - Task 6 (INTEGRATION TEST): makes REAL HTTP requests against the Flask
     app to verify the feature works end-to-end (like Cypress for backend).
   - Task 7 (DOCUMENTATION): auto-updates TASKS.md with status, progress,
     and commit hash for traceability.
+  - Task 8 (CONTRACT PACK): publishes backend->frontend handoff artifacts
+    under `.context/feature_contracts/` (md + json).
 
 Previous safeguards (still active):
   - Task 2 (READ): prevents blind overwrites by reading files first.
@@ -66,9 +68,12 @@ from tools.project_tools import (
     GetLatestMigrationTool,
     GitOpsTool,
     IntegrationTestTool,
+    ListFeatureContractPacksTool,
     ListProjectFilesTool,
+    PublishFeatureContractPackTool,
     ReadAlembicHistoryTool,
     ReadContextFileTool,
+    ReadFeatureContractPackTool,
     ReadGovernanceFileTool,
     ReadPendingTasksTool,
     ReadProjectFileTool,
@@ -110,6 +115,7 @@ _CRITICAL_AUDIT_TOOLS = {
     "run_backend_tests",
     "run_frontend_tests",
     "run_integration_tests",
+    "publish_feature_contract_pack",
     "git_operations",
     "update_task_status",
 }
@@ -333,6 +339,7 @@ def _derive_single_run_status(
     saw_backend_tests_ok = False
     saw_integration_tests_ok = False
     saw_integration_tests_error = False
+    saw_contract_pack_ok = False
     for event in audit_events:
         tool = str(event.get("tool", ""))
         status = str(event.get("status", "")).upper()
@@ -352,6 +359,8 @@ def _derive_single_run_status(
                 saw_integration_tests_ok = True
             if status == "ERROR":
                 saw_integration_tests_error = True
+        if tool == "publish_feature_contract_pack" and status == "OK":
+            saw_contract_pack_ok = True
         if status == "ERROR" and tool in _CRITICAL_AUDIT_TOOLS:
             reasons.append(f"audit_error:{tool}")
             continue
@@ -373,6 +382,8 @@ def _derive_single_run_status(
             not saw_integration_tests_ok or saw_integration_tests_error
         ):
             reasons.append("missing_or_failed_integration_tests")
+        if repo_name == "auraxis-api" and not saw_contract_pack_ok:
+            reasons.append("missing_feature_contract_pack")
 
     deduped = list(dict.fromkeys(reasons))
     return (len(deduped) > 0, deduped)
@@ -452,6 +463,8 @@ class AuraxisSquad:
         self.glm = GetLatestMigrationTool()
         self.rah = ReadAlembicHistoryTool()
         self.rs = ReadSchemaTool()
+        self.lfcp = ListFeatureContractPacksTool()
+        self.rfcp = ReadFeatureContractPackTool()
 
         # Validation tools
         self.vmc = ValidateMigrationConsistencyTool()
@@ -463,6 +476,7 @@ class AuraxisSquad:
 
         # Documentation tools
         self.uts = UpdateTaskStatusTool()
+        self.pfcp = PublishFeatureContractPackTool()
 
         # Write + Git tools
         self.wf = WriteFileTool()
@@ -470,15 +484,16 @@ class AuraxisSquad:
 
     def run_backend_workflow(self, briefing: str, plan_only: bool = False):
         """
-        7-task pipeline:
+        8-task pipeline:
           Plan -> Read -> Write -> Review -> Unit Test
-          -> Integration Test -> Documentation.
+          -> Integration Test -> Documentation -> Contract Pack.
 
         Task 2 (Read) prevents blind overwrites.
         Task 4 (Review) catches model/migration inconsistencies
         BEFORE committing, so agents self-correct.
         Task 6 (Integration Test) makes real HTTP requests to verify E2E.
         Task 7 (Documentation) auto-updates TASKS.md for traceability.
+        Task 8 (Contract Pack) publishes API handoff artifacts for frontend agents.
         """
 
         # --- AGENTS ---
@@ -535,6 +550,7 @@ class AuraxisSquad:
                 self.wf,
                 self.git,
                 self.uts,
+                self.pfcp,
             ],
             verbose=True,
         )
@@ -815,6 +831,44 @@ class AuraxisSquad:
             context=[task_plan, task_review, task_test, task_integration],
         )
 
+        # --- TASK 8: CONTRACT PACK (backend -> frontend handoff) ---
+        task_contract_pack = Task(
+            description=(
+                "CONTRACT PACK PHASE — publish backend contract artifacts for "
+                "frontend agents.\n\n"
+                "Execute this phase for every backend run (even if no endpoint "
+                "changed, publish an explicit note).\n\n"
+                "Steps:\n"
+                "1. Build a JSON payload with these keys:\n"
+                "   - rest_endpoints: [{method, path, description}]\n"
+                "   - graphql_endpoints: [{type, name, description}]\n"
+                "   - auth: short text about auth/session expectations\n"
+                "   - error_contract: list of error semantics/codes\n"
+                "   - examples: list of request/response examples (short)\n"
+                "   - notes: rollout caveats, feature flags, backward compatibility\n"
+                "2. publish_feature_contract_pack(\n"
+                "     task_id='<task id>',\n"
+                "     feature_name='<feature title>',\n"
+                "     summary='<what frontend must implement>',\n"
+                "     payload_json='<json object string>'\n"
+                "   )\n"
+                "3. Verify by reading read_feature_contract_pack('<task id>', 'md').\n\n"
+                "Rules:\n"
+                "- If no API contract changed, still publish a pack with empty "
+                "endpoint lists and a clear `notes` explanation.\n"
+                "- Keep fields objective and implementation-ready for frontend squads."
+            ),
+            expected_output=(
+                "Contract pack results:\n"
+                "- Published task id: <id>\n"
+                "- JSON file path\n"
+                "- Markdown file path\n"
+                "- Frontend action summary"
+            ),
+            agent=backend_dev,
+            context=[task_plan, task_review, task_test, task_integration, task_docs],
+        )
+
         # --- CREW ---
         crew = Crew(
             agents=[manager, backend_dev, qa_engineer],
@@ -826,6 +880,7 @@ class AuraxisSquad:
                 task_test,
                 task_integration,
                 task_docs,
+                task_contract_pack,
             ],
             process=Process.sequential,
             verbose=True,
@@ -848,7 +903,15 @@ class AuraxisSquad:
                 "You coordinate feature delivery by reading pending tasks, "
                 "governance and current code before planning."
             ),
-            tools=[self.rpt, self.rts, self.rcf, self.rgf, self.rpf],
+            tools=[
+                self.rpt,
+                self.rts,
+                self.rcf,
+                self.rgf,
+                self.rpf,
+                self.lfcp,
+                self.rfcp,
+            ],
             verbose=True,
             allow_delegation=True,
         )
@@ -863,7 +926,15 @@ class AuraxisSquad:
                 "You always read files before writing, avoid broad rewrites, "
                 "and follow repository coding standards."
             ),
-            tools=[self.rpf, self.lpf, self.rcf, self.wf, self.git, self.uts],
+            tools=[
+                self.rpf,
+                self.lpf,
+                self.rcf,
+                self.rfcp,
+                self.wf,
+                self.git,
+                self.uts,
+            ],
             verbose=True,
         )
 
@@ -886,7 +957,10 @@ class AuraxisSquad:
                 "1. read_pending_tasks()\n"
                 "2. read_tasks_section('<task_id or area>')\n"
                 "3. read_governance_file('product.md')\n"
-                "4. read_governance_file('steering.md')\n\n"
+                "4. read_governance_file('steering.md')\n"
+                "5. list_feature_contract_packs()\n"
+                "6. read_feature_contract_pack('<related backend task id>', 'md') "
+                "when a contract pack exists for the feature dependency.\n\n"
                 f'USER BRIEFING: "{briefing}"\n\n'
                 "DUPLICATE WORK GUARD:\n"
                 "If task is already done or code already exists, output "

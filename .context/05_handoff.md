@@ -2,6 +2,44 @@
 
 Data: 2026-02-25 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-27 (contract handoff backend->frontend + guideline unificado)
+
+### O que foi feito
+
+- `ai_squad` (platform):
+  - backend workflow evoluído para fase adicional obrigatória de publicação de contrato;
+  - novos tools de handoff compartilhado adicionados:
+    - `publish_feature_contract_pack`
+    - `list_feature_contract_packs`
+    - `read_feature_contract_pack`
+  - política de conclusão backend endurecida: execução sem pack publicado agora entra como bloqueada.
+- Contexto global:
+  - criado `.context/feature_contracts/README.md`;
+  - criado template `.context/templates/FEATURE_CONTRACT_PACK_TEMPLATE.json`;
+  - criado `.context/32_frontend_unified_guideline.md` como base canônica de frontend web/app;
+  - atualizado índice/steering/contract para exigir leitura do guideline e dos packs.
+- Frontend repos:
+  - `repos/auraxis-web` e `repos/auraxis-app` atualizados para referenciar explicitamente
+    a base canônica cross-platform e o fluxo de leitura de `Feature Contract Pack`.
+
+### O que foi validado
+
+- `python -m py_compile` no orquestrador e tools alterados (`main.py`, `project_tools.py`, `tool_security.py`, `__init__.py`) ✅
+- leitura estática dos docs atualizados e links canônicos para guideline/contract packs ✅
+
+### Riscos pendentes
+
+- ainda não há packs reais publicados por task backend neste novo formato em produção;
+  primeira execução backend pós-merge será o teste operacional completo do fluxo.
+- repositório `auraxis-platform` possui artefatos locais legados fora de escopo (duplicatas `* 2`)
+  que devem continuar sem commit.
+
+### Próximo passo sugerido
+
+1. Mergear bloco atual da platform + web/app.
+2. Executar um ciclo backend real (`make next-task`) para validar publicação/consumo do primeiro pack.
+3. Na primeira feature integrada em web/app, registrar evidência de leitura do pack no handoff da task.
+
 ## Atualização rápida — 2026-02-27 (guardrails anti-drift + saneamento app/api)
 
 ### O que foi feito

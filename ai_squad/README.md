@@ -25,6 +25,7 @@ Com isso, o master:
 - usa o briefing padrão `Execute a tarefa`;
 - resolve `task_id` por repo e bloqueia execução sem task resolvida;
 - bloqueia execução se o repo alvo estiver com worktree sujo (anti-contaminação);
+- para backend (`auraxis-api`), publica `Feature Contract Pack` em `.context/feature_contracts/`;
 - registra status em `tasks_status/`;
 - libera lock ao final.
 

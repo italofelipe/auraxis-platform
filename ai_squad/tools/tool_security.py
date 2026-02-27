@@ -41,6 +41,7 @@ from typing import Optional
 SQUAD_ROOT: Path = Path(__file__).resolve().parent.parent
 PLATFORM_ROOT: Path = SQUAD_ROOT.parent
 REPOS_ROOT: Path = PLATFORM_ROOT / "repos"
+SHARED_CONTRACTS_DIR: Path = PLATFORM_ROOT / ".context" / "feature_contracts"
 
 
 def _resolve_project_root() -> Path:
@@ -179,6 +180,7 @@ if TARGET_REPO_NAME == "auraxis-api":
 # regardless of directory.
 # ---------------------------------------------------------------------------
 BLOCKED_EXTENSIONS: set[str] = {".env", ".pem", ".key", ".secret", ".credentials"}
+SHARED_CONTRACT_EXTENSIONS: set[str] = {".md", ".json"}
 
 # ---------------------------------------------------------------------------
 # GIT_STAGE_BLOCKLIST — glob patterns that git_operations must NEVER stage.
@@ -239,6 +241,18 @@ if not _audit_logger.handlers:
     _audit_logger.addHandler(_handler)
     _audit_logger.setLevel(logging.INFO)
 
+_TOOL_AUDIT_EVENTS: list[dict[str, object]] = []
+
+
+def reset_tool_audit_snapshot() -> None:
+    """Reset in-memory tool audit events for current process run."""
+    _TOOL_AUDIT_EVENTS.clear()
+
+
+def get_tool_audit_snapshot() -> list[dict[str, object]]:
+    """Return a copy of in-memory tool audit events for current process run."""
+    return list(_TOOL_AUDIT_EVENTS)
+
 
 # ---------------------------------------------------------------------------
 # audit_log — structured logging for every tool invocation.
@@ -261,6 +275,17 @@ def audit_log(
     Side Effects:
         Appends a line to ai_squad/logs/tool_audit.log.
     """
+    _TOOL_AUDIT_EVENTS.append(
+        {
+            "tool": tool_name,
+            "status": status,
+            "args": args,
+            "result_preview": str(result)[:200],
+        }
+    )
+    if len(_TOOL_AUDIT_EVENTS) > 5000:
+        del _TOOL_AUDIT_EVENTS[:-5000]
+
     _audit_logger.info(
         f"tool={tool_name} | status={status} | args={args} | "
         f"result_preview={str(result)[:200]}"
@@ -324,6 +349,28 @@ def validate_write_path(raw_path: str) -> Path:
     if resolved.suffix in BLOCKED_EXTENSIONS:
         raise PermissionError(
             f"Extension '{resolved.suffix}' is blocked for agent writes."
+        )
+
+    return resolved
+
+
+def validate_shared_contract_path(raw_path: str) -> Path:
+    """Validate writes/reads under shared cross-repo feature contracts dir.
+
+    This helper allows controlled cross-repo contract exchange between
+    backend and frontend agents via `<platform>/.context/feature_contracts`.
+    """
+    resolved = (SHARED_CONTRACTS_DIR / raw_path).resolve()
+
+    if not resolved.is_relative_to(SHARED_CONTRACTS_DIR):
+        raise PermissionError(
+            f"Shared contract path escapes base directory: {raw_path}"
+        )
+
+    if resolved.suffix not in SHARED_CONTRACT_EXTENSIONS:
+        raise PermissionError(
+            f"Shared contract extension '{resolved.suffix}' is not allowed. "
+            f"Allowed: {sorted(SHARED_CONTRACT_EXTENSIONS)}"
         )
 
     return resolved

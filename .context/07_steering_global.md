@@ -21,6 +21,7 @@ Entregar o produto Auraxis com previsibilidade, segurança e qualidade, usando f
 - Commits pequenos, reversíveis e com escopo claro.
 - Toda mudança relevante deve atualizar documentação de contexto.
 - Toda feature com impacto de contrato deve ter teste de regressão.
+- Toda feature backend com impacto de contrato deve publicar `Feature Contract Pack` em `.context/feature_contracts/` para consumo dos frontends.
 - Execução autônoma só inicia com `task_id` resolvido (nunca `UNSPECIFIED`) e worktree limpo.
 - Se houver drift de contexto (fingerprint de política), execução deve falhar em preflight.
 
@@ -38,6 +39,7 @@ Entregar o produto Auraxis com previsibilidade, segurança e qualidade, usando f
 - **Shared-first para reutilização.** Código frontend reutilizado deve viver em diretórios shared canônicos:
   - web: `app/shared/{components,types,validators,utils}`
   - app: `shared/{components,types,validators,utils}`
+- **Guideline frontend unificado.** Web e app devem seguir os mesmos conceitos arquiteturais, gates e convenções descritos em `.context/32_frontend_unified_guideline.md`, com variação apenas de camada/plataforma.
 
 ### Segurança — não negociável em nenhum repo
 - **Zero secrets em código.** Nenhum token, API key ou credential hardcoded.
