@@ -10,6 +10,32 @@ Ela agora fica no repositório de plataforma (`auraxis-platform`) e seleciona o 
 
 ## Como usar (Mac OS)
 
+### Modo recomendado (zero overhead operacional)
+
+Da raiz da plataforma:
+
+```bash
+cd /Users/italochagas/Desktop/projetos/auraxis-platform
+make next-task
+```
+
+Com isso, o master:
+- adquire lock automaticamente;
+- executa api/web/app em paralelo;
+- usa o briefing padrão `Execute a tarefa`;
+- registra status em `tasks_status/`;
+- libera lock ao final.
+
+Briefing custom:
+
+```bash
+BRIEFING="Execute a tarefa" make next-task
+```
+
+---
+
+### Modo manual (avançado)
+
 1.  **Instalação (Crie um venv isolado):**
     ```bash
     cd ai_squad
@@ -25,7 +51,7 @@ Ela agora fica no repositório de plataforma (`auraxis-platform`) e seleciona o 
     ```
     *Nota: Você também pode usar modelos locais com **Ollama** se preferir.*
 
-3.  **Configuração do repositório alvo (obrigatório):**
+3.  **Configuração do repositório alvo:**
     ```bash
     export AURAXIS_TARGET_REPO=auraxis-api   # auraxis-api | auraxis-web | auraxis-app
     ```

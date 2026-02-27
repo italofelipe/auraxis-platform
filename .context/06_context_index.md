@@ -1,6 +1,6 @@
 # Context Index
 
-Última atualização: 2026-02-25
+Última atualização: 2026-02-26
 
 ## Objetivo
 
@@ -13,6 +13,7 @@ Este índice organiza a leitura mínima para qualquer pessoa ou agente retomar o
 | # | Arquivo | O que fornece |
 |:--|:--------|:--------------|
 | 1 | `00_overview.md` | Visão geral do produto e do ecossistema |
+| 1.1 | `../product.md` | Fonte única de produto (estratégia e direção canônica) |
 | 2 | `07_steering_global.md` | Princípios imutáveis de entrega |
 | 3 | `08_agent_contract.md` | Contrato de comportamento de agentes |
 | 4 | `23_definition_of_done.md` | DoD canônico — critérios de conclusão |
@@ -34,6 +35,7 @@ Este índice organiza a leitura mínima para qualquer pessoa ou agente retomar o
 |:--------|:-----------|
 | `25_quality_security_playbook.md` | **Ao trabalhar em qualquer repo frontend** — manual completo de quality + security |
 | `26_frontend_architecture.md` | **Antes de qualquer trabalho em auraxis-app ou auraxis-web** — arquitetura, tokens, feature-based, zero `any`, PWA |
+| `30_design_reference.md` | **Obrigatorio para tarefas de UI/layout no app e web** — referencia visual canonica dos assets em `designs/` |
 | `27_agentic_maturity_remediation_plan.md` | Ao acompanhar as correções de maturidade operacional para autonomia de agentes |
 | `28_autonomous_delivery_readiness.md` | Antes de iniciar novos blocos de feature com agentes autônomos (baseline de prontidão) |
 | `29_feature_flags_foundation.md` | Ao operar PLT4 (base de governança de feature toggles) |

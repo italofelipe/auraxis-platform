@@ -26,6 +26,7 @@ Todo agente DEVE ler na ordem antes de qualquer ação:
 Para trabalho em produto (web, app, api), também ler:
 - `.context/quality_gates.md` do repo — gates obrigatórios
 - `CODING_STANDARDS.md` do repo — padrões de código
+- `.context/30_design_reference.md` — obrigatorio para qualquer tarefa de UI/layout em `web`/`app`
 
 ---
 
@@ -36,6 +37,7 @@ Para trabalho em produto (web, app, api), também ler:
 - Listar critérios de conclusão
 - Identificar riscos antes de mudanças estruturais
 - Verificar se existe teste para a lógica que será implementada
+- Em tarefas frontend, abrir os assets de `designs/` e confirmar aderencia ao blueprint visual canonico
 
 ### Ao escrever código
 - Seguir os padrões definidos em `CODING_STANDARDS.md` do repo

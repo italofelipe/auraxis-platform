@@ -19,7 +19,9 @@ Centralizar contexto de produto, engenharia e execução para trabalho humano + 
 ## Fonte de verdade
 - Status global e handoff da plataforma: `.context/01_status_atual.md` e `.context/05_handoff.md`
 - Status e andamento por produto: `tasks.md` de cada repositório em `repos/`
-- Produto e visão: product.md
+- Produto e visao (canonico): `product.md` na raiz da plataforma
+- Referencia visual de layout (frontend): `designs/` + `.context/30_design_reference.md`
+- `product.md` em `repos/*` sao briefs operacionais derivados
 - Diretrizes de execução: steering.md
 
 ## Regra operacional

@@ -5,7 +5,7 @@ PLATFORM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SQUAD_DIR="${PLATFORM_ROOT}/ai_squad"
 
 TARGET_REPO="${1:-all}"
-BRIEFING="${2:-Execute a próxima tarefa}"
+BRIEFING="${2:-Execute a tarefa}"
 MODE="${3:-run}"
 
 if [[ ! -d "${SQUAD_DIR}" ]]; then
@@ -14,9 +14,11 @@ if [[ ! -d "${SQUAD_DIR}" ]]; then
 fi
 
 if [[ ! -d "${SQUAD_DIR}/.venv" ]]; then
-  echo "Missing ai_squad virtualenv at ${SQUAD_DIR}/.venv" >&2
-  echo "Run: make squad-setup" >&2
-  exit 1
+  echo "ai_squad virtualenv missing. Bootstrapping automatically..."
+  cd "${SQUAD_DIR}"
+  python3 -m venv .venv
+  source .venv/bin/activate
+  pip install -r requirements.txt
 fi
 
 cd "${SQUAD_DIR}"
@@ -31,16 +33,14 @@ else
   export AURAXIS_EXECUTION_MODE="run"
 fi
 
-if [[ "${MODE}" == "safe" ]]; then
-  LOCK_REPO="${TARGET_REPO}"
-  if [[ "${TARGET_REPO}" == "all" ]]; then
-    LOCK_REPO="auraxis-all"
-  fi
-  (
-    cd "${PLATFORM_ROOT}"
-    ./scripts/agent-lock.sh acquire crewai "${LOCK_REPO}" "AI Squad run: ${BRIEFING}"
-  )
-  trap 'cd "${PLATFORM_ROOT}" && ./scripts/agent-lock.sh release crewai >/dev/null 2>&1 || true' EXIT
+LOCK_REPO="${TARGET_REPO}"
+if [[ "${TARGET_REPO}" == "all" ]]; then
+  LOCK_REPO="auraxis-all"
 fi
+(
+  cd "${PLATFORM_ROOT}"
+  ./scripts/agent-lock.sh acquire crewai "${LOCK_REPO}" "AI Squad run: ${BRIEFING}"
+)
+trap 'cd "${PLATFORM_ROOT}" && ./scripts/agent-lock.sh release crewai >/dev/null 2>&1 || true' EXIT
 
 python3 main.py
