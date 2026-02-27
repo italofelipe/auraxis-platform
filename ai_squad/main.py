@@ -700,23 +700,22 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
 # =================================================================
 
 if __name__ == "__main__":
-    target_env = os.getenv("AURAXIS_TARGET_REPO", TARGET_REPO_NAME).strip()
+    target_env = os.getenv("AURAXIS_TARGET_REPO", "all").strip()
     execution_mode = os.getenv("AURAXIS_EXECUTION_MODE", "run").strip().lower()
     plan_only = execution_mode == "plan_only"
     print("### Auraxis AI Squad — Workspace Orchestrator ###")
     print(f"Platform root: {PLATFORM_ROOT}")
     print(f"Target repo: {target_env}")
-    print(f"Target project root: {PROJECT_ROOT}")
+    if target_env.lower() in ("all", "auraxis-all", "*"):
+        print("Target project root: multi-repo mode (api/web/app)")
+    else:
+        print(f"Target project root: {PROJECT_ROOT}")
     print(f"Execution mode: {execution_mode}")
     print()
 
     briefing = os.getenv(
         "AURAXIS_BRIEFING",
-        (
-            "Implement the next pending task from the repository task board.\n"
-            "Read tasks section and prioritize Todo/In Progress with dependencies resolved.\n"
-            "Preserve existing implementation and avoid duplicate work."
-        ),
+        "Execute a tarefa",
     )
     task_id = infer_task_id(briefing)
 

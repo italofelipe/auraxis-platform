@@ -1,6 +1,32 @@
 # Status Atual (snapshot)
 
-Data: 2026-02-25
+Data: 2026-02-26
+
+## Atualizacao Orquestrador (2026-02-27 — zero-overhead run + limpeza do legado na API)
+- `repos/auraxis-api/ai_squad` removido do repositório de API (legado descontinuado).
+- Auditoria de migração concluída:
+  - não foram encontrados artefatos funcionais exclusivos no legado da API que faltassem no `ai_squad` da platform;
+  - diferenças restantes eram versão antiga de arquivos já migrados + artefatos locais (`.env`, `.venv`, `__pycache__`, logs).
+- Fluxo de execução simplificado para comando único:
+  - `scripts/ai-next-task.sh` agora faz bootstrap automático de venv (quando ausente), adquire lock automaticamente e libera lock ao final;
+  - `ai_squad/main.py` passa a assumir `AURAXIS_TARGET_REPO=all` por padrão;
+  - briefing padrão ajustado para `Execute a tarefa`;
+  - `make next-task` vira interface principal sem overhead operacional manual.
+
+## Atualizacao Design Reference (2026-02-26 — assets em `designs/` operacionalizados)
+- Especificacao visual canonica criada em `.context/30_design_reference.md`.
+- Fonte visual oficial registrada:
+  - `designs/1920w default.png` (dashboard autenticado desktop);
+  - `designs/Background.svg` (base visual publico/institucional).
+- Contrato de agentes atualizado:
+  - leitura obrigatoria do spec de design para tarefas de UI/layout (`.context/08_agent_contract.md`).
+- Arquitetura frontend atualizada:
+  - secao de fonte visual obrigatoria adicionada em `.context/26_frontend_architecture.md`.
+- Produto/overview atualizados:
+  - `product.md` e `.context/00_overview.md` agora apontam explicitamente para `designs/` e o spec operacional.
+- Backlogs de produto atualizados para enforcement:
+  - `repos/auraxis-web/tasks.md` com diretriz global de layout + critérios visuais em `WEB4` e `WEB20`;
+  - `repos/auraxis-app/tasks.md` com diretriz global de layout + critérios visuais em `APP4` e `APP19`.
 
 ## Atualizacao de priorizacao (2026-02-25 — local-first)
 - Publicacao externa (stores/app e release web publica) foi postergada por decisao de custo e foco.
@@ -344,7 +370,7 @@ Próximas tasks de produto:
 | Gates por repo no workflow | `workflows/agent-session.md` | Comandos de gate por stack embutidos no passo de commit |
 | Script de prereqs | `scripts/verify-agent-session.sh` | Valida git, SSH, Python, submodules, .context antes de começar |
 | Handoffs históricos | `.context/handoffs/` | Diretório criado + protocolo documentado |
-| Interop CrewAI | `repos/auraxis-api/ai_squad/CLAUDE.md` | Protocolo de lock e handoff para o squad automatizado |
+| Interop CrewAI | `ai_squad/CLAUDE.md` | Protocolo de lock e handoff para o squad automatizado |
 
 ### Commits desta rodada (platform)
 
@@ -532,7 +558,7 @@ Principais gaps: Jest setup real (APP2), Vitest config (WEB2), SonarCloud (APP4/
 | Bootstrap de repos | `scripts/bootstrap-repo.sh`, `workflows/repo-bootstrap.md` | Removida referência a script inexistente; exemplos atualizados para `auraxis-app` |
 | Nomenclatura canônica | `AGENTS.md`, `README.md`, `CLAUDE.md`, `.context/00_overview.md`, `ai_integration-claude.md` | Referências operacionais migradas de `auraxis-mobile` para `auraxis-app` |
 | Backend GraphQL docs | `repos/auraxis-api/steering.md`, `repos/auraxis-api/CLAUDE.md`, `repos/auraxis-api/CODING_STANDARDS.md` | Drift Ariadne/Graphene eliminado |
-| Handoff no ai_squad | `repos/auraxis-api/ai_squad/tools/tool_security.py` | Allowlist expandida para `.context/handoffs` e `.context/reports` |
+| Handoff no ai_squad | `ai_squad/tools/tool_security.py` | Allowlist expandida para `.context/handoffs` e `.context/reports` |
 | Sonar secret alignment | `repos/auraxis-web/.github/workflows/ci.yml`, `repos/auraxis-app/.github/workflows/ci.yml` | CI padronizado em `SONAR_AURAXIS_WEB_TOKEN` e `SONAR_AURAXIS_APP_TOKEN` |
 | Higiene de artefatos | `repos/auraxis-web/.gitignore`, `repos/auraxis-app/.gitignore` | `coverage/` e `.nuxtrc` ignorados; repo aninhado em `repos/.git` removido |
 | Sync de tasks/status | `repos/auraxis-app/tasks.md`, `repos/auraxis-web/tasks.md`, `.context/01_status_atual.md` | Status e backlog local alinhados ao estado atual |

@@ -75,6 +75,24 @@ Estas definições são mandatórias para `auraxis-web` e `auraxis-app`.
 
 ---
 
+## 2.2 Fonte visual obrigatoria para layout
+
+Qualquer tarefa de tela/componente visual em frontend deve usar os assets canonicos da pasta
+`designs/` na platform:
+
+1. `designs/1920w default.png`
+2. `designs/Background.svg`
+
+Leitura obrigatoria complementar:
+- `.context/30_design_reference.md`
+
+Regras:
+1. Primeiro reproduzir hierarquia/composicao do asset de referencia.
+2. Depois aplicar adaptacao responsiva por tokens (sem inventar nova linguagem visual).
+3. Se houver ambiguidade relevante no layout, abrir item em `tasks.md` antes de desviar.
+
+---
+
 ## 3. Arquitetura de pastas — Feature-based
 
 ### Regra central

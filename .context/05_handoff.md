@@ -2,6 +2,65 @@
 
 Data: 2026-02-25 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-27 (master run simplificado + limpeza legado API)
+
+### O que foi feito
+
+- `repos/auraxis-api/ai_squad` removido (descontinuação da cópia legado).
+- `ai_squad/main.py` ajustado para:
+  - default `AURAXIS_TARGET_REPO=all` (multi-repo);
+  - briefing padrão `Execute a tarefa`.
+- `scripts/ai-next-task.sh` ajustado para:
+  - bootstrap automático de venv/deps quando ausente;
+  - lock automático (acquire/release) em toda execução.
+- `make next-task` consolidado como entrada principal sem overhead manual.
+
+### O que foi validado
+
+- `bash -n scripts/ai-next-task.sh` ✅
+- `python3 -m py_compile ai_squad/main.py` ✅
+- ausência da pasta legado na API: `repos/auraxis-api/ai_squad` ✅
+
+### Riscos pendentes
+
+- Execução real do squad ainda depende de chave LLM válida em `ai_squad/.env` (`OPENAI_API_KEY`).
+- Se o lock estiver ocupado por outro operador/agente, a run será bloqueada (comportamento esperado).
+
+### Próximo passo sugerido
+
+1. Executar `make next-task` na raiz da platform.
+2. Em caso de bloqueio, consultar `tasks_status/` e reexecutar com briefing específico para destravar dependências.
+
+## Atualização rápida — 2026-02-26 (enforcement de layout canônico nos backlogs)
+
+### O que foi feito
+
+- `repos/auraxis-web/tasks.md`:
+  - adicionada seção `Diretriz global de layout (obrigatória para agentes)`;
+  - adicionados critérios visuais explícitos em `WEB4` e `WEB20`.
+- `repos/auraxis-app/tasks.md`:
+  - adicionada seção `Diretriz global de layout (obrigatória para agentes)`;
+  - adicionados critérios visuais explícitos em `APP4` e `APP19`.
+- Critérios vinculados à fonte de verdade visual:
+  - `designs/1920w default.png`
+  - `designs/Background.svg`
+  - `.context/30_design_reference.md`
+
+### O que foi validado
+
+- Diff local confirma presença das diretrizes globais e critérios visuais nas tasks de UI dos dois repositórios.
+- Referências de caminho estão absolutas e inequívocas para consumo dos agentes.
+
+### Riscos pendentes
+
+- Ainda depende de execução disciplinada dos agentes em cada task de UI (captura de screenshot e handoff com comparação visual).
+- Não substitui validação humana de qualidade visual final.
+
+### Próximo passo sugerido
+
+1. Exigir em PR template de web/app um checkbox de aderência ao `.context/30_design_reference.md`.
+2. Adicionar job leve de lint documental para garantir que tasks de UI contenham `Critério visual obrigatório`.
+
 ## Atualização rápida — 2026-02-25 (PLT4.1 hygiene gate)
 
 ### O que foi feito
@@ -742,7 +801,7 @@ Eliminar deficiências de governança e operação que impediam autonomia confi�
 | Bootstrap repo | `scripts/bootstrap-repo.sh`, `workflows/repo-bootstrap.md` | Referência a script inexistente removida; instruções executáveis |
 | Nomenclatura canônica | `AGENTS.md`, `README.md`, `CLAUDE.md`, `.context/00_overview.md`, `ai_integration-claude.md` | Drift `auraxis-mobile` eliminado dos docs operacionais |
 | Drift backend GraphQL | `repos/auraxis-api/steering.md`, `repos/auraxis-api/CLAUDE.md`, `repos/auraxis-api/CODING_STANDARDS.md` | Documentação alinhada para Graphene |
-| Handoff no ai_squad | `repos/auraxis-api/ai_squad/tools/tool_security.py` | Escrita permitida em `.context/handoffs` e `.context/reports` |
+| Handoff no ai_squad | `ai_squad/tools/tool_security.py` | Escrita permitida em `.context/handoffs` e `.context/reports` |
 | Secrets Sonar alinhados | `repos/auraxis-web/.github/workflows/ci.yml`, `repos/auraxis-app/.github/workflows/ci.yml` | CI padronizado com `SONAR_AURAXIS_WEB_TOKEN` e `SONAR_AURAXIS_APP_TOKEN` |
 | Higiene de artefatos | `repos/auraxis-web/.gitignore`, `repos/auraxis-app/.gitignore` | Ignore de `coverage/` e `.nuxtrc`; limpeza de ruído local executada |
 | Sync de backlog | `repos/auraxis-app/tasks.md`, `repos/auraxis-web/tasks.md`, `.context/01_status_atual.md` | Tasks e status global alinhados ao estado atual |

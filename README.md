@@ -106,13 +106,13 @@ Setup inicial do `ai_squad`:
 make squad-setup
 ```
 
-Executar "próxima tarefa" em todos os repos (api/web/app):
+Executar com comando único (master + paralelismo api/web/app + lock automático):
 
 ```bash
 make next-task
 ```
 
-Execução com lock automático (safe mode):
+Alias equivalente:
 
 ```bash
 make next-task-safe
@@ -132,10 +132,10 @@ make next-task-web
 make next-task-app
 ```
 
-Com briefing custom:
+Com briefing/prompt custom:
 
 ```bash
-BRIEFING="Execute a próxima tarefa e reporte riscos" make next-task
+BRIEFING="Execute a tarefa" make next-task
 ```
 
 ## Próximo passo sugerido

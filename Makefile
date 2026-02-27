@@ -3,7 +3,7 @@ SHELL := /bin/bash
 PLATFORM_ROOT := /Users/italochagas/Desktop/projetos/auraxis-platform
 SQUAD_DIR := $(PLATFORM_ROOT)/ai_squad
 NEXT_TASK_SCRIPT := $(PLATFORM_ROOT)/scripts/ai-next-task.sh
-BRIEFING ?= Execute a próxima tarefa
+BRIEFING ?= Execute a tarefa
 
 .PHONY: help squad-setup lock-status next-task next-task-all next-task-api next-task-web next-task-app next-task-safe next-task-plan
 
@@ -13,7 +13,7 @@ help:
 	@echo "  make lock-status      - show current agent lock status"
 	@echo "  make next-task        - run orchestrator for all repos (api/web/app)"
 	@echo "  make next-task-all    - same as next-task"
-	@echo "  make next-task-safe   - run orchestrator with automatic lock acquire/release"
+	@echo "  make next-task-safe   - alias de next-task (lock ja e automatico)"
 	@echo "  make next-task-plan   - dry-run plan only (no writes/commits)"
 	@echo "  make next-task-api    - run orchestrator only for auraxis-api"
 	@echo "  make next-task-web    - run orchestrator only for auraxis-web"

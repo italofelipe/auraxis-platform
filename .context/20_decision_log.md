@@ -389,6 +389,55 @@ Para `auraxis-api`, manter sem `ci-passed` (já inexistente no workflow) e remov
 
 ---
 
+### DEC-029 — Design assets em `designs/` como fonte visual canonica para frontend
+
+**Decisão:** oficializar os arquivos `designs/1920w default.png` e `designs/Background.svg` como
+fonte visual canonica para tarefas de layout no `auraxis-web` e `auraxis-app`, com execução
+padronizada via `.context/30_design_reference.md`.
+
+**Racional:** a autonomia dos agentes depende de reduzir ambiguidade na interpretacao de layout.
+Sem referencia visual explicita, agentes tendem a gerar variacoes nao alinhadas ao tema e a
+hierarquia de blocos. O spec visual centraliza tokens extraidos, composicao esperada e criterios
+de aceite para diminuir retrabalho.
+
+**Alternativas rejeitadas:**
+- manter apenas instrucoes textuais de paleta/tipografia sem blueprint visual;
+- deixar cada repo frontend definir seu proprio reference file;
+- interpretar imagens ad hoc por tarefa sem checklist operacional.
+
+**Dono:** plataforma + owners frontend.
+**Impacto:** leitura de design passa a ser mandatória para tarefas de UI/layout, com atualizacoes em:
+- `.context/30_design_reference.md` (novo spec visual operacional);
+- `.context/06_context_index.md` (indice de leitura complementar);
+- `.context/08_agent_contract.md` (contrato de leitura para UI/layout);
+- `.context/26_frontend_architecture.md` e `product.md` (vinculo com a fonte visual canonica).
+
+---
+
+### DEC-030 — Master run com comando único + remoção do `ai_squad` legado na API
+
+**Decisão:** consolidar o orquestrador apenas em `auraxis-platform/ai_squad`, remover o legado
+`repos/auraxis-api/ai_squad` e tornar o fluxo padrão de execução zero-overhead via
+`make next-task`.
+
+**Racional:** o objetivo operacional é permitir que o maintainer acione o sistema com um único
+prompt/comando ("Execute a tarefa"), sem etapas manuais repetitivas de lock/env/target.
+Manter cópia legado no repo da API gera ambiguidade e risco de desvio de execução.
+
+**Alternativas rejeitadas:**
+- manter dois `ai_squad` em paralelo (platform + api);
+- exigir export manual de variáveis a cada run;
+- deixar lock como passo opcional/manual no fluxo padrão.
+
+**Dono:** plataforma.
+**Impacto:**
+- `repos/auraxis-api/ai_squad` removido;
+- `ai_squad/main.py` com default multi-repo (`AURAXIS_TARGET_REPO=all`) e briefing padrão `Execute a tarefa`;
+- `scripts/ai-next-task.sh` com bootstrap de venv automático + lock acquire/release automático;
+- `make next-task` definido como interface principal para acionar o master.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |
