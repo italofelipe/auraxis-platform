@@ -63,17 +63,27 @@ def _resolve_project_root() -> Path:
     target_repo = os.getenv("AURAXIS_TARGET_REPO", "auraxis-api").strip()
     if not target_repo:
         target_repo = "auraxis-api"
+
+    # Multi-repo orchestration bootstraps with "all" and then spawns one
+    # child process per concrete repo target. For module import safety in the
+    # parent process, resolve to the canonical backend repo.
+    if target_repo.lower() in ("all", "auraxis-all", "*"):
+        target_repo = "auraxis-api"
+
+    def _has_task_board(repo_root: Path) -> bool:
+        return (repo_root / "TASKS.md").exists() or (repo_root / "tasks.md").exists()
+
     candidate = (REPOS_ROOT / target_repo).resolve()
-    if candidate.exists() and (candidate / "TASKS.md").exists():
+    if candidate.exists() and _has_task_board(candidate):
         return candidate
 
     legacy_candidate = SQUAD_ROOT.parent.resolve()
-    if (legacy_candidate / "TASKS.md").exists() and (legacy_candidate / "app").is_dir():
+    if _has_task_board(legacy_candidate) and (legacy_candidate / "app").is_dir():
         return legacy_candidate
 
     raise RuntimeError(
         "Unable to resolve squad project root. "
-        "Set AURAXIS_TARGET_REPO (auraxis-api|auraxis-web|auraxis-app) "
+        "Set AURAXIS_TARGET_REPO (auraxis-api|auraxis-web|auraxis-app|all) "
         "or AURAXIS_PROJECT_ROOT."
     )
 
