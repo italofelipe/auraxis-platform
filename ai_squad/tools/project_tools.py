@@ -661,6 +661,151 @@ def _render_contract_markdown(pack: dict[str, object]) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
+def _parse_toon_scalar(line: str) -> tuple[str, str] | None:
+    if "=" in line:
+        key, value = line.split("=", 1)
+        return key.strip(), value.strip()
+    if ":" in line:
+        key, value = line.split(":", 1)
+        return key.strip(), value.strip()
+    return None
+
+
+def _parse_toon_object_line(line: str) -> dict[str, str]:
+    parsed: dict[str, str] = {}
+    for chunk in line.split(";"):
+        candidate = chunk.strip()
+        if not candidate:
+            continue
+        scalar = _parse_toon_scalar(candidate)
+        if scalar is None:
+            continue
+        key, value = scalar
+        parsed[key] = value
+    return parsed
+
+
+def _parse_contract_payload(payload_raw: str) -> dict[str, object]:
+    normalized = (payload_raw or "").strip()
+    if not normalized:
+        raise ValueError("payload is empty.")
+
+    if normalized.startswith("{"):
+        try:
+            parsed = json.loads(normalized)
+        except json.JSONDecodeError as error:
+            raise ValueError(f"payload is not valid JSON ({error})") from error
+        if not isinstance(parsed, dict):
+            raise ValueError("payload JSON must be an object.")
+        return parsed
+
+    payload: dict[str, object] = {}
+    list_sections = {
+        "rest_endpoints",
+        "graphql_endpoints",
+        "error_contract",
+        "examples",
+    }
+    object_sections = {"rest_endpoints", "graphql_endpoints"}
+    current_section = ""
+
+    for raw_line in normalized.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.upper() == "TOON/1":
+            continue
+
+        if line.endswith(":"):
+            section_name = line[:-1].strip()
+            if section_name in list_sections:
+                payload.setdefault(section_name, [])
+                current_section = section_name
+                continue
+
+        if line.startswith("- "):
+            if current_section not in list_sections:
+                raise ValueError(
+                    "TOON list item found outside a known section. "
+                    "Use section headers: rest_endpoints:, graphql_endpoints:, "
+                    "error_contract:, examples:."
+                )
+            item_content = line[2:].strip()
+            if current_section in object_sections:
+                obj = _parse_toon_object_line(item_content)
+                if not obj:
+                    raise ValueError(
+                        f"invalid TOON object item in {current_section}: '{item_content}'"
+                    )
+                payload[current_section].append(obj)
+            else:
+                payload[current_section].append(item_content)
+            continue
+
+        scalar = _parse_toon_scalar(line)
+        if scalar is None:
+            raise ValueError(f"invalid TOON line: '{line}'")
+        key, value = scalar
+        payload[key] = value
+        current_section = ""
+
+    return payload
+
+
+def _render_contract_toon(pack: dict[str, object]) -> str:
+    rest_endpoints = pack.get("rest_endpoints", [])
+    graphql_endpoints = pack.get("graphql_endpoints", [])
+    error_contract = pack.get("error_contract", [])
+    examples = pack.get("examples", [])
+
+    lines: list[str] = [
+        "TOON/1",
+        f"task_id={pack.get('task_id', '')}",
+        f"feature_name={pack.get('feature_name', '')}",
+        f"summary={pack.get('summary', '')}",
+        f"generated_at={pack.get('generated_at', '')}",
+        f"producer_repo={pack.get('producer_repo', '')}",
+        f"auth={pack.get('auth', '')}",
+        "rest_endpoints:",
+    ]
+
+    if isinstance(rest_endpoints, list):
+        for endpoint in rest_endpoints:
+            if not isinstance(endpoint, dict):
+                continue
+            method = str(endpoint.get("method", "")).strip()
+            path = str(endpoint.get("path", "")).strip()
+            description = str(endpoint.get("description", "")).strip()
+            lines.append(
+                f"- method={method}; path={path}; description={description}"
+            )
+
+    lines.append("graphql_endpoints:")
+    if isinstance(graphql_endpoints, list):
+        for endpoint in graphql_endpoints:
+            if not isinstance(endpoint, dict):
+                continue
+            endpoint_type = str(endpoint.get("type", "")).strip()
+            name = str(endpoint.get("name", "")).strip()
+            description = str(endpoint.get("description", "")).strip()
+            lines.append(
+                f"- type={endpoint_type}; name={name}; description={description}"
+            )
+
+    lines.append("error_contract:")
+    if isinstance(error_contract, list):
+        for error in error_contract:
+            lines.append(f"- {error}")
+
+    lines.append("examples:")
+    if isinstance(examples, list):
+        for example in examples:
+            lines.append(f"- {example}")
+
+    lines.append(f"notes={pack.get('notes', '')}")
+    return "\n".join(lines).strip() + "\n"
+
+
 class PublishFeatureContractPackTool(BaseTool):
     name: str = "publish_feature_contract_pack"
     description: str = (
@@ -671,8 +816,10 @@ class PublishFeatureContractPackTool(BaseTool):
         "- task_id: backlog task id (e.g., B11)\n"
         "- feature_name: short feature title\n"
         "- summary: functional summary for frontend agents\n"
-        "- payload_json: JSON object string with keys: rest_endpoints, "
-        "graphql_endpoints, auth, error_contract, examples, notes\n"
+        "- payload_toon: TOON/1 payload (preferred, token-optimized)\n"
+        "- payload_json: JSON payload (legacy fallback)\n"
+        "Payload fields: rest_endpoints, graphql_endpoints, auth, "
+        "error_contract, examples, notes\n"
     )
 
     def _run(
@@ -680,7 +827,8 @@ class PublishFeatureContractPackTool(BaseTool):
         task_id: str,
         feature_name: str,
         summary: str,
-        payload_json: str,
+        payload_toon: str = "",
+        payload_json: str = "",
     ) -> str:
         if TARGET_REPO_NAME != "auraxis-api":
             msg = (
@@ -707,10 +855,9 @@ class PublishFeatureContractPackTool(BaseTool):
             )
             return msg
 
-        try:
-            payload = json.loads(payload_json)
-        except json.JSONDecodeError as error:
-            msg = f"Error: payload_json is not valid JSON ({error})"
+        raw_payload = (payload_toon or "").strip() or (payload_json or "").strip()
+        if not raw_payload:
+            msg = "Error: payload_toon or payload_json is required."
             audit_log(
                 "publish_feature_contract_pack",
                 {"task_id": normalized_task_id},
@@ -719,8 +866,10 @@ class PublishFeatureContractPackTool(BaseTool):
             )
             return msg
 
-        if not isinstance(payload, dict):
-            msg = "Error: payload_json must be a JSON object."
+        try:
+            payload = _parse_contract_payload(raw_payload)
+        except ValueError as error:
+            msg = f"Error: {error}"
             audit_log(
                 "publish_feature_contract_pack",
                 {"task_id": normalized_task_id},
@@ -803,7 +952,7 @@ class ReadFeatureContractPackTool(BaseTool):
     name: str = "read_feature_contract_pack"
     description: str = (
         "Reads a shared feature contract pack by task ID. "
-        "Parameters: task_id (e.g., B11), format ('json'|'md', default 'md')."
+        "Parameters: task_id (e.g., B11), format ('json'|'md'|'toon', default 'md')."
     )
 
     def _run(self, task_id: str, format: str = "md") -> str:
@@ -820,8 +969,8 @@ class ReadFeatureContractPackTool(BaseTool):
             return msg
 
         target_format = format.strip().lower()
-        if target_format not in {"json", "md"}:
-            msg = "Error: format must be 'json' or 'md'."
+        if target_format not in {"json", "md", "toon"}:
+            msg = "Error: format must be 'json', 'md', or 'toon'."
             audit_log(
                 "read_feature_contract_pack",
                 {"task_id": normalized_task_id, "format": format},
@@ -830,21 +979,37 @@ class ReadFeatureContractPackTool(BaseTool):
             )
             return msg
 
-        path = validate_shared_contract_path(f"{normalized_task_id}.{target_format}")
-        if not path.exists():
-            msg = (
-                f"Error: contract pack not found for {normalized_task_id} "
-                f"({target_format})."
-            )
-            audit_log(
-                "read_feature_contract_pack",
-                {"task_id": normalized_task_id, "format": target_format},
-                msg,
-                status="ERROR",
-            )
-            return msg
-
-        result = path.read_text(encoding="utf-8")
+        if target_format == "toon":
+            json_path = validate_shared_contract_path(f"{normalized_task_id}.json")
+            if not json_path.exists():
+                msg = (
+                    f"Error: contract pack not found for {normalized_task_id} "
+                    "(json source for toon rendering)."
+                )
+                audit_log(
+                    "read_feature_contract_pack",
+                    {"task_id": normalized_task_id, "format": target_format},
+                    msg,
+                    status="ERROR",
+                )
+                return msg
+            pack = json.loads(json_path.read_text(encoding="utf-8"))
+            result = _render_contract_toon(pack)
+        else:
+            path = validate_shared_contract_path(f"{normalized_task_id}.{target_format}")
+            if not path.exists():
+                msg = (
+                    f"Error: contract pack not found for {normalized_task_id} "
+                    f"({target_format})."
+                )
+                audit_log(
+                    "read_feature_contract_pack",
+                    {"task_id": normalized_task_id, "format": target_format},
+                    msg,
+                    status="ERROR",
+                )
+                return msg
+            result = path.read_text(encoding="utf-8")
         audit_log(
             "read_feature_contract_pack",
             {"task_id": normalized_task_id, "format": target_format},

@@ -40,6 +40,8 @@ Entregar o produto Auraxis com previsibilidade, segurança e qualidade, usando f
   - web: `app/shared/{components,types,validators,utils}`
   - app: `shared/{components,types,validators,utils}`
 - **Guideline frontend unificado.** Web e app devem seguir os mesmos conceitos arquiteturais, gates e convenções descritos em `.context/32_frontend_unified_guideline.md`, com variação apenas de camada/plataforma.
+- **Contrato tipado obrigatório.** Frontend deve manter tipos OpenAPI gerados e baseline de `Feature Contract Pack` em CI (`contracts:check` bloqueante).
+- **PR checklist obrigatório.** Todo repo de produto deve manter template de PR com checklist de validação, contratos e riscos.
 
 ### Segurança — não negociável em nenhum repo
 - **Zero secrets em código.** Nenhum token, API key ou credential hardcoded.

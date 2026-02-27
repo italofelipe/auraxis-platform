@@ -100,6 +100,27 @@ Com isso, o gestor dispara execução para `auraxis-api`, `auraxis-web` e `aurax
   - `AURAXIS_ALLOW_DIRTY_WORKTREE=true` permite execução com repo sujo.
   - `AURAXIS_FORCE_RERUN=true` ignora skip idempotente do ledger.
 
+## TOON (token optimization)
+
+Para payloads estruturados entre agentes, usar **TOON/1** como formato padrão.
+JSON segue suportado apenas como fallback de compatibilidade.
+
+Exemplo para `publish_feature_contract_pack`:
+
+```text
+TOON/1
+auth=JWT bearer with refresh cookie
+rest_endpoints:
+- method=GET; path=/transactions; description=list transactions v2
+graphql_endpoints:
+- type=query; name=transactions; description=list transactions
+error_contract:
+- VALIDATION_ERROR when payload is invalid
+examples:
+- GET /transactions?month=2026-02 -> 200 with meta.pagination
+notes=No breaking changes; feature flag `tx_v2` remains enabled.
+```
+
 ## Como estender
 - Adicione novos agentes (Frontend, Mobile, DevOps) no `main.py`.
 - Crie novas ferramentas em `tools/project_tools.py` (ex: ferramenta de git commit, ferramenta de deploy aws).

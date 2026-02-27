@@ -63,6 +63,8 @@ Para trabalho em produto (web, app, api), também ler:
 - Código compartilhado entre múltiplas features/telas deve obrigatoriamente ir para diretórios shared canônicos:
   - web: `app/shared/{components,types,validators,utils}`
   - app: `shared/{components,types,validators,utils}`
+- Para troca de payload estruturado entre agentes (handoff técnico), usar **TOON/1** por padrão.
+  JSON é permitido apenas como fallback de compatibilidade quando TOON não for suportado.
 
 ### Política de estilo por tokens (frontend)
 - Web: usar tokens/vars do tema Chakra UI (ou camada de tokens equivalente) para cores, tipografia, spacing, radius, bordas e motion.
@@ -71,6 +73,7 @@ Para trabalho em produto (web, app, api), também ler:
 
 ### Antes de commitar
 - Executar `npm run quality-check` (app) ou `pnpm quality-check` (web) obrigatoriamente
+- Executar `contracts:check` (diretamente ou via `quality-check`) para validar drift de OpenAPI + packs
 - Se qualquer gate falhar: **corrigir antes de commitar**
 - Em fluxos autônomos: não marcar `Done` sem `update_task_status` válido para o mesmo `task_id` do preflight.
 - Verificar checklist de segurança:
@@ -88,6 +91,7 @@ Para trabalho em produto (web, app, api), também ler:
 - Em erro/bloqueio: notificar gestor e agentes paralelos no terminal, e registrar detalhe técnico em `tasks_status/<TASK_ID>.md` na platform
 - `tasks_status/` é log operacional local (não versionado); o status oficial continua em `tasks.md`/`TASKS.md`
 - Em task backend com impacto de contrato (REST/GraphQL), publicar `Feature Contract Pack` (`.json` + `.md`) em `.context/feature_contracts/`.
+- Em tasks frontend com integração backend, atualizar baseline/geração tipada via `contracts:sync` antes de subir PR.
 
 ---
 

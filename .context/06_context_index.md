@@ -42,6 +42,7 @@ Este índice organiza a leitura mínima para qualquer pessoa ou agente retomar o
 | `29_feature_flags_foundation.md` | Ao operar PLT4 (base de governança de feature toggles) |
 | `31_feature_flag_lifecycle.md` | Ao criar/alterar flags em web/app/api |
 | `feature_contracts/README.md` | Antes de integrar frontend com feature backend recém-entregue |
+| `openapi/README.md` | Antes de sincronizar tipos de API no frontend (`contracts:sync`) |
 | `17_discovery_framework.md` | Ao avaliar novas features/ideias |
 | `18_feedback_loop.md` | Ao encerrar um ciclo de trabalho |
 | `19_context_maintenance.md` | Ao atualizar arquivos de `.context/` |

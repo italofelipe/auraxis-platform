@@ -1,0 +1,1572 @@
+{
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "bearerFormat": "JWT",
+        "description": "Token JWT obtido através do login",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "name": "Italo Chagas",
+      "url": "https://github.com/italofelipe"
+    },
+    "description": "API para gestão financeira pessoal.\n\n- Controle de transações, carteira e dados de usuário.\n- Autenticação JWT.\n- Ticker representa o símbolo de mercado de ativos da carteira.\n- Consulte os documentos técnicos em docs/.",
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    },
+    "title": "Auraxis API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.0.2",
+  "paths": {
+    "/auth/login": {
+      "options": {
+        "parameters": [],
+        "responses": {}
+      },
+      "post": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/auth/logout": {
+      "options": {
+        "parameters": [],
+        "responses": {}
+      },
+      "post": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/auth/password/forgot": {
+      "options": {
+        "parameters": [],
+        "responses": {}
+      },
+      "post": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/auth/password/reset": {
+      "options": {
+        "parameters": [],
+        "responses": {}
+      },
+      "post": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/auth/register": {
+      "options": {
+        "parameters": [],
+        "responses": {}
+      },
+      "post": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/goals": {
+      "get": {
+        "parameters": [],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [],
+        "responses": {}
+      },
+      "post": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/goals/simulate": {
+      "options": {
+        "parameters": [],
+        "responses": {}
+      },
+      "post": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/goals/{goal_id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "goal_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      },
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "goal_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "goal_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "goal_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/goals/{goal_id}/plan": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "goal_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "goal_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/healthz": {
+      "get": {
+        "description": "Endpoint público de liveness para probes de infraestrutura.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Serviço saudável"
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      },
+      "options": {
+        "description": "Endpoint público de liveness para probes de infraestrutura.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Serviço saudável"
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/transactions": {
+      "delete": {
+        "parameters": [],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [],
+        "responses": {}
+      },
+      "post": {
+        "parameters": [],
+        "responses": {}
+      },
+      "put": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/transactions/dashboard": {
+      "get": {
+        "parameters": [],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/transactions/deleted": {
+      "get": {
+        "parameters": [],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/transactions/due-range": {
+      "get": {
+        "parameters": [],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/transactions/expenses": {
+      "get": {
+        "parameters": [],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/transactions/list": {
+      "get": {
+        "parameters": [],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/transactions/restore/{transaction_id}": {
+      "options": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/transactions/summary": {
+      "get": {
+        "parameters": [],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/transactions/{transaction_id}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      },
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/transactions/{transaction_id}/force": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/user/me": {
+      "get": {
+        "parameters": [],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/user/profile": {
+      "get": {
+        "parameters": [],
+        "responses": {}
+      },
+      "options": {
+        "parameters": [],
+        "responses": {}
+      },
+      "put": {
+        "parameters": [],
+        "responses": {}
+      }
+    },
+    "/wallet": {
+      "get": {
+        "description": "Lista os investimentos cadastrados na carteira com paginação.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de investimentos"
+          },
+          "401": {
+            "description": "Token inválido"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "options": {
+        "description": "Lista os investimentos cadastrados na carteira com paginação.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de investimentos"
+          },
+          "401": {
+            "description": "Token inválido"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "post": {
+        "description": "Adiciona um novo item à carteira do usuário.\n\nVocê pode informar um valor fixo (como R$1000,00 em poupança) ou um ativo com ticker.\n\nRegras:\n- Se informar o campo 'ticker', o campo 'value' será ignorado.\n- Se não informar 'ticker', é obrigatório informar 'value'.\n- Se informar 'ticker', também é obrigatório informar 'quantity'.\n\nExemplo com valor fixo:\n{'name': 'Poupança', 'value': 1500.00, 'register_date': '2024-07-01', 'should_be_on_wallet': true}\n\nExemplo com ticker:\n{'name': 'Investimento PETR4', 'ticker': 'petr4', 'quantity': 10, 'register_date': '2024-07-01', 'should_be_on_wallet': true}\n\nResposta esperada:\n{'message': 'Ativo cadastrado com sucesso'}",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Ativo cadastrado com sucesso"
+          },
+          "400": {
+            "description": "Erro de validação ou ticker inválido"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "500": {
+            "description": "Erro interno"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/valuation": {
+      "get": {
+        "description": "Retorna a valorização atual consolidada da carteira do usuário, com cálculo por investimento.",
+        "parameters": [
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valorização retornada com sucesso"
+          },
+          "401": {
+            "description": "Token inválido"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "options": {
+        "description": "Retorna a valorização atual consolidada da carteira do usuário, com cálculo por investimento.",
+        "parameters": [
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valorização retornada com sucesso"
+          },
+          "401": {
+            "description": "Token inválido"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/valuation/history": {
+      "get": {
+        "description": "Retorna histórico diário de evolução da carteira por período, com totais de compra/venda e valor líquido investido acumulado.",
+        "parameters": [
+          {
+            "description": "Data final (YYYY-MM-DD). Opcional.",
+            "in": "query",
+            "name": "finalDate",
+            "required": false
+          },
+          {
+            "description": "Data inicial (YYYY-MM-DD). Opcional.",
+            "in": "query",
+            "name": "startDate",
+            "required": false
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Histórico retornado com sucesso"
+          },
+          "400": {
+            "description": "Parâmetros inválidos"
+          },
+          "401": {
+            "description": "Token inválido"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "options": {
+        "description": "Retorna histórico diário de evolução da carteira por período, com totais de compra/venda e valor líquido investido acumulado.",
+        "parameters": [
+          {
+            "description": "Data final (YYYY-MM-DD). Opcional.",
+            "in": "query",
+            "name": "finalDate",
+            "required": false
+          },
+          {
+            "description": "Data inicial (YYYY-MM-DD). Opcional.",
+            "in": "query",
+            "name": "startDate",
+            "required": false
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Histórico retornado com sucesso"
+          },
+          "400": {
+            "description": "Parâmetros inválidos"
+          },
+          "401": {
+            "description": "Token inválido"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/{investment_id}": {
+      "delete": {
+        "description": "Deleta um investimento da carteira do usuário autenticado.",
+        "parameters": [
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Investimento deletado com sucesso"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão para deletar"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "options": {
+        "description": "Atualiza um investimento existente da carteira do usuário.",
+        "parameters": [
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Investimento atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "put": {
+        "description": "Atualiza um investimento existente da carteira do usuário.",
+        "parameters": [
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Investimento atualizado com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/{investment_id}/history": {
+      "get": {
+        "description": "Retorna o histórico de alterações de um investimento, paginado e ordenado.",
+        "parameters": [
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Histórico paginado"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "options": {
+        "description": "Retorna o histórico de alterações de um investimento, paginado e ordenado.",
+        "parameters": [
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Histórico paginado"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/{investment_id}/operations": {
+      "get": {
+        "description": "Lista operações de investimento de um item da carteira com paginação.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de operações"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "options": {
+        "description": "Lista operações de investimento de um item da carteira com paginação.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de operações"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "post": {
+        "description": "Registra uma operação de investimento (buy/sell) para um item da carteira.",
+        "parameters": [
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Operação criada com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/{investment_id}/operations/invested-amount": {
+      "get": {
+        "description": "Retorna o valor investido no dia informado, considerando operações de compra e venda do investimento.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cálculo retornado com sucesso"
+          },
+          "400": {
+            "description": "Parâmetro inválido"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "options": {
+        "description": "Retorna o valor investido no dia informado, considerando operações de compra e venda do investimento.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cálculo retornado com sucesso"
+          },
+          "400": {
+            "description": "Parâmetro inválido"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/{investment_id}/operations/position": {
+      "get": {
+        "description": "Retorna posição atual e custo médio do investimento com base nas operações registradas.",
+        "parameters": [
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Posição retornada com sucesso"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "options": {
+        "description": "Retorna posição atual e custo médio do investimento com base nas operações registradas.",
+        "parameters": [
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Posição retornada com sucesso"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/{investment_id}/operations/summary": {
+      "get": {
+        "description": "Resumo agregado das operações de um investimento.",
+        "parameters": [
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resumo retornado com sucesso"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "options": {
+        "description": "Resumo agregado das operações de um investimento.",
+        "parameters": [
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resumo retornado com sucesso"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/{investment_id}/operations/{operation_id}": {
+      "delete": {
+        "description": "Remove operação de investimento.",
+        "parameters": [
+          {
+            "description": "ID da operação",
+            "in": "path",
+            "name": "operation_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operação removida com sucesso"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Operação não encontrada"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "options": {
+        "description": "Atualiza operação de investimento existente.",
+        "parameters": [
+          {
+            "description": "ID da operação",
+            "in": "path",
+            "name": "operation_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operação atualizada com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Operação não encontrada"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "put": {
+        "description": "Atualiza operação de investimento existente.",
+        "parameters": [
+          {
+            "description": "ID da operação",
+            "in": "path",
+            "name": "operation_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operação atualizada com sucesso"
+          },
+          "400": {
+            "description": "Dados inválidos"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Operação não encontrada"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      }
+    },
+    "/wallet/{investment_id}/valuation": {
+      "get": {
+        "description": "Retorna a valorização atual de um investimento específico.",
+        "parameters": [
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valorização retornada com sucesso"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      },
+      "options": {
+        "description": "Retorna a valorização atual de um investimento específico.",
+        "parameters": [
+          {
+            "description": "ID do investimento",
+            "in": "path",
+            "name": "investment_id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Opcional. Envie 'v2' para o contrato padronizado.",
+            "in": "header",
+            "name": "X-API-Contract",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valorização retornada com sucesso"
+          },
+          "401": {
+            "description": "Token inválido"
+          },
+          "403": {
+            "description": "Sem permissão"
+          },
+          "404": {
+            "description": "Investimento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Wallet"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "description": "Endpoints para registro, login e logout de usuários",
+      "name": "Autenticação"
+    },
+    {
+      "description": "Gerenciamento de dados de usuário e perfil",
+      "name": "Usuários"
+    },
+    {
+      "description": "Criação, edição e consulta de transações financeiras",
+      "name": "Transações"
+    },
+    {
+      "description": "Gerenciamento de metas financeiras e planejamento",
+      "name": "Metas"
+    },
+    {
+      "description": "Gerenciamento da carteira de investimentos",
+      "name": "Wallet"
+    },
+    {
+      "description": "Endpoint público para liveness/readiness de infraestrutura",
+      "name": "Health"
+    },
+    {
+      "description": "Gerenciamento de contas bancárias (pendente)",
+      "name": "Contas"
+    },
+    {
+      "description": "Gerenciamento de cartões de crédito (pendente)",
+      "name": "Cartões de Crédito"
+    },
+    {
+      "description": "Sistema de categorização por tags (pendente)",
+      "name": "Tags"
+    }
+  ]
+}

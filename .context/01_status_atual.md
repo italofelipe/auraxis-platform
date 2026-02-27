@@ -1,6 +1,29 @@
 # Status Atual (snapshot)
 
-Data: 2026-02-26
+Data: 2026-02-27
+
+## Atualizacao Contratos + PR Governance + Lead Time (2026-02-27)
+- `auraxis-web`:
+  - adicionados `contracts:sync` e `contracts:check` com geração tipada OpenAPI em
+    `app/shared/types/generated/openapi.ts`;
+  - adicionado baseline versionado de packs em `contracts/feature-contract-baseline.json`;
+  - novo job de CI `Contract Smoke (OpenAPI + Packs)` e integração em `quality-check` + parity local;
+  - template de PR obrigatório em `.github/pull_request_template.md`.
+- `auraxis-app`:
+  - adicionados `contracts:sync` e `contracts:check` com geração tipada OpenAPI em
+    `shared/types/generated/openapi.ts`;
+  - adicionado baseline versionado de packs em `contracts/feature-contract-baseline.json`;
+  - novo job de CI `Contract Smoke (OpenAPI + Packs)` e integração em `quality-check` + parity local;
+  - template de PR obrigatório em `.github/pull_request_template.md`.
+- `auraxis-api`:
+  - template de PR obrigatório adicionado em `.github/pull_request_template.md` com checklist de
+    contrato e handoff backend->frontend.
+- `auraxis-platform`:
+  - snapshot OpenAPI canônico versionado em `.context/openapi/openapi.snapshot.json`;
+  - novo runbook `.context/openapi/README.md`;
+  - script `scripts/export-openapi-snapshot.sh` para export determinístico do swagger runtime;
+  - script `scripts/generate_task_lead_time_report.py` + workflow agendado
+    `.github/workflows/lead-time-metrics.yml` para métricas de lead time por task.
 
 ## Atualizacao Contrato Backend->Frontend (2026-02-27 — feature contract packs + guideline unificado)
 - `ai_squad` atualizado para incluir fase obrigatória de `Feature Contract Pack` em runs backend.
