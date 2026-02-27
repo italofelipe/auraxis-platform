@@ -2,6 +2,39 @@
 
 Data: 2026-02-25 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-27 (resiliência do master orchestration)
+
+### O que foi feito
+
+- `ai_squad/main.py`:
+  - adicionado timeout por processo filho (`AURAXIS_CHILD_TIMEOUT_SECONDS`);
+  - logs de stdout/stderr dos filhos agora são streamados em tempo real com prefixo de repo;
+  - resumo final consolidado do master com status/tempo/task/commits/precommit por repo;
+  - idempotência por `repo + task_id + briefing_hash` com skip automático de execução já concluída;
+  - opção de forçar rerun via `AURAXIS_FORCE_RERUN=true`.
+- `ai_squad/tools/task_status.py`:
+  - ledger estruturado `_execution_ledger.jsonl` para rastreio e recuperação.
+- parser de task IDs corrigido para suportar formatos `WEB3`, `APP4`, `PLT1`.
+
+### O que foi validado
+
+- `python3 -m py_compile ai_squad/main.py ai_squad/tools/task_status.py` ✅
+- resolução automática de task por repo com briefing genérico:
+  - api -> `PLT1`
+  - web -> `WEB3`
+  - app -> `APP4`
+- leitura de board compatível com `TASKS.md` e `tasks.md` ✅
+
+### Riscos pendentes
+
+- Validação end-to-end depende de execução real com provedor LLM ativo (`OPENAI_API_KEY`).
+- Sem task ID explícito no briefing, o parser depende da ordem do backlog no arquivo de tasks.
+
+### Próximo passo sugerido
+
+1. Rodar `make next-task` com LLM ativo para validar timeout/ledger em execução real.
+2. Se necessário reprocessar mesmo contexto concluído, usar `AURAXIS_FORCE_RERUN=true`.
+
 ## Atualização rápida — 2026-02-27 (master run simplificado + limpeza legado API)
 
 ### O que foi feito
