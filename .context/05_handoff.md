@@ -1625,3 +1625,31 @@ git checkout -b feat/web2-vitest-config
 ### Próximo passo
 1. Rodar `make next-task` novamente e validar ausência do erro:
    `repository path not found: /.../repos/auraxis-<repo>-<timestamp>`.
+
+## 2026-02-28 — Hotfix operacional: worktree runtime + progresso de execução
+
+### O que foi feito
+- `ai_squad/main.py`:
+  - worktree efêmero agora hidrata dependências não versionadas:
+    - `auraxis-api`: link de `.venv`;
+    - `auraxis-web`/`auraxis-app`: link de `node_modules`.
+  - preflight passa a bloquear com mensagem explícita quando pré-requisito runtime não existe no repo canônico.
+  - adicionados spinner + barra de progresso no modo `all` durante a execução paralela.
+  - adicionado relatório consolidado em Markdown ao fim do run:
+    - `tasks_status/ORCH-<BRIEFING_HASH>-report.md`.
+- `ai_squad/tools/project_tools.py`:
+  - `git_operations.create_branch` agora faz checkout de branch existente (não falha à toa).
+  - `git_operations.commit` agora aceita `branch_name` como hint para sair de detached HEAD e anexar branch antes do commit.
+  - parser TOON ficou tolerante a linhas livres (agrega em `notes`) para evitar falha em `publish_feature_contract_pack`.
+
+### O que foi validado
+- `python3 -m py_compile ai_squad/main.py ai_squad/tools/project_tools.py ai_squad/tools/tool_security.py` passou.
+
+### Riscos pendentes
+- Necessário rerun real de `make next-task` para confirmar:
+  - queda de bloqueios por ambiente (`No module named ...`, retorno 127 por dependência ausente);
+  - relatório markdown consolidado gerado em todos os runs.
+
+### Próximo passo
+1. Rodar `make next-task`.
+2. Verificar `tasks_status/ORCH-*-report.md` e o resumo por repo no terminal.

@@ -47,7 +47,7 @@ import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 from time import monotonic
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 
 from crewai import Agent, Crew, Process, Task
 from dotenv import load_dotenv
@@ -305,7 +305,71 @@ def _create_execution_worktree(repo: str) -> tuple[Path | None, str]:
         stderr = result.stderr.strip() or result.stdout.strip() or "unknown error"
         return None, f"failed to create execution worktree from {ref}: {stderr}"
 
+    source_repo_root = PLATFORM_ROOT / "repos" / repo
+    hydration_error = _hydrate_execution_worktree(
+        repo=repo,
+        source_root=source_repo_root,
+        worktree_root=worktree_path,
+    )
+    if hydration_error:
+        _remove_execution_worktree(repo, worktree_path)
+        return None, hydration_error
+
     return worktree_path, ""
+
+
+def _link_dependency_dir(
+    *,
+    source_root: Path,
+    worktree_root: Path,
+    dirname: str,
+) -> None:
+    source_dir = source_root / dirname
+    worktree_dir = worktree_root / dirname
+    if not source_dir.exists() or worktree_dir.exists():
+        return
+    worktree_dir.symlink_to(source_dir, target_is_directory=True)
+
+
+def _hydrate_execution_worktree(repo: str, source_root: Path, worktree_root: Path) -> str:
+    """Attach runtime dependencies to ephemeral worktree when available.
+
+    Worktrees only include tracked files. Runtime dependencies like `.venv`
+    and `node_modules` are untracked and therefore absent by default.
+    """
+    if repo == "auraxis-api":
+        try:
+            _link_dependency_dir(
+                source_root=source_root,
+                worktree_root=worktree_root,
+                dirname=".venv",
+            )
+        except OSError as error:
+            return f"failed to link backend .venv into worktree: {error}"
+        if not (worktree_root / ".venv" / "bin" / "python").exists():
+            return (
+                "backend runtime prerequisites missing: .venv not available in "
+                f"{source_root}. Run project bootstrap first."
+            )
+        return ""
+
+    if repo in ("auraxis-web", "auraxis-app"):
+        try:
+            _link_dependency_dir(
+                source_root=source_root,
+                worktree_root=worktree_root,
+                dirname="node_modules",
+            )
+        except OSError as error:
+            return f"failed to link node_modules into worktree: {error}"
+        if not (worktree_root / "node_modules").exists():
+            return (
+                "frontend runtime prerequisites missing: node_modules not available in "
+                f"{source_root}. Run dependency install first."
+            )
+        return ""
+
+    return ""
 
 
 def _remove_execution_worktree(repo: str, worktree_path: Path) -> None:
@@ -1262,7 +1326,121 @@ class AuraxisSquad:
         return crew.kickoff()
 
 
-def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
+def _render_progress_bar(completed: int, total: int, width: int = 24) -> str:
+    if total <= 0:
+        total = 1
+    ratio = min(max(completed / total, 0.0), 1.0)
+    filled = int(ratio * width)
+    return "[" + ("#" * filled) + ("-" * (width - filled)) + "]"
+
+
+def _write_multi_run_report(
+    *,
+    briefing: str,
+    briefing_hash: str,
+    execution_mode: str,
+    policy_fingerprint: str,
+    targets: tuple[str, str, str],
+    results: dict[str, dict[str, object]],
+    done_count: int,
+    skipped_count: int,
+    blocked_count: int,
+    overall_rc: int,
+) -> Path:
+    report_dir = PLATFORM_ROOT / "tasks_status"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    report_path = report_dir / f"ORCH-{briefing_hash[:8].upper()}-report.md"
+
+    lines: list[str] = [
+        "# AI Squad Orchestration Report",
+        "",
+        f"- generated_at: `{datetime.now(timezone.utc).isoformat()}`",
+        f"- briefing_hash: `{briefing_hash}`",
+        f"- execution_mode: `{execution_mode}`",
+        f"- policy_fingerprint: `{policy_fingerprint}`",
+        f"- overall_status: `{'done' if overall_rc == 0 else 'blocked'}`",
+        "",
+        "## Briefing",
+        "",
+        "```text",
+        briefing,
+        "```",
+        "",
+        "## Summary",
+        "",
+        "| Metric | Value |",
+        "|:--|:--|",
+        f"| repos_done | {done_count} |",
+        f"| repos_skipped | {skipped_count} |",
+        f"| repos_blocked | {blocked_count} |",
+        f"| overall_return_code | {overall_rc} |",
+        "",
+        "## Per Repository",
+        "",
+        "| Repo | Task | Status | Return Code | Duration (s) | Precommit | Quality Evidence | Branch Guardrail |",
+        "|:--|:--|:--|--:|--:|:--|:--|:--|",
+    ]
+
+    for repo in targets:
+        result = results.get(repo, {})
+        lines.append(
+            "| {repo} | {task} | {status} | {rc} | {duration} | {pre} | {quality} | {branch} |".format(
+                repo=repo,
+                task=result.get("task_id", "UNSPECIFIED"),
+                status=result.get("status", "blocked"),
+                rc=result.get("returncode", 1),
+                duration=result.get("duration_seconds", 0.0),
+                pre=result.get("precommit_status", "unknown"),
+                quality=str(result.get("quality_gate_evidence", "missing")).replace("|", "/"),
+                branch=str(result.get("branch_guardrail_evidence", "missing")).replace("|", "/"),
+            )
+        )
+
+    lines.extend(["", "## Details", ""])
+    for repo in targets:
+        result = results.get(repo, {})
+        lines.extend(
+            [
+                f"### {repo}",
+                "",
+                f"- task_id: `{result.get('task_id', 'UNSPECIFIED')}`",
+                f"- status: `{result.get('status', 'blocked')}`",
+                f"- return_code: `{result.get('returncode', 1)}`",
+                f"- duration_seconds: `{result.get('duration_seconds', 0.0)}`",
+                f"- precommit_status: `{result.get('precommit_status', 'unknown')}`",
+                f"- quality_gate_evidence: `{result.get('quality_gate_evidence', 'missing')}`",
+                f"- branch_guardrail_evidence: `{result.get('branch_guardrail_evidence', 'missing')}`",
+            ]
+        )
+        commits = result.get("commit_hashes") or []
+        if isinstance(commits, list) and commits:
+            lines.append(f"- commits: `{', '.join(str(c) for c in commits)}`")
+        skip_reason = str(result.get("skip_reason", "")).strip()
+        if skip_reason:
+            lines.append(f"- skip_reason: `{skip_reason}`")
+        tech_debt = result.get("tech_debt_hints") or []
+        if isinstance(tech_debt, list) and tech_debt:
+            lines.append("- possible_tech_debt:")
+            for hint in tech_debt:
+                lines.append(f"  - {hint}")
+
+        stdout_tail = str(result.get("stdout", "")).strip()
+        stderr_tail = str(result.get("stderr", "")).strip()
+        if stdout_tail:
+            lines.extend(["", "#### stdout_tail", "", "```text"])
+            lines.extend(stdout_tail.splitlines()[-40:])
+            lines.append("```")
+        if stderr_tail:
+            lines.extend(["", "#### stderr_tail", "", "```text"])
+            lines.extend(stderr_tail.splitlines()[-40:])
+            lines.append("```")
+        lines.append("")
+
+    report_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return report_path
+
+
+def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> tuple[int, Path]:
     """Run one squad execution per product repo in parallel with detailed telemetry."""
     targets = ("auraxis-api", "auraxis-web", "auraxis-app")
     script_path = str((SQUAD_ROOT / "main.py").resolve())
@@ -1534,23 +1712,53 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
 
     with ThreadPoolExecutor(max_workers=3) as executor:
         future_map = {executor.submit(_run_target, repo): repo for repo in targets}
-        for future in as_completed(future_map):
-            repo = future_map[future]
-            try:
-                results[repo] = future.result()
-            except Exception as exc:  # pragma: no cover - defensive fallback
-                results[repo] = {
-                    "returncode": 1,
-                    "stdout": "",
-                    "stderr": str(exc),
-                    "timed_out": False,
-                    "duration_seconds": 0.0,
-                    "task_id": "UNSPECIFIED",
-                    "status": "blocked",
-                    "commit_hashes": [],
-                    "precommit_status": "unknown",
-                    "tech_debt_hints": [],
-                }
+        pending = set(future_map.keys())
+        spinner = ("|", "/", "-", "\\")
+        spin_index = 0
+        run_started_at = monotonic()
+        while pending:
+            done, pending = wait(
+                pending,
+                timeout=1.0,
+                return_when=FIRST_COMPLETED,
+            )
+            if not done:
+                completed = len(results)
+                total = len(targets)
+                elapsed = monotonic() - run_started_at
+                bar = _render_progress_bar(completed, total)
+                running_repos = sorted(future_map[future] for future in pending)
+                running_preview = ", ".join(running_repos) if running_repos else "none"
+                print(
+                    f"[progress] {spinner[spin_index % len(spinner)]} "
+                    f"{bar} {completed}/{total} completed "
+                    f"elapsed={elapsed:.1f}s running={running_preview}"
+                )
+                spin_index += 1
+                continue
+
+            for future in done:
+                repo = future_map[future]
+                try:
+                    results[repo] = future.result()
+                except Exception as exc:  # pragma: no cover - defensive fallback
+                    results[repo] = {
+                        "returncode": 1,
+                        "stdout": "",
+                        "stderr": str(exc),
+                        "timed_out": False,
+                        "duration_seconds": 0.0,
+                        "task_id": "UNSPECIFIED",
+                        "status": "blocked",
+                        "commit_hashes": [],
+                        "precommit_status": "unknown",
+                        "tech_debt_hints": [],
+                    }
+                print(
+                    f"[progress] ✔ repo={repo} finished "
+                    f"status={results[repo].get('status', 'blocked')} "
+                    f"({len(results)}/{len(targets)})"
+                )
 
     print("=== AURAXIS MULTI-REPO ORCHESTRATION SUMMARY (MASTER) ===")
     overall_rc = 0
@@ -1621,15 +1829,29 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
             if repo in results
         )
     )
+    next_action = (
+        "advance to next tasks (all repositories completed/skipped)."
+        if overall_rc == 0
+        else "resolve blocked repositories and rerun with same briefing (use AURAXIS_FORCE_RERUN=true only if necessary)."
+    )
     print(
         "next_action: "
-        + (
-            "advance to next tasks (all repositories completed/skipped)."
-            if overall_rc == 0
-            else "resolve blocked repositories and rerun with same briefing (use AURAXIS_FORCE_RERUN=true only if necessary)."
-        )
+        + next_action
     )
-    return overall_rc
+    report_path = _write_multi_run_report(
+        briefing=briefing,
+        briefing_hash=briefing_hash,
+        execution_mode=execution_mode,
+        policy_fingerprint=policy_fingerprint,
+        targets=targets,
+        results=results,
+        done_count=done_count,
+        skipped_count=skipped_count,
+        blocked_count=blocked_count,
+        overall_rc=overall_rc,
+    )
+    print(f"report_path: {report_path}")
+    return overall_rc, report_path
 
 
 # =================================================================
@@ -1717,7 +1939,7 @@ if __name__ == "__main__":
             next_task_suggestion="Wait for per-repo execution summary.",
             details=planned_details,
         )
-        rc = run_multi_repo_orchestration(briefing, execution_mode)
+        rc, report_path = run_multi_repo_orchestration(briefing, execution_mode)
         final_status = "done" if rc == 0 else "blocked"
         status_file = write_status_entry(
             task_id=task_id,
@@ -1731,6 +1953,7 @@ if __name__ == "__main__":
             ),
             details=(
                 f"overall_return_code={rc}\n\n"
+                f"report_path={report_path}\n\n"
                 "Resolved per-repo task IDs:\n"
                 f"- auraxis-api: {planned_task_ids['auraxis-api']}\n"
                 f"- auraxis-web: {planned_task_ids['auraxis-web']}\n"
@@ -1746,6 +1969,7 @@ if __name__ == "__main__":
             "implemented: parallel dispatch to auraxis-api, auraxis-web, auraxis-app"
         )
         print(f"status_file: {status_file}")
+        print(f"report_path: {report_path}")
         sys.exit(rc)
 
     policy_expected = os.getenv("AURAXIS_POLICY_FINGERPRINT", "").strip()
