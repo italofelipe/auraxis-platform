@@ -894,6 +894,55 @@ determinismo da execução autônoma.
 
 ---
 
+### DEC-050 — Execução isolada por worktree efêmero + rollback automático em bloqueio
+
+**Decisão:** executar cada child do modo `AURAXIS_TARGET_REPO=all` em worktree efêmero
+criado a partir de `origin/<default_branch>`, com remoção ao final da execução.
+Quando não houver worktree efêmero e o status final for `blocked`, aplicar rollback
+automático do alvo (`git reset --hard HEAD` + `git clean -fd`).
+
+**Racional:** reduzir contaminação de estado entre execuções, impedir acúmulo de artefatos
+locais e eliminar situação de reexecução sobre worktree parcialmente alterado.
+
+**Alternativas rejeitadas:**
+- continuar executando direto no clone principal e confiar apenas em limpeza manual;
+- bloquear em erro sem rollback e delegar toda recuperação ao operador;
+- desativar paralelismo para reduzir colisão (perde throughput sem resolver raiz).
+
+**Dono:** platform/ai-squad.
+**Impacto:**
+- run paralelo mais determinístico e reprodutível;
+- redução de falso bloqueio por estado residual;
+- menor risco de drift entre tentativas consecutivas.
+
+---
+
+### DEC-051 — Regra hard de evidência para `Done` + auto-reparo de quality gate frontend
+
+**Decisão:** ao atualizar task para `Done`, exigir:
+- `commit_hash` obrigatório;
+- evidência de alteração funcional (não apenas `tasks.md`/`TASKS.md`);
+- validações específicas por task crítica (quando mapeadas no tool layer).
+
+Além disso, em frontend, habilitar retentativa automática de quality gate com
+auto-reparo (`lint --fix`/`prettier`) antes de concluir bloqueio.
+
+**Racional:** evitar falso positivo de conclusão sem código funcional e reduzir bloqueios
+evitáveis por inconsistência de estilo/formatação.
+
+**Alternativas rejeitadas:**
+- aceitar `Done` sem hash/sem evidência e tratar só em revisão manual;
+- manter quality gate one-shot sem tentativa de correção automática;
+- liberar commit por exceção quando taskboard estiver atualizado.
+
+**Dono:** platform/ai-squad.
+**Impacto:**
+- melhora da rastreabilidade de entrega;
+- menor chance de regressão por conclusão indevida;
+- queda de falhas triviais de lint format em runs autônomos.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

@@ -44,6 +44,7 @@ import subprocess
 import sys
 import threading
 import traceback
+from datetime import datetime
 from pathlib import Path
 from time import monotonic
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -117,7 +118,6 @@ _CRITICAL_AUDIT_TOOLS = {
     "run_frontend_tests",
     "run_integration_tests",
     "publish_feature_contract_pack",
-    "git_operations",
     "update_task_status",
 }
 _POLICY_FINGERPRINT_FILES: tuple[Path, ...] = (
@@ -245,6 +245,126 @@ def _check_repo_worktree_clean(repo: str) -> tuple[bool, str]:
         "repository has uncommitted changes. "
         "Clean the worktree before autonomous run.\n"
         f"{preview}"
+    )
+
+
+def _resolve_default_branch(repo_root: Path) -> str:
+    result = subprocess.run(
+        ["git", "symbolic-ref", "--short", "refs/remotes/origin/HEAD"],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    candidate = result.stdout.strip().replace("origin/", "")
+    if candidate:
+        return candidate
+
+    for fallback in ("main", "master"):
+        check = subprocess.run(
+            ["git", "show-ref", "--verify", f"refs/remotes/origin/{fallback}"],
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if check.returncode == 0:
+            return fallback
+
+    return "main"
+
+
+def _create_execution_worktree(repo: str) -> tuple[Path | None, str]:
+    repo_root = PLATFORM_ROOT / "repos" / repo
+    if not repo_root.exists():
+        return None, f"repository path not found: {repo_root}"
+
+    subprocess.run(
+        ["git", "fetch", "origin", "--prune"],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    default_branch = _resolve_default_branch(repo_root)
+    ref = f"origin/{default_branch}"
+    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
+    worktree_root = PLATFORM_ROOT / ".tmp" / "agent-worktrees"
+    worktree_root.mkdir(parents=True, exist_ok=True)
+    worktree_path = worktree_root / f"{repo}-{timestamp}"
+
+    result = subprocess.run(
+        ["git", "worktree", "add", "--detach", str(worktree_path), ref],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        stderr = result.stderr.strip() or result.stdout.strip() or "unknown error"
+        return None, f"failed to create execution worktree from {ref}: {stderr}"
+
+    return worktree_path, ""
+
+
+def _remove_execution_worktree(repo: str, worktree_path: Path) -> None:
+    repo_root = PLATFORM_ROOT / "repos" / repo
+    subprocess.run(
+        ["git", "worktree", "remove", "--force", str(worktree_path)],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    subprocess.run(
+        ["git", "worktree", "prune"],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def _rollback_repo_worktree(repo: str) -> None:
+    repo_root = PLATFORM_ROOT / "repos" / repo
+    subprocess.run(
+        ["git", "reset", "--hard", "HEAD"],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    subprocess.run(
+        ["git", "clean", "-fd"],
+        cwd=str(repo_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def _rollback_execution_target() -> None:
+    explicit_root = os.getenv("AURAXIS_PROJECT_ROOT", "").strip()
+    if explicit_root:
+        target_root = Path(explicit_root).expanduser().resolve()
+    else:
+        target_root = PLATFORM_ROOT / "repos" / TARGET_REPO_NAME
+    if not target_root.exists():
+        return
+    subprocess.run(
+        ["git", "reset", "--hard", "HEAD"],
+        cwd=str(target_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    subprocess.run(
+        ["git", "clean", "-fd"],
+        cwd=str(target_root),
+        capture_output=True,
+        text=True,
+        check=False,
     )
 
 
@@ -384,16 +504,23 @@ def _derive_single_run_status(
         reasons.append("result_text_markers")
 
     audit_events = get_tool_audit_snapshot()
+    tool_last_status: dict[str, str] = {}
+    tool_last_preview: dict[str, str] = {}
+
     saw_update_task_status_ok = False
     saw_repo_quality_gate_ok = False
     saw_backend_tests_ok = False
     saw_integration_tests_ok = False
     saw_integration_tests_error = False
     saw_contract_pack_ok = False
+
     for event in audit_events:
         tool = str(event.get("tool", ""))
         status = str(event.get("status", "")).upper()
         preview = str(event.get("result_preview", "")).lower()
+        tool_last_status[tool] = status
+        tool_last_preview[tool] = preview
+
         if tool == "update_task_status" and status == "OK":
             saw_update_task_status_ok = True
         if (
@@ -411,15 +538,22 @@ def _derive_single_run_status(
                 saw_integration_tests_error = True
         if tool == "publish_feature_contract_pack" and status == "OK":
             saw_contract_pack_ok = True
-        if status == "ERROR" and tool in _CRITICAL_AUDIT_TOOLS:
-            reasons.append(f"audit_error:{tool}")
-            continue
-        if tool == "run_repo_quality_gates" and "return_code: 0" not in preview:
-            reasons.append("quality_gate_nonzero")
-            continue
-        if tool == "git_operations" and "commit error" in preview:
-            reasons.append("git_commit_error")
-            continue
+
+    for tool_name in _CRITICAL_AUDIT_TOOLS:
+        last_status = tool_last_status.get(tool_name, "")
+        if last_status == "ERROR":
+            reasons.append(f"audit_error:{tool_name}")
+
+    if (
+        tool_last_status.get("run_repo_quality_gates", "") == "ERROR"
+        and "return_code: 0" not in tool_last_preview.get("run_repo_quality_gates", "")
+    ):
+        reasons.append("quality_gate_nonzero")
+    if (
+        tool_last_status.get("git_operations", "") == "ERROR"
+        and "commit error" in tool_last_preview.get("git_operations", "")
+    ):
+        reasons.append("git_commit_error")
 
     if execution_mode == "run":
         if not saw_update_task_status_ok:
@@ -1138,6 +1272,12 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
     allow_dirty_worktree = (
         os.getenv("AURAXIS_ALLOW_DIRTY_WORKTREE", "false").strip().lower() == "true"
     )
+    use_worktree_execution = (
+        os.getenv("AURAXIS_USE_WORKTREE_EXECUTION", "true").strip().lower() == "true"
+    )
+    auto_rollback_on_block = (
+        os.getenv("AURAXIS_AUTO_ROLLBACK_ON_BLOCK", "true").strip().lower() == "true"
+    )
     policy_fingerprint = _compute_policy_fingerprint()
     results: dict[str, dict[str, object]] = {}
     briefing_hash = _briefing_hash(briefing)
@@ -1273,12 +1413,54 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
         env["AURAXIS_POLICY_FINGERPRINT"] = policy_fingerprint
         env["AURAXIS_EXECUTION_MODE"] = execution_mode
         env["AURAXIS_MULTI_CHILD"] = "1"
-        raw = _stream_subprocess(
-            repo=repo,
-            command=[sys.executable, script_path],
-            env=env,
-            timeout_seconds=child_timeout_seconds,
-        )
+
+        execution_worktree: Path | None = None
+        if use_worktree_execution:
+            execution_worktree, worktree_error = _create_execution_worktree(repo)
+            if execution_worktree is None:
+                reason = f"preflight blocked: {worktree_error}"
+                print(f"[{repo}][orchestrator] {reason}")
+                blocked_result = {
+                    "returncode": 1,
+                    "timed_out": False,
+                    "duration_seconds": 0.0,
+                    "stdout": "",
+                    "stderr": reason,
+                    "task_id": inferred_task_id,
+                    "status": "blocked",
+                    "commit_hashes": [],
+                    "precommit_status": "failed",
+                    "tech_debt_hints": [reason],
+                }
+                append_ledger_entry(
+                    {
+                        "repo": repo,
+                        "task_id": inferred_task_id,
+                        "briefing_hash": briefing_hash,
+                        "execution_mode": execution_mode,
+                        "status": "blocked",
+                        "returncode": 1,
+                        "timed_out": False,
+                        "duration_seconds": 0.0,
+                        "commit_hashes": [],
+                        "precommit_status": "failed",
+                        "skip_reason": reason,
+                    },
+                    repo=repo,
+                )
+                return blocked_result
+            env["AURAXIS_PROJECT_ROOT"] = str(execution_worktree)
+
+        try:
+            raw = _stream_subprocess(
+                repo=repo,
+                command=[sys.executable, script_path],
+                env=env,
+                timeout_seconds=child_timeout_seconds,
+            )
+        finally:
+            if execution_worktree is not None:
+                _remove_execution_worktree(repo, execution_worktree)
         extracted = _extract_summary_from_output(
             inferred_task_id,
             raw["stdout"],
@@ -1320,6 +1502,13 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
             else:
                 result["stderr"] = drift_message
             result["task_id"] = resolved_task_id
+
+        if (
+            result["status"] == "blocked"
+            and execution_worktree is None
+            and auto_rollback_on_block
+        ):
+            _rollback_repo_worktree(repo)
 
         append_ledger_entry(
             {
@@ -1624,6 +1813,16 @@ if __name__ == "__main__":
             if is_blocked
             else "Advance to the next pending task in tasks.md/TASKS.md."
         )
+        auto_rollback_on_block = (
+            os.getenv("AURAXIS_AUTO_ROLLBACK_ON_BLOCK", "true").strip().lower()
+            == "true"
+        )
+        is_multi_child = os.getenv("AURAXIS_MULTI_CHILD", "0").strip() == "1"
+        if final_status == "blocked" and auto_rollback_on_block and not is_multi_child:
+            _rollback_execution_target()
+            result_text = (
+                f"{result_text}\n\n[orchestrator] auto rollback applied to execution target."
+            )
         details = result_text
         if block_reasons:
             details = f"block_reasons={', '.join(block_reasons)}\n\n{result_text}"

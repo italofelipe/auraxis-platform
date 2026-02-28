@@ -9,6 +9,7 @@ Status:
 - ✅ Bloqueio hard de `task_id drift` no orquestrador multi-repo.
 - ✅ Health check ampliado para detectar `detached HEAD` e mismatch de Node local vs CI.
 - ✅ Runtime local Node `22.x` padronizado em app/web (paridade com CI).
+- ✅ Hardening pós-mortem (P0/P1/P2): isolamento por worktree efêmero, rollback automático em bloqueio e regra hard de evidência para `Done`.
 
 ## Estado dos blocos de plataforma
 
