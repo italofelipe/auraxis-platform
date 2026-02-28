@@ -2,6 +2,19 @@
 
 Data: 2026-02-27
 
+## Atualizacao Stabilization pós-merge (2026-02-28)
+- Baseline operacional validado em `auraxis-web`, `auraxis-app` e `auraxis-api`:
+  - web: `pnpm quality-check` + `node scripts/ci-audit-gate.cjs` ✅
+  - app: `npm run quality-check` + `node scripts/ci-audit-gate.js` ✅
+  - api: `bash scripts/run_ci_quality_local.sh` (docker python3.11) ✅
+- Higiene de CI audit no frontend:
+  - scripts `ci-audit-gate` (web/app) nao gravam mais `audit.json` no workspace por padrao;
+  - suporte a output explicito para debug via `AURAXIS_AUDIT_OUTPUT_PATH`;
+  - `.gitignore` atualizado em web/app para bloquear artefato `audit.json`;
+  - `audit.json` removido do versionamento em `auraxis-web`.
+- Documentacao atualizada:
+  - `.context/quality_gates.md` de web/app agora exige `nvm use 22` para paridade com CI e descreve o fluxo do novo audit gate.
+
 ## Atualizacao PLT4.3 + Guardrails v2 + API local resilience (2026-02-28)
 - `auraxis-platform`:
   - novo bootstrap central de provider por ambiente em `scripts/bootstrap-feature-flag-provider.sh`;
