@@ -1625,3 +1625,61 @@ git checkout -b feat/web2-vitest-config
 ### Próximo passo
 1. Rodar `make next-task` novamente e validar ausência do erro:
    `repository path not found: /.../repos/auraxis-<repo>-<timestamp>`.
+
+## 2026-02-28 — Hotfix operacional: worktree runtime + progresso de execução
+
+### O que foi feito
+- `ai_squad/main.py`:
+  - worktree efêmero agora hidrata dependências não versionadas:
+    - `auraxis-api`: link de `.venv`;
+    - `auraxis-web`/`auraxis-app`: link de `node_modules`.
+  - preflight passa a bloquear com mensagem explícita quando pré-requisito runtime não existe no repo canônico.
+  - adicionados spinner + barra de progresso no modo `all` durante a execução paralela.
+  - adicionado relatório consolidado em Markdown ao fim do run:
+    - `tasks_status/ORCH-<BRIEFING_HASH>-report.md`.
+- `scripts/ai-next-task.sh`:
+  - preflight de Node adicionado para runs que envolvem web/app:
+    - bloqueia execução se Node local não for `22.x`;
+    - override explícito: `AURAXIS_SKIP_NODE_PREFLIGHT=true`.
+- `ai_squad/tools/project_tools.py`:
+  - `git_operations.create_branch` agora faz checkout de branch existente (não falha à toa).
+  - `git_operations.commit` agora aceita `branch_name` como hint para sair de detached HEAD e anexar branch antes do commit.
+  - parser TOON ficou tolerante a linhas livres (agrega em `notes`) para evitar falha em `publish_feature_contract_pack`.
+
+### O que foi validado
+- `python3 -m py_compile ai_squad/main.py ai_squad/tools/project_tools.py ai_squad/tools/tool_security.py` passou.
+
+### Riscos pendentes
+- Necessário rerun real de `make next-task` para confirmar:
+  - queda de bloqueios por ambiente (`No module named ...`, retorno 127 por dependência ausente);
+  - relatório markdown consolidado gerado em todos os runs.
+
+### Próximo passo
+1. Rodar `make next-task`.
+2. Verificar `tasks_status/ORCH-*-report.md` e o resumo por repo no terminal.
+
+## 2026-02-28 — Automação de preparo local (runtime one-shot)
+
+### O que foi feito
+- Criado script de setup one-shot:
+  - `scripts/setup-local-runtime.sh`
+  - responsabilidades:
+    - validar/ativar Node 22 (`nvm install/use` quando necessário);
+    - criar/atualizar venv do `ai_squad` e instalar dependências;
+    - criar/atualizar venv da API e instalar `requirements.txt` + `requirements-dev.txt`;
+    - instalar dependências do web (`pnpm install`);
+    - instalar dependências do app (`npm install` por padrão; `npm ci` opcional).
+- Make target adicionado:
+  - `make runtime-setup`.
+- README atualizado com instrução do novo comando.
+
+### O que foi validado
+- `bash -n scripts/setup-local-runtime.sh` passou.
+- `make help` exibe o target `runtime-setup`.
+
+### Risco pendente
+- execução completa de instalação depende de rede e do estado local de `nvm/corepack`.
+
+### Próximo passo
+1. Rodar `make runtime-setup`.
+2. Em seguida rodar `make next-task`.

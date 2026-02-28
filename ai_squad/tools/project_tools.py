@@ -709,6 +709,7 @@ def _parse_contract_payload(payload_raw: str) -> dict[str, object]:
     }
     object_sections = {"rest_endpoints", "graphql_endpoints"}
     current_section = ""
+    freeform_notes: list[str] = []
 
     for raw_line in normalized.splitlines():
         line = raw_line.strip()
@@ -745,10 +746,20 @@ def _parse_contract_payload(payload_raw: str) -> dict[str, object]:
 
         scalar = _parse_toon_scalar(line)
         if scalar is None:
-            raise ValueError(f"invalid TOON line: '{line}'")
+            freeform_notes.append(line)
+            current_section = ""
+            continue
         key, value = scalar
         payload[key] = value
         current_section = ""
+
+    if freeform_notes:
+        existing_notes = str(payload.get("notes", "")).strip()
+        appended_notes = "\n".join(freeform_notes).strip()
+        if existing_notes and appended_notes:
+            payload["notes"] = f"{existing_notes}\n{appended_notes}"
+        elif appended_notes:
+            payload["notes"] = appended_notes
 
     return payload
 
@@ -2131,9 +2142,20 @@ def _git_create_branch(branch_name: str) -> str:
             f"Branch '{branch_name}' must contain task ID '{expected_task_id}'."
         )
 
-    result = safe_subprocess(["git", "checkout", "-b", branch_name], timeout=15)
-    if result["returncode"] != 0:
-        return f"Error creating branch: {result['stderr']}"
+    branch_exists = safe_subprocess(
+        ["git", "show-ref", "--verify", f"refs/heads/{branch_name}"],
+        timeout=15,
+    )["returncode"] == 0
+
+    if branch_exists:
+        checkout_result = safe_subprocess(["git", "checkout", branch_name], timeout=15)
+        if checkout_result["returncode"] != 0:
+            return f"Error checking out existing branch: {checkout_result['stderr']}"
+        return f"Branch '{branch_name}' checked out."
+
+    create_result = safe_subprocess(["git", "checkout", "-b", branch_name], timeout=15)
+    if create_result["returncode"] != 0:
+        return f"Error creating branch: {create_result['stderr']}"
     return f"Branch '{branch_name}' created."
 
 
@@ -2162,13 +2184,58 @@ def _git_filter_safe_files(files: list[str]) -> list[str]:
     return safe_files
 
 
-def _git_commit(message: str) -> str:
-    """Selective staging + commit. Never uses 'git add .'."""
-    # Detect current branch — block commits to master/main
-    branch_result = safe_subprocess(
-        ["git", "rev-parse", "--abbrev-ref", "HEAD"], timeout=10
+def _git_current_branch_name() -> str:
+    branch_result = safe_subprocess(["git", "branch", "--show-current"], timeout=10)
+    branch_name = branch_result["stdout"].strip()
+    if branch_name:
+        return branch_name
+
+    symbolic_ref = safe_subprocess(
+        ["git", "symbolic-ref", "--quiet", "--short", "HEAD"],
+        timeout=10,
     )
-    current_branch = branch_result["stdout"].strip()
+    resolved_branch = symbolic_ref["stdout"].strip()
+    if resolved_branch:
+        return resolved_branch
+    return "HEAD"
+
+
+def _git_checkout_or_create_branch(branch_name: str) -> str | None:
+    if not branch_name:
+        return None
+    checkout_result = safe_subprocess(["git", "checkout", branch_name], timeout=15)
+    if checkout_result["returncode"] == 0:
+        return None
+    create_result = safe_subprocess(["git", "checkout", "-b", branch_name], timeout=15)
+    if create_result["returncode"] == 0:
+        return None
+    return (
+        "unable to checkout/create requested branch "
+        f"'{branch_name}': {checkout_result['stderr'] or create_result['stderr']}"
+    )
+
+
+def _git_commit(message: str, branch_name: str = None) -> str:
+    """Selective staging + commit. Never uses 'git add .'."""
+    current_branch = _git_current_branch_name()
+    if branch_name and current_branch != branch_name:
+        checkout_error = _git_checkout_or_create_branch(branch_name)
+        if checkout_error:
+            return f"BLOCKED: {checkout_error}"
+        current_branch = _git_current_branch_name()
+
+    if current_branch in ("HEAD", "") and branch_name:
+        checkout_error = _git_checkout_or_create_branch(branch_name)
+        if checkout_error:
+            return f"BLOCKED: {checkout_error}"
+        current_branch = _git_current_branch_name()
+
+    if current_branch in ("HEAD", ""):
+        return (
+            "BLOCKED: commit attempted on detached HEAD. "
+            "Create or checkout a feature branch before committing."
+        )
+
     if current_branch in ("master", "main"):
         return (
             "BLOCKED: Direct commits to 'master'/'main' are not allowed. "
@@ -2249,7 +2316,7 @@ class GitOpsTool(BaseTool):
         if command == "create_branch":
             result = _git_create_branch(branch_name)
         elif command == "commit":
-            result = _git_commit(message)
+            result = _git_commit(message, branch_name=branch_name)
         elif command == "status":
             result = _git_status()
         else:
