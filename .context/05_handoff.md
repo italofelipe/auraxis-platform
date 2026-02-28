@@ -1657,3 +1657,29 @@ git checkout -b feat/web2-vitest-config
 ### Próximo passo
 1. Rodar `make next-task`.
 2. Verificar `tasks_status/ORCH-*-report.md` e o resumo por repo no terminal.
+
+## 2026-02-28 — Automação de preparo local (runtime one-shot)
+
+### O que foi feito
+- Criado script de setup one-shot:
+  - `scripts/setup-local-runtime.sh`
+  - responsabilidades:
+    - validar/ativar Node 22 (`nvm install/use` quando necessário);
+    - criar/atualizar venv do `ai_squad` e instalar dependências;
+    - criar/atualizar venv da API e instalar `requirements.txt` + `requirements-dev.txt`;
+    - instalar dependências do web (`pnpm install`);
+    - instalar dependências do app (`npm install` por padrão; `npm ci` opcional).
+- Make target adicionado:
+  - `make runtime-setup`.
+- README atualizado com instrução do novo comando.
+
+### O que foi validado
+- `bash -n scripts/setup-local-runtime.sh` passou.
+- `make help` exibe o target `runtime-setup`.
+
+### Risco pendente
+- execução completa de instalação depende de rede e do estado local de `nvm/corepack`.
+
+### Próximo passo
+1. Rodar `make runtime-setup`.
+2. Em seguida rodar `make next-task`.

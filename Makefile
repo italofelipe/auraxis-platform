@@ -5,10 +5,11 @@ SQUAD_DIR := $(PLATFORM_ROOT)/ai_squad
 NEXT_TASK_SCRIPT := $(PLATFORM_ROOT)/scripts/ai-next-task.sh
 BRIEFING ?= Execute a tarefa
 
-.PHONY: help squad-setup lock-status next-task next-task-all next-task-api next-task-web next-task-app next-task-safe next-task-plan openapi-snapshot lead-time-report
+.PHONY: help runtime-setup squad-setup lock-status next-task next-task-all next-task-api next-task-web next-task-app next-task-safe next-task-plan openapi-snapshot lead-time-report
 
 help:
 	@echo "Targets:"
+	@echo "  make runtime-setup    - one-shot local runtime setup (node22 + venv + deps api/web/app)"
 	@echo "  make squad-setup      - create/update ai_squad virtualenv and install deps"
 	@echo "  make lock-status      - show current agent lock status"
 	@echo "  make next-task        - run orchestrator for all repos (api/web/app)"
@@ -23,6 +24,9 @@ help:
 	@echo ""
 	@echo "Optional:"
 	@echo "  BRIEFING='Seu comando' make next-task"
+
+runtime-setup:
+	cd "$(PLATFORM_ROOT)" && ./scripts/setup-local-runtime.sh
 
 squad-setup:
 	@test -d "$(SQUAD_DIR)" || (echo "Missing ai_squad dir: $(SQUAD_DIR)" && exit 1)
