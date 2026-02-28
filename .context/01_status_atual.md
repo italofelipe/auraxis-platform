@@ -2,6 +2,17 @@
 
 Data: 2026-02-27
 
+## Atualizacao PLT4.2 (2026-02-28 — provider OSS runtime)
+- `auraxis-api`:
+  - `app/utils/feature_flags.py` evoluído para resolver flags via provider `unleash` com cache curto e fallback local.
+  - testes de runtime atualizados em `tests/test_feature_flags_runtime.py` cobrindo snapshot remoto e fallback por falha.
+- `auraxis-web`:
+  - `app/shared/feature-flags/service.ts` evoluído com provider `unleash` (cache + fallback local).
+  - `app/composables/useTools.ts` passou a resolver decisão remota para `web.tools.salary-raise-calculator`.
+- `auraxis-app`:
+  - `shared/feature-flags/service.ts` evoluído com provider `unleash` (cache + fallback local).
+  - `lib/tools-api.ts` e `hooks/queries/use-tools-query.ts` passaram a consumir decisão remota para `app.tools.salary-raise-calculator`.
+
 ## Atualizacao Release/CI (2026-02-27 — PLT3.1 + sonar local policy)
 - `PLT3.1` consolidado com policy operacional única de release cut em `.context/33_release_cut_policy.md`:
   - cadência, freeze, hotfix, gates mínimos e checklist de aprovação de PR de release.

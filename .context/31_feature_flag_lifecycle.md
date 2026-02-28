@@ -1,6 +1,6 @@
 # Feature Flag Lifecycle (PLT4.1)
 
-Atualizado: 2026-02-25
+Atualizado: 2026-02-28
 
 ## Estados
 
@@ -25,6 +25,13 @@ Atualizado: 2026-02-25
 - Web: `scripts/check-feature-flags.cjs` + job `Feature Flags Hygiene` no CI.
 - App: `scripts/check-feature-flags.cjs` + job `Feature Flags Hygiene` no CI.
 - API: `scripts/check_feature_flags.py` + step `Feature Flags Hygiene` no job `quality`.
+- Runtime OSS (PLT4.2): `unleash` integrado com fallback local em web/app/api.
+
+## Regra de resolução em runtime
+
+1. decisão explícita do provider remoto (`unleash`) quando disponível;
+2. override de ambiente (flags por variável);
+3. fallback para catálogo local versionado.
 
 ## Critérios de falha
 

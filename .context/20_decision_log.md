@@ -797,6 +797,28 @@ preservando o gate oficial bloqueante no pipeline de CI.
 
 ---
 
+### DEC-046 — Provider remoto de flags padronizado em `unleash` com fallback local
+
+**Decisão:** padronizar o runtime de feature flags em `auraxis-api`, `auraxis-web` e
+`auraxis-app` para modo `local|unleash`, com resolução em cadeia:
+provider remoto (`unleash`) -> override de ambiente -> catálogo local versionado.
+
+**Racional:** concluir PLT4 com um provider OSS real por ambiente, sem perder resiliência
+quando o provider estiver indisponível.
+
+**Alternativas rejeitadas:**
+- manter apenas catálogo local sem provider remoto;
+- integrar provider diferente por repositório;
+- tornar fallback local opcional (maior risco de indisponibilidade).
+
+**Dono:** platform + backend + frontend.
+**Impacto:**
+- integração runtime unificada nos 3 repos;
+- redução de drift de comportamento entre app/web/api;
+- base pronta para rollout controlado por ambiente.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |
