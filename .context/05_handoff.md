@@ -1683,3 +1683,20 @@ git checkout -b feat/web2-vitest-config
 ### Próximo passo
 1. Rodar `make runtime-setup`.
 2. Em seguida rodar `make next-task`.
+
+## 2026-02-28 — UX hotfix: auto-switch de Node no `ai-next-task`
+
+### O que foi feito
+- `scripts/ai-next-task.sh` passou a tentar correção automática de Node quando web/app participam do run:
+  - carrega `nvm` quando disponível;
+  - executa `nvm install/use <major requerido>` (default `22`);
+  - só falha o preflight se não conseguir convergir para a versão requerida.
+- Novas variáveis:
+  - `AURAXIS_AUTO_USE_NVM` (default `true`);
+  - `AURAXIS_NODE_MAJOR_REQUIRED` (default `22`).
+
+### O que foi validado
+- `bash -n scripts/ai-next-task.sh` passou.
+
+### Próximo passo
+1. Rodar `make next-task` sem `nvm use 22` manual para confirmar auto-correção.
