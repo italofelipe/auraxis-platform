@@ -1637,6 +1637,10 @@ git checkout -b feat/web2-vitest-config
   - adicionados spinner + barra de progresso no modo `all` durante a execução paralela.
   - adicionado relatório consolidado em Markdown ao fim do run:
     - `tasks_status/ORCH-<BRIEFING_HASH>-report.md`.
+- `scripts/ai-next-task.sh`:
+  - preflight de Node adicionado para runs que envolvem web/app:
+    - bloqueia execução se Node local não for `22.x`;
+    - override explícito: `AURAXIS_SKIP_NODE_PREFLIGHT=true`.
 - `ai_squad/tools/project_tools.py`:
   - `git_operations.create_branch` agora faz checkout de branch existente (não falha à toa).
   - `git_operations.commit` agora aceita `branch_name` como hint para sair de detached HEAD e anexar branch antes do commit.

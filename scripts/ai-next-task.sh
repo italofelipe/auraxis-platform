@@ -14,6 +14,7 @@ FLAG_BOOTSTRAP="${AURAXIS_FEATURE_FLAGS_BOOTSTRAP:-true}"
 FLAG_BOOTSTRAP_ENV="${AURAXIS_FEATURE_FLAGS_ENV:-development}"
 FLAG_BOOTSTRAP_PROVIDER="${AURAXIS_FEATURE_FLAGS_PROVIDER:-}"
 SKIP_LLM_PREFLIGHT="${AURAXIS_SKIP_LLM_PREFLIGHT:-false}"
+SKIP_NODE_PREFLIGHT="${AURAXIS_SKIP_NODE_PREFLIGHT:-false}"
 ENV_FILES=("${SQUAD_DIR}/.env" "${PLATFORM_ROOT}/.env")
 
 if [[ ! -d "${SQUAD_DIR}" ]]; then
@@ -92,6 +93,30 @@ if [[ "${AUTO_PREP}" == "true" ]]; then
   fi
   echo "[ai-next-task] Preparing repository state for autonomous run..."
   "${PREP_SCRIPT}" "${TARGET_REPO}"
+fi
+
+requires_node_22="false"
+case "${TARGET_REPO}" in
+  all|auraxis-all|auraxis-web|auraxis-app)
+    requires_node_22="true"
+    ;;
+esac
+
+if [[ "${requires_node_22}" == "true" && "${SKIP_NODE_PREFLIGHT}" != "true" ]]; then
+  if ! command -v node >/dev/null 2>&1; then
+    echo "[ai-next-task] Node preflight failed: node runtime is required for auraxis-web/auraxis-app." >&2
+    echo "[ai-next-task] Install/use Node 22.x and rerun." >&2
+    exit 1
+  fi
+  node_version="$(node -v 2>/dev/null || true)"
+  node_major="${node_version#v}"
+  node_major="${node_major%%.*}"
+  if [[ "${node_major}" != "22" ]]; then
+    echo "[ai-next-task] Node preflight failed: expected Node 22.x, current ${node_version}." >&2
+    echo "[ai-next-task] Run 'nvm use 22' (or equivalente) e tente novamente." >&2
+    echo "[ai-next-task] Set AURAXIS_SKIP_NODE_PREFLIGHT=true only for diagnostics." >&2
+    exit 1
+  fi
 fi
 
 if [[ ! -d "${SQUAD_DIR}/.venv" ]]; then
