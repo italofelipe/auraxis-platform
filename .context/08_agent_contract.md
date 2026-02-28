@@ -76,6 +76,9 @@ Para trabalho em produto (web, app, api), também ler:
 - Executar `npm run quality-check` (app) ou `pnpm quality-check` (web) obrigatoriamente
 - Executar `contracts:check` (diretamente ou via `quality-check`) para validar drift de OpenAPI + packs
 - Se qualquer gate falhar: **corrigir antes de commitar**
+- Enforcement automático no `ai_squad`:
+  - frontend: `git commit` é bloqueado sem `run_repo_quality_gates()` em PASS;
+  - backend: `git commit` é bloqueado sem `run_backend_tests()` + `run_integration_tests(full_crud)` em PASS.
 - Em fluxos autônomos: não marcar `Done` sem `update_task_status` válido para o mesmo `task_id` do preflight.
 - Verificar checklist de segurança:
   - [ ] Nenhum secret ou token hardcoded

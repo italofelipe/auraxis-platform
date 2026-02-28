@@ -45,7 +45,7 @@ Status:
 - ✅ Sonar scanner pinado por SHA nos workflows
 
 Pendência recomendada:
-- [ ] Confirmar Dependency Graph habilitado nos 3 repositórios (app/web agora sem fallback permissivo no workflow).
+- [ ] Confirmar Dependency Graph habilitado nos 3 repositórios (app/web agora em modo estrito; sem suporte o job falha por design).
 
 ---
 
@@ -60,16 +60,20 @@ Status:
 - ✅ Templates SDD locais adicionados em `auraxis-app` e `auraxis-web`
 - ✅ Guardrail anti-drift de execução: bloqueio de `task_id` divergente no fim do run
 - ✅ Auto-prepare de repositório antes de run (fetch, saída de detached HEAD, sync de branch base)
+- ✅ Commit guardrail pós-gates no orquestrador:
+  - frontend só comita após `run_repo_quality_gates()` com status `pass`;
+  - backend só comita após `run_backend_tests()` e `run_integration_tests(full_crud)` com status `pass`.
+- ✅ `ai-next-task` com preflight de credencial LLM (`OPENAI_API_KEY` ou `OLLAMA_BASE_URL`).
 
 Pendência recomendada:
 - [ ] Eliminar branches remotos legados `codex/*` ainda existentes após migração de PRs ativos.
-- [ ] Padronizar runtime local Node para major 22 (paridade CI em app/web).
+- [ ] Medir estabilidade do bloqueio de commit pós-gates por pelo menos 3 ciclos completos de `make next-task`.
 
 ---
 
 ## 5) Próximo bloco (pré-feature)
 
 1. Concluir PLT1/PLT3/PLT4 runtime para remover os últimos bloqueios de autonomia ampla.
-2. Padronizar Node local = CI (`22.x`) em app/web para reduzir drift local-vs-pipeline.
+2. Manter Node local = CI (`22.x`) em app/web para reduzir drift local-vs-pipeline.
 3. Rodar bateria de estabilidade (`make next-task`) por múltiplos ciclos e medir taxa de bloqueio.
 4. Com estabilidade comprovada, iniciar backlog de negócio: `B10` e `B11` (API), seguido de fluxos consumidores em web/app.

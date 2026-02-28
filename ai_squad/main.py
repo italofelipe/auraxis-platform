@@ -248,6 +248,25 @@ def _check_repo_worktree_clean(repo: str) -> tuple[bool, str]:
     )
 
 
+_QUALITY_GUARD_ENV_KEYS: tuple[str, ...] = (
+    "AURAXIS_LAST_FRONTEND_QUALITY_STATUS",
+    "AURAXIS_LAST_BACKEND_TESTS_STATUS",
+    "AURAXIS_LAST_INTEGRATION_STATUS",
+    "AURAXIS_INTEGRATION_REGISTER_AND_LOGIN",
+    "AURAXIS_INTEGRATION_FULL_CRUD",
+)
+
+
+def _reset_quality_commit_guard_env(target_env: dict[str, str] | None = None) -> None:
+    keys = _QUALITY_GUARD_ENV_KEYS
+    if target_env is None:
+        for key in keys:
+            os.environ.pop(key, None)
+        return
+    for key in keys:
+        target_env.pop(key, None)
+
+
 def _extract_summary_from_output(
     default_task_id: str,
     stdout_text: str,
@@ -725,10 +744,10 @@ class AuraxisSquad:
             context=[task_plan, task_read],
         )
 
-        # --- TASK 4: REVIEW (self-check before commit) ---
+        # --- TASK 4: REVIEW (self-check + branch guardrail) ---
         task_review = Task(
             description=(
-                "REVIEW PHASE — validate consistency before committing.\n\n"
+                "REVIEW PHASE — validate consistency and prepare branch.\n\n"
                 "Execute these checks IN ORDER:\n"
                 "1. validate_migration_consistency(\n"
                 "     model_path='<model file>',\n"
@@ -743,11 +762,11 @@ class AuraxisSquad:
                 "DECISION:\n"
                 "- If validate_migration_consistency returns ISSUES: "
                 "FIX the files using write_file_content, then re-validate.\n"
-                "- If all checks pass: proceed to create branch and commit.\n"
+                "- If all checks pass: create branch only (NO COMMIT YET).\n"
                 "  git_operations(command='create_branch', "
                 "branch_name='feat/<task-id>-<description>')\n"
-                "  git_operations(command='commit', "
-                "message='feat(<scope>): <description>')\n\n"
+                "  git_operations(command='status')\n\n"
+                "Commit is allowed only after unit + integration tests pass.\n\n"
                 "This task is the GATEKEEPER. Do not commit if any "
                 "check shows ISSUES."
             ),
@@ -758,7 +777,7 @@ class AuraxisSquad:
                 "- Schema preserved: YES or NO (+ what was lost)\n"
                 "- down_revision correct: YES or NO\n"
                 "- Branch created: <name>\n"
-                "- Commit: <hash or 'blocked — issues found'>"
+                "- Ready for tests: YES or NO"
             ),
             agent=backend_dev,
             context=[task_plan, task_read, task_code],
@@ -826,28 +845,31 @@ class AuraxisSquad:
             context=[task_review, task_test],
         )
 
-        # --- TASK 7: DOCUMENTATION (auto-update TASKS.md) ---
+        # --- TASK 7: COMMIT + DOCUMENTATION (post-gates only) ---
         task_docs = Task(
             description=(
-                "DOCUMENTATION PHASE — update traceability records.\n\n"
+                "COMMIT + DOCUMENTATION PHASE — update traceability records.\n\n"
                 "After successful implementation and testing, update "
                 "the project records for traceability.\n\n"
                 "Execute IN ORDER:\n"
-                "1. git_operations(command='status') — get the current "
-                "branch and last commit info\n"
-                "2. Extract the commit hash from the git status/log\n"
-                "3. update_task_status(\n"
+                "1. If BOTH unit and integration tests passed, commit now:\n"
+                "   git_operations(command='commit', "
+                "message='feat(<scope>): <summary>')\n"
+                "2. git_operations(command='status') — capture branch/commit info\n"
+                "3. Extract commit hash from git output\n"
+                "4. update_task_status(\n"
                 "     task_id='<task ID from the plan>',\n"
                 "     status='Done',\n"
                 "     progress='100%',\n"
                 "     commit_hash='<commit hash>'\n"
                 "   )\n"
-                "4. Verify the update by reading TASKS.md\n\n"
+                "5. Verify the update by reading TASKS.md\n\n"
                 "RULES:\n"
                 "- Only mark as Done if BOTH unit tests and "
                 "integration tests passed.\n"
                 "- If tests failed, mark as 'In Progress' with the "
                 "current progress percentage.\n"
+                "- If tests failed, DO NOT commit.\n"
                 "- Always include the commit hash for traceability.\n"
                 "- The task_id comes from Task 1 (PLAN) output."
             ),
@@ -924,7 +946,7 @@ class AuraxisSquad:
     def run_frontend_workflow(self, briefing: str, plan_only: bool = False):
         """
         6-task generic workflow for app/web repositories:
-          Plan -> Read -> Write -> Review/Commit -> Quality -> Docs
+          Plan -> Read -> Write -> Review/Branch -> Quality -> Commit/Docs
         """
         manager = Agent(
             role="Gerente de Projeto Frontend",
@@ -1049,17 +1071,16 @@ class AuraxisSquad:
 
         task_review = Task(
             description=(
-                "REVIEW/COMMIT PHASE:\n"
+                "REVIEW/BRANCH PHASE:\n"
                 "1. git_operations(command='status')\n"
                 "2. create conventional branch:\n"
                 "   git_operations(command='create_branch', "
                 "branch_name='feat/<task-id>-<short-description>')\n"
-                "3. commit with conventional commit message:\n"
-                "   git_operations(command='commit', "
-                "message='feat(<scope>): <summary>')\n"
-                "Block completion if commit cannot be created."
+                "3. git_operations(command='status')\n"
+                "Do NOT commit in this phase. Commit is allowed only after "
+                "run_repo_quality_gates() passes."
             ),
-            expected_output="Branch name, commit result, and git status.",
+            expected_output="Branch name and git status on feature branch.",
             agent=frontend_dev,
             context=[task_code],
         )
@@ -1079,11 +1100,12 @@ class AuraxisSquad:
 
         task_docs = Task(
             description=(
-                "DOCUMENTATION PHASE:\n"
-                "If quality passed, update task status using:\n"
+                "COMMIT + DOCUMENTATION PHASE:\n"
+                "If quality passed, commit and then update task status:\n"
+                "git_operations(command='commit', message='feat(<scope>): <summary>')\n"
                 "update_task_status(task_id='<task_id>', status='Done', "
                 "progress='100%', commit_hash='<hash>').\n"
-                "If quality failed, mark as In Progress with realistic progress."
+                "If quality failed, do not commit and mark as In Progress with realistic progress."
             ),
             expected_output="Task board update confirmation.",
             agent=frontend_dev,
@@ -1237,6 +1259,7 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
                 return skipped_result
 
         env = env_base.copy()
+        _reset_quality_commit_guard_env(env)
         child_briefing = briefing
         if infer_task_id(briefing) == "UNSPECIFIED" and inferred_task_id != "UNSPECIFIED":
             child_briefing = (
@@ -1583,6 +1606,7 @@ if __name__ == "__main__":
     )
 
     squad = AuraxisSquad()
+    _reset_quality_commit_guard_env()
     try:
         if TARGET_REPO_NAME == "auraxis-api":
             result = squad.run_backend_workflow(briefing, plan_only=plan_only)

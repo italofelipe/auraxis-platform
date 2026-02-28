@@ -13,10 +13,36 @@ AUTO_PREP="${AURAXIS_AUTO_PREP_REPOS:-true}"
 FLAG_BOOTSTRAP="${AURAXIS_FEATURE_FLAGS_BOOTSTRAP:-true}"
 FLAG_BOOTSTRAP_ENV="${AURAXIS_FEATURE_FLAGS_ENV:-development}"
 FLAG_BOOTSTRAP_PROVIDER="${AURAXIS_FEATURE_FLAGS_PROVIDER:-}"
+SKIP_LLM_PREFLIGHT="${AURAXIS_SKIP_LLM_PREFLIGHT:-false}"
 
 if [[ ! -d "${SQUAD_DIR}" ]]; then
   echo "ai_squad directory not found at: ${SQUAD_DIR}" >&2
   exit 1
+fi
+
+has_nonempty_env_value() {
+  local env_file="$1"
+  local key="$2"
+  [[ -f "${env_file}" ]] || return 1
+  local value
+  value="$(grep -E "^${key}=" "${env_file}" 2>/dev/null | tail -n 1 | cut -d '=' -f2- || true)"
+  [[ -n "${value}" ]]
+}
+
+if [[ "${SKIP_LLM_PREFLIGHT}" != "true" ]]; then
+  has_openai="false"
+  has_ollama="false"
+  if [[ -n "${OPENAI_API_KEY:-}" ]] || has_nonempty_env_value "${SQUAD_DIR}/.env" "OPENAI_API_KEY"; then
+    has_openai="true"
+  fi
+  if [[ -n "${OLLAMA_BASE_URL:-}" ]] || has_nonempty_env_value "${SQUAD_DIR}/.env" "OLLAMA_BASE_URL"; then
+    has_ollama="true"
+  fi
+  if [[ "${has_openai}" != "true" && "${has_ollama}" != "true" ]]; then
+    echo "[ai-next-task] LLM preflight failed: configure OPENAI_API_KEY or OLLAMA_BASE_URL in ${SQUAD_DIR}/.env (or env vars)." >&2
+    echo "[ai-next-task] Set AURAXIS_SKIP_LLM_PREFLIGHT=true only for diagnostics." >&2
+    exit 1
+  fi
 fi
 
 if [[ "${FLAG_BOOTSTRAP}" == "true" ]]; then

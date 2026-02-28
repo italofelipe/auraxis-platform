@@ -2,6 +2,21 @@
 
 Data: 2026-02-27
 
+## Atualizacao Autonomy Hardening (2026-02-28)
+- `auraxis-web` e `auraxis-app`:
+  - `dependency-review.yml` migrado para modo estrito (sem fallback de compatibilidade);
+  - `Dependency Review` volta a ser gate bloqueante integral em PRs.
+- `ai_squad`:
+  - fluxo backend e frontend ajustado para branch-first + commit somente após gates/testes passarem;
+  - `git_operations(commit)` agora bloqueia:
+    - frontend sem `run_repo_quality_gates() == pass`;
+    - backend sem `run_backend_tests() == pass` e `run_integration_tests(full_crud) == pass`;
+  - isolamento de estado de guardrail por execução (reset de variáveis de status no kickoff).
+- `scripts/ai-next-task.sh`:
+  - preflight de credencial LLM obrigatório (OpenAI ou Ollama) para falhar cedo com erro explícito.
+- documentação sincronizada:
+  - `.context/08_agent_contract.md`, `.context/28_autonomous_delivery_readiness.md` e `ai_squad/README.md`.
+
 ## Atualizacao Stabilization pós-merge (2026-02-28)
 - Baseline operacional validado em `auraxis-web`, `auraxis-app` e `auraxis-api`:
   - web: `pnpm quality-check` + `node scripts/ci-audit-gate.cjs` ✅

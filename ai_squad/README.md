@@ -25,6 +25,7 @@ Com isso, o master:
 - usa o briefing padrão `Execute a tarefa`;
 - resolve `task_id` por repo e bloqueia execução sem task resolvida;
 - bloqueia execução se o repo alvo estiver com worktree sujo (anti-contaminação);
+- valida preflight de credencial LLM (`OPENAI_API_KEY` ou `OLLAMA_BASE_URL`);
 - para backend (`auraxis-api`), publica `Feature Contract Pack` em `.context/feature_contracts/`;
 - registra status em `tasks_status/`;
 - libera lock ao final.
@@ -96,6 +97,9 @@ Com isso, o gestor dispara execução para `auraxis-api`, `auraxis-web` e `aurax
   - branch precisa conter o `task_id` resolvido;
   - `update_task_status` deve usar o mesmo `task_id` do preflight;
   - fingerprint de política global (`07_steering_global.md`, `08_agent_contract.md`, `product.md`) é validado no start.
+  - commit só é permitido após gates aprovados:
+    - frontend: `run_repo_quality_gates()` precisa retornar PASS;
+    - backend: `run_backend_tests()` e `run_integration_tests(full_crud)` precisam retornar PASS.
 - Override explícito (somente quando necessário):
   - `AURAXIS_ALLOW_DIRTY_WORKTREE=true` permite execução com repo sujo.
   - `AURAXIS_FORCE_RERUN=true` ignora skip idempotente do ledger.

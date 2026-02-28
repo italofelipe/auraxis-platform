@@ -2,6 +2,40 @@
 
 Data: 2026-02-25 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-28 (autonomy hardening: commit pós-gates + dependency review estrito)
+
+### O que foi feito
+
+- `auraxis-web` e `auraxis-app`:
+  - `dependency-review.yml` simplificado para modo estrito (sem fallback de compatibilidade).
+- `ai_squad`:
+  - fluxo alterado para branch-first e commit somente após gates aprovados;
+  - commit guardrail implementado no tool layer:
+    - frontend exige `run_repo_quality_gates()` PASS;
+    - backend exige `run_backend_tests()` + `run_integration_tests(full_crud)` PASS;
+  - reset de variáveis de estado de qualidade por execução para evitar vazamento de contexto.
+- `scripts/ai-next-task.sh`:
+  - preflight de credencial LLM antes de kickoff (OpenAI/Ollama), com erro explícito quando ausente.
+- documentação sincronizada:
+  - `.context/08_agent_contract.md`, `.context/28_autonomous_delivery_readiness.md`, `ai_squad/README.md`, `tasks.md` de app/web.
+
+### O que foi validado
+
+- verificação estática de consistência de workflow e guardrails (código + docs) concluída.
+- pontos de enforcement confirmados no código:
+  - `ai_squad/main.py` (ordem de fases e reset de guardrail env);
+  - `ai_squad/tools/project_tools.py` (`_git_commit` bloqueante por status de gate/testes).
+
+### Riscos pendentes
+
+- `Dependency Review` em web/app agora depende de `Dependency Graph` habilitado no GitHub.
+- o novo fluxo de commit pós-gates precisa de validação em ciclos reais (`make next-task`) para medir taxa de bloqueio.
+
+### Próximo passo sugerido
+
+1. Rodar 2-3 ciclos reais de `make next-task` e observar `tasks_status/` + ledger.
+2. Se estabilidade for mantida, promover este baseline como política final de autonomia para Sprint B.
+
 ## Atualização rápida — 2026-02-28 (stabilization pós-merge + hygiene de audit gate)
 
 ### O que foi feito
