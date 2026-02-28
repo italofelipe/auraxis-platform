@@ -872,6 +872,28 @@ entre execuções locais e de agentes.
 
 ---
 
+### DEC-049 — Commit pós-gates obrigatório no orquestrador autônomo
+
+**Decisão:** endurecer o `ai_squad` para impedir commits antes da validação de qualidade:
+- frontend só pode commitar após `run_repo_quality_gates()` em PASS;
+- backend só pode commitar após `run_backend_tests()` e
+  `run_integration_tests(scenario='full_crud')` em PASS.
+
+**Racional:** reduzir retrabalho por commits prematuros que falham em QA/CI e aumentar
+determinismo da execução autônoma.
+
+**Alternativas rejeitadas:**
+- manter commit antes dos testes e bloquear apenas no fim da execução;
+- confiar somente em validação de status textual do agente sem enforcement no tool layer.
+
+**Dono:** platform/ai-squad.
+**Impacto:**
+- `git_operations(commit)` vira gate hard de qualidade;
+- fluxo de tarefas em backend/frontend foi ajustado para branch-first e commit pós-gates;
+- redução de drift entre execução autônoma local e critérios de merge no CI.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

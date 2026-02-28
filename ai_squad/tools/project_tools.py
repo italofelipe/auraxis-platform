@@ -1042,6 +1042,9 @@ class RunTestsTool(BaseTool):
             timeout=300,
             cwd=str(PROJECT_ROOT),
         )
+        os.environ["AURAXIS_LAST_BACKEND_TESTS_STATUS"] = (
+            "pass" if result["returncode"] == 0 else "fail"
+        )
         output = f"STDOUT: {result['stdout']}\nSTDERR: {result['stderr']}"
         audit_log(
             "run_backend_tests",
@@ -1080,6 +1083,10 @@ class RunRepoQualityGatesTool(BaseTool):
             timeout=600,
             cwd=str(PROJECT_ROOT),
         )
+        if repo_name in ("auraxis-web", "auraxis-app"):
+            os.environ["AURAXIS_LAST_FRONTEND_QUALITY_STATUS"] = (
+                "pass" if result["returncode"] == 0 else "fail"
+            )
         output = (
             f"COMMAND: {' '.join(command)}\n"
             f"RETURN_CODE: {result['returncode']}\n"
@@ -1190,6 +1197,13 @@ class IntegrationTestTool(BaseTool):
             output[:200],
             status="OK" if data["passed"] else "ERROR",
         )
+        os.environ[f"AURAXIS_INTEGRATION_{scenario.upper()}"] = (
+            "pass" if data["passed"] else "fail"
+        )
+        if scenario == "full_crud":
+            os.environ["AURAXIS_LAST_INTEGRATION_STATUS"] = (
+                "pass" if data["passed"] else "fail"
+            )
         return output
 
 
@@ -1832,6 +1846,23 @@ def _git_commit(message: str) -> str:
             "BLOCKED: branch/task drift detected at commit stage. "
             f"Current branch '{current_branch}' must contain task ID '{expected_task_id}'."
         )
+
+    if TARGET_REPO_NAME in ("auraxis-web", "auraxis-app"):
+        quality_status = os.getenv("AURAXIS_LAST_FRONTEND_QUALITY_STATUS", "").strip().lower()
+        if quality_status != "pass":
+            return (
+                "BLOCKED: quality gates not confirmed for frontend repo. "
+                "Run run_repo_quality_gates() and pass before committing."
+            )
+    if TARGET_REPO_NAME == "auraxis-api":
+        backend_tests_status = os.getenv("AURAXIS_LAST_BACKEND_TESTS_STATUS", "").strip().lower()
+        integration_status = os.getenv("AURAXIS_LAST_INTEGRATION_STATUS", "").strip().lower()
+        if backend_tests_status != "pass" or integration_status != "pass":
+            return (
+                "BLOCKED: backend tests/integration not confirmed. "
+                "Run run_backend_tests() and run_integration_tests(scenario='full_crud') "
+                "successfully before committing."
+            )
 
     if not message:
         return "Error: commit message is required."
