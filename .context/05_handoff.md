@@ -105,7 +105,7 @@ Data: 2026-02-25 (Remediação de maturidade agentic)
   - `audit.json` bloqueado por `.gitignore` em web/app;
   - `audit.json` removido do versionamento em `auraxis-web`.
 - documentação de gates atualizada em web/app para reforçar:
-  - paridade de runtime com `nvm use 22`;
+  - paridade de runtime com `nvm use 25`;
   - uso operacional do novo audit gate.
 
 ### O que foi validado
@@ -117,7 +117,7 @@ Data: 2026-02-25 (Remediação de maturidade agentic)
 ### Riscos pendentes
 
 - `auraxis-api` local ainda está `ahead 3` em `master` (estado local não publicado), exigindo decisão explícita antes de usar esse commit como referência de submodule.
-- parity local em frontend depende de runtime Node 22; em Node diferente pode haver warning de engines.
+- parity local em frontend depende de runtime Node 25; em Node diferente pode haver warning de engines.
 
 ### Próximo passo sugerido
 
@@ -1639,7 +1639,7 @@ git checkout -b feat/web2-vitest-config
     - `tasks_status/ORCH-<BRIEFING_HASH>-report.md`.
 - `scripts/ai-next-task.sh`:
   - preflight de Node adicionado para runs que envolvem web/app:
-    - bloqueia execução se Node local não for `22.x`;
+    - bloqueia execução se Node local não for `25.x`;
     - override explícito: `AURAXIS_SKIP_NODE_PREFLIGHT=true`.
 - `ai_squad/tools/project_tools.py`:
   - `git_operations.create_branch` agora faz checkout de branch existente (não falha à toa).
@@ -1664,7 +1664,7 @@ git checkout -b feat/web2-vitest-config
 - Criado script de setup one-shot:
   - `scripts/setup-local-runtime.sh`
   - responsabilidades:
-    - validar/ativar Node 22 (`nvm install/use` quando necessário);
+    - validar/ativar Node 25 (`nvm install/use` quando necessário);
     - criar/atualizar venv do `ai_squad` e instalar dependências;
     - criar/atualizar venv da API e instalar `requirements.txt` + `requirements-dev.txt`;
     - instalar dependências do web (`pnpm install`);
@@ -1689,14 +1689,47 @@ git checkout -b feat/web2-vitest-config
 ### O que foi feito
 - `scripts/ai-next-task.sh` passou a tentar correção automática de Node quando web/app participam do run:
   - carrega `nvm` quando disponível;
-  - executa `nvm install/use <major requerido>` (default `22`);
+  - executa `nvm install/use <major requerido>` (default `25`);
   - só falha o preflight se não conseguir convergir para a versão requerida.
 - Novas variáveis:
   - `AURAXIS_AUTO_USE_NVM` (default `true`);
-  - `AURAXIS_NODE_MAJOR_REQUIRED` (default `22`).
+  - `AURAXIS_NODE_MAJOR_REQUIRED` (default `25`).
 
 ### O que foi validado
 - `bash -n scripts/ai-next-task.sh` passou.
 
 ### Próximo passo
-1. Rodar `make next-task` sem `nvm use 22` manual para confirmar auto-correção.
+1. Rodar `make next-task` sem `nvm use 25` manual para confirmar auto-correção.
+
+## 2026-02-28 — Fechamento técnico: Node 25 + retry/recovery/checkpoint no orquestrador
+
+### O que foi feito
+- `scripts/ai-next-task.sh` e `scripts/setup-local-runtime.sh` agora usam Node `25` por padrão (`AURAXIS_NODE_MAJOR_REQUIRED`).
+- Hardening real aplicado em `ai_squad/main.py`:
+  - tentativas múltiplas por repo (`AURAXIS_REPO_MAX_ATTEMPTS`);
+  - backoff progressivo (`AURAXIS_RETRY_BACKOFF_SECONDS`);
+  - checkpoint de execução por repo/briefing em `tasks_status/.orchestration_state/`;
+  - execução de ações de recovery entre tentativas e journal de recuperação no resumo/report;
+  - emissão de `attempts_executed` por repo no relatório consolidado.
+- Correção do bootstrap web no recovery (`corepack`) para detecção robusta via `shutil.which`.
+- Node 25 alinhado em `auraxis-web` e `auraxis-app`:
+  - `.nvmrc`, `package.json` (`engines`), workflows e docs de quality gate;
+  - `auraxis-web/Dockerfile` atualizado para `node:25-bookworm-slim`.
+
+### O que foi validado
+- `python3 -m py_compile ai_squad/main.py` passou.
+- `bash -n scripts/ai-next-task.sh scripts/setup-local-runtime.sh` passou.
+- Execução diagnóstica:
+  - `AURAXIS_SKIP_LLM_PREFLIGHT=true AURAXIS_AUTO_PREP_REPOS=false ./scripts/ai-next-task.sh all "Execute a tarefa" plan`
+  - resultado: preflight de Node 25 passou; bloqueios observados vieram de `worktree dirty` (esperado).
+
+### Riscos pendentes
+- ainda exige disciplina de `worktree clean` nos repos de produto para execução autônoma full (`run`).
+- retries não substituem correção de regras de negócio/testes quando a implementação em si estiver incorreta.
+
+### Próximo passo sugerido
+1. Commitar e abrir PR dos ajustes em:
+  - `fix/platform-node25-agent-resilience` (platform)
+  - `chore/web-node25-standardization` (web)
+  - `chore/app-node25-standardization` (app)
+2. Após merge, rodar `make next-task` em `run` e monitorar `tasks_status/ORCH-*-report.md`.

@@ -39,14 +39,16 @@ References:
 
 import os
 import hashlib
+import json
 import re
+import shutil
 import subprocess
 import sys
 import threading
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
-from time import monotonic
+from time import monotonic, sleep
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 
 from crewai import Agent, Crew, Process, Task
@@ -439,6 +441,8 @@ _QUALITY_GUARD_ENV_KEYS: tuple[str, ...] = (
     "AURAXIS_INTEGRATION_REGISTER_AND_LOGIN",
     "AURAXIS_INTEGRATION_FULL_CRUD",
 )
+
+_ORCHESTRATION_STATE_DIR = PLATFORM_ROOT / "tasks_status" / ".orchestration_state"
 
 
 def _reset_quality_commit_guard_env(target_env: dict[str, str] | None = None) -> None:
@@ -1377,17 +1381,18 @@ def _write_multi_run_report(
         "",
         "## Per Repository",
         "",
-        "| Repo | Task | Status | Return Code | Duration (s) | Precommit | Quality Evidence | Branch Guardrail |",
-        "|:--|:--|:--|--:|--:|:--|:--|:--|",
+        "| Repo | Task | Status | Attempt(s) | Return Code | Duration (s) | Precommit | Quality Evidence | Branch Guardrail |",
+        "|:--|:--|:--|--:|--:|--:|:--|:--|:--|",
     ]
 
     for repo in targets:
         result = results.get(repo, {})
         lines.append(
-            "| {repo} | {task} | {status} | {rc} | {duration} | {pre} | {quality} | {branch} |".format(
+            "| {repo} | {task} | {status} | {attempts} | {rc} | {duration} | {pre} | {quality} | {branch} |".format(
                 repo=repo,
                 task=result.get("task_id", "UNSPECIFIED"),
                 status=result.get("status", "blocked"),
+                attempts=result.get("attempts_executed", 1),
                 rc=result.get("returncode", 1),
                 duration=result.get("duration_seconds", 0.0),
                 pre=result.get("precommit_status", "unknown"),
@@ -1405,6 +1410,7 @@ def _write_multi_run_report(
                 "",
                 f"- task_id: `{result.get('task_id', 'UNSPECIFIED')}`",
                 f"- status: `{result.get('status', 'blocked')}`",
+                f"- attempts_executed: `{result.get('attempts_executed', 1)}`",
                 f"- return_code: `{result.get('returncode', 1)}`",
                 f"- duration_seconds: `{result.get('duration_seconds', 0.0)}`",
                 f"- precommit_status: `{result.get('precommit_status', 'unknown')}`",
@@ -1423,6 +1429,11 @@ def _write_multi_run_report(
             lines.append("- possible_tech_debt:")
             for hint in tech_debt:
                 lines.append(f"  - {hint}")
+        recovery_logs = result.get("recovery_logs") or []
+        if isinstance(recovery_logs, list) and recovery_logs:
+            lines.append("- recovery_logs:")
+            for log_line in recovery_logs[-10:]:
+                lines.append(f"  - {log_line}")
 
         stdout_tail = str(result.get("stdout", "")).strip()
         stderr_tail = str(result.get("stderr", "")).strip()
@@ -1440,6 +1451,224 @@ def _write_multi_run_report(
     return report_path
 
 
+def _state_file_for(repo: str, briefing_hash: str) -> Path:
+    repo_state_dir = _ORCHESTRATION_STATE_DIR / briefing_hash
+    repo_state_dir.mkdir(parents=True, exist_ok=True)
+    return repo_state_dir / f"{repo}.json"
+
+
+def _load_repo_state(repo: str, briefing_hash: str) -> dict[str, object]:
+    state_path = _state_file_for(repo, briefing_hash)
+    if not state_path.exists():
+        return {}
+    try:
+        payload = json.loads(state_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    return payload
+
+
+def _save_repo_state(
+    repo: str,
+    briefing_hash: str,
+    payload: dict[str, object],
+) -> None:
+    state_path = _state_file_for(repo, briefing_hash)
+    state_path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _clear_repo_state(repo: str, briefing_hash: str) -> None:
+    state_path = _state_file_for(repo, briefing_hash)
+    if state_path.exists():
+        state_path.unlink(missing_ok=True)
+
+
+def _run_command(
+    command: list[str],
+    *,
+    cwd: Path,
+    timeout_seconds: int = 900,
+) -> tuple[int, str, str]:
+    result = subprocess.run(
+        command,
+        cwd=str(cwd),
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=timeout_seconds,
+    )
+    return result.returncode, result.stdout.strip(), result.stderr.strip()
+
+
+def _read_package_manager_spec(repo_root: Path) -> str:
+    package_json_path = repo_root / "package.json"
+    if not package_json_path.exists():
+        return "pnpm@10.30.1"
+    try:
+        payload = json.loads(package_json_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return "pnpm@10.30.1"
+    package_manager = str(payload.get("packageManager", "")).strip()
+    if package_manager.startswith("pnpm@"):
+        return package_manager
+    return "pnpm@10.30.1"
+
+
+def _recover_api_runtime(repo_root: Path) -> tuple[bool, str]:
+    logs: list[str] = []
+    venv_python = repo_root / ".venv" / "bin" / "python"
+    if not venv_python.exists():
+        rc, out, err = _run_command(["python3", "-m", "venv", ".venv"], cwd=repo_root)
+        logs.append(f"create_venv rc={rc}")
+        if out:
+            logs.append(out)
+        if err:
+            logs.append(err)
+        if rc != 0:
+            return False, " | ".join(logs)
+
+    python_exec = str(venv_python if venv_python.exists() else Path("python3"))
+    commands = [
+        [python_exec, "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"],
+        [python_exec, "-m", "pip", "install", "-r", "requirements.txt"],
+    ]
+    if (repo_root / "requirements-dev.txt").exists():
+        commands.append([python_exec, "-m", "pip", "install", "-r", "requirements-dev.txt"])
+
+    for command in commands:
+        rc, out, err = _run_command(command, cwd=repo_root, timeout_seconds=1800)
+        logs.append(f"{' '.join(command)} rc={rc}")
+        if out:
+            logs.append(out)
+        if err:
+            logs.append(err)
+        if rc != 0:
+            return False, " | ".join(logs)
+    return True, " | ".join(logs)
+
+
+def _recover_web_runtime(repo_root: Path) -> tuple[bool, str]:
+    logs: list[str] = []
+    if shutil.which("corepack"):
+        rc, out, err = _run_command(["corepack", "enable"], cwd=repo_root)
+        logs.append(f"corepack enable rc={rc}")
+        if out:
+            logs.append(out)
+        if err:
+            logs.append(err)
+        package_manager = _read_package_manager_spec(repo_root)
+        rc, out, err = _run_command(
+            ["corepack", "prepare", package_manager, "--activate"],
+            cwd=repo_root,
+        )
+        logs.append(f"corepack prepare {package_manager} rc={rc}")
+        if out:
+            logs.append(out)
+        if err:
+            logs.append(err)
+    else:
+        logs.append("corepack not available; using existing pnpm runtime")
+
+    install_commands = [
+        ["pnpm", "install", "--frozen-lockfile"],
+        ["pnpm", "install"],
+    ]
+    for command in install_commands:
+        rc, out, err = _run_command(command, cwd=repo_root, timeout_seconds=1800)
+        logs.append(f"{' '.join(command)} rc={rc}")
+        if out:
+            logs.append(out)
+        if err:
+            logs.append(err)
+        if rc == 0:
+            return True, " | ".join(logs)
+    return False, " | ".join(logs)
+
+
+def _recover_app_runtime(repo_root: Path) -> tuple[bool, str]:
+    logs: list[str] = []
+    install_commands = [
+        ["npm", "ci", "--ignore-scripts"],
+        ["npm", "install"],
+    ]
+    for command in install_commands:
+        rc, out, err = _run_command(command, cwd=repo_root, timeout_seconds=1800)
+        logs.append(f"{' '.join(command)} rc={rc}")
+        if out:
+            logs.append(out)
+        if err:
+            logs.append(err)
+        if rc == 0:
+            return True, " | ".join(logs)
+    return False, " | ".join(logs)
+
+
+def _derive_recovery_actions(repo: str, result: dict[str, object]) -> list[str]:
+    combined = (
+        f"{result.get('stdout', '')}\n{result.get('stderr', '')}".lower()
+    )
+    actions: list[str] = []
+
+    if repo == "auraxis-api":
+        if "no module named" in combined or "module not found" in combined:
+            actions.append("bootstrap_api_python_runtime")
+        if "setup/execution error" in combined and "integration" in combined:
+            actions.append("bootstrap_api_python_runtime")
+
+    if repo == "auraxis-web":
+        if (
+            "return_code: 127" in combined
+            or "npm error could not determine executable" in combined
+            or "pnpm: not found" in combined
+            or "unsupported engine" in combined
+        ):
+            actions.append("bootstrap_web_node_runtime")
+
+    if repo == "auraxis-app":
+        if (
+            "return_code: 127" in combined
+            or "npm error could not determine executable" in combined
+            or "sh: 1:" in combined
+            or "unsupported engine" in combined
+        ):
+            actions.append("bootstrap_app_node_runtime")
+
+    if "detached head" in combined and "branch/task drift detected at commit stage" in combined:
+        actions.append("retry_with_branch_attach")
+
+    return list(dict.fromkeys(actions))
+
+
+def _execute_recovery_actions(repo: str, actions: list[str]) -> tuple[bool, list[str]]:
+    repo_root = PLATFORM_ROOT / "repos" / repo
+    logs: list[str] = []
+    if not actions:
+        return False, logs
+
+    all_ok = True
+    for action in actions:
+        if action == "bootstrap_api_python_runtime":
+            ok, detail = _recover_api_runtime(repo_root)
+        elif action == "bootstrap_web_node_runtime":
+            ok, detail = _recover_web_runtime(repo_root)
+        elif action == "bootstrap_app_node_runtime":
+            ok, detail = _recover_app_runtime(repo_root)
+        elif action == "retry_with_branch_attach":
+            ok, detail = True, "branch attach delegated to git_operations commit fallback."
+        else:
+            ok, detail = False, f"unknown recovery action: {action}"
+
+        logs.append(f"{action}: {'ok' if ok else 'fail'} | {detail}")
+        if not ok:
+            all_ok = False
+    return all_ok, logs
+
+
 def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> tuple[int, Path]:
     """Run one squad execution per product repo in parallel with detailed telemetry."""
     targets = ("auraxis-api", "auraxis-web", "auraxis-app")
@@ -1455,6 +1684,20 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> tuple[in
     )
     auto_rollback_on_block = (
         os.getenv("AURAXIS_AUTO_ROLLBACK_ON_BLOCK", "true").strip().lower() == "true"
+    )
+    try:
+        max_repo_attempts = max(1, int(os.getenv("AURAXIS_REPO_MAX_ATTEMPTS", "3")))
+    except ValueError:
+        max_repo_attempts = 3
+    try:
+        retry_backoff_seconds = max(
+            1.0,
+            float(os.getenv("AURAXIS_RETRY_BACKOFF_SECONDS", "4")),
+        )
+    except ValueError:
+        retry_backoff_seconds = 4.0
+    resume_from_checkpoint = (
+        os.getenv("AURAXIS_RESUME_FROM_CHECKPOINT", "true").strip().lower() == "true"
     )
     policy_fingerprint = _compute_policy_fingerprint()
     results: dict[str, dict[str, object]] = {}
@@ -1592,123 +1835,288 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> tuple[in
         env["AURAXIS_EXECUTION_MODE"] = execution_mode
         env["AURAXIS_MULTI_CHILD"] = "1"
 
-        execution_worktree: Path | None = None
-        if use_worktree_execution:
-            execution_worktree, worktree_error = _create_execution_worktree(repo)
-            if execution_worktree is None:
-                reason = f"preflight blocked: {worktree_error}"
-                print(f"[{repo}][orchestrator] {reason}")
-                blocked_result = {
-                    "returncode": 1,
-                    "timed_out": False,
-                    "duration_seconds": 0.0,
-                    "stdout": "",
-                    "stderr": reason,
-                    "task_id": inferred_task_id,
-                    "status": "blocked",
-                    "commit_hashes": [],
-                    "precommit_status": "failed",
-                    "tech_debt_hints": [reason],
-                }
-                append_ledger_entry(
-                    {
-                        "repo": repo,
-                        "task_id": inferred_task_id,
-                        "briefing_hash": briefing_hash,
-                        "execution_mode": execution_mode,
-                        "status": "blocked",
+        recovery_journal: list[str] = []
+        start_attempt = 1
+        if resume_from_checkpoint and not force_rerun:
+            checkpoint = _load_repo_state(repo, briefing_hash)
+            if checkpoint:
+                checkpoint_task = str(checkpoint.get("task_id", "")).strip().upper()
+                checkpoint_attempt_raw = checkpoint.get("attempt", 0)
+                try:
+                    checkpoint_attempt = int(checkpoint_attempt_raw)
+                except (TypeError, ValueError):
+                    checkpoint_attempt = 0
+                checkpoint_status = str(checkpoint.get("status", "")).strip().lower()
+                if (
+                    checkpoint_status == "blocked"
+                    and checkpoint_task == inferred_task_id.upper()
+                    and 0 < checkpoint_attempt < max_repo_attempts
+                ):
+                    start_attempt = checkpoint_attempt + 1
+                    recovery_journal.append(
+                        "resume checkpoint detected: "
+                        f"last_blocked_attempt={checkpoint_attempt}, resuming_at={start_attempt}"
+                    )
+
+        attempt = start_attempt
+        last_result: dict[str, object] | None = None
+        while attempt <= max_repo_attempts:
+            execution_worktree: Path | None = None
+            checkpoint_payload = {
+                "repo": repo,
+                "task_id": inferred_task_id,
+                "briefing_hash": briefing_hash,
+                "status": "running",
+                "attempt": attempt,
+                "max_attempts": max_repo_attempts,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+            if recovery_journal:
+                checkpoint_payload["recovery_journal"] = recovery_journal[-20:]
+            _save_repo_state(
+                repo=repo,
+                briefing_hash=briefing_hash,
+                payload=checkpoint_payload,
+            )
+
+            if use_worktree_execution:
+                execution_worktree, worktree_error = _create_execution_worktree(repo)
+                if execution_worktree is None:
+                    reason = f"preflight blocked: {worktree_error}"
+                    print(
+                        f"[{repo}][orchestrator] attempt={attempt}/{max_repo_attempts} {reason}"
+                    )
+                    blocked_result = {
                         "returncode": 1,
                         "timed_out": False,
                         "duration_seconds": 0.0,
+                        "stdout": "",
+                        "stderr": reason,
+                        "task_id": inferred_task_id,
+                        "status": "blocked",
                         "commit_hashes": [],
                         "precommit_status": "failed",
-                        "skip_reason": reason,
-                    },
-                    repo=repo,
-                )
-                return blocked_result
-            env["AURAXIS_PROJECT_ROOT"] = str(execution_worktree)
-
-        try:
-            raw = _stream_subprocess(
-                repo=repo,
-                command=[sys.executable, script_path],
-                env=env,
-                timeout_seconds=child_timeout_seconds,
-            )
-        finally:
-            if execution_worktree is not None:
-                _remove_execution_worktree(repo, execution_worktree)
-        extracted = _extract_summary_from_output(
-            inferred_task_id,
-            raw["stdout"],
-            raw["stderr"],
-        )
-        status = "done"
-        if raw["timed_out"]:
-            status = "blocked"
-        elif raw["returncode"] != 0:
-            status = "blocked"
-        elif "status: blocked" in raw["stdout"].lower():
-            status = "blocked"
-        elif extracted.get("precommit_status") == "failed":
-            status = "blocked"
-        elif extracted.get("quality_gate_failed"):
-            status = "blocked"
-        elif extracted.get("tool_error_detected"):
-            status = "blocked"
-
-        result = {
-            **raw,
-            **extracted,
-            "status": status,
-        }
-        resolved_task_id = inferred_task_id.upper()
-        reported_task_id = str(result.get("task_id", "")).strip().upper()
-        if reported_task_id and reported_task_id != resolved_task_id:
-            result["status"] = "blocked"
-            drift_message = (
-                "task_id drift detected: "
-                f"resolved={resolved_task_id}, reported={reported_task_id}"
-            )
-            hints = list(result.get("tech_debt_hints", []))
-            hints.append(drift_message)
-            result["tech_debt_hints"] = hints[:5]
-            stderr = str(result.get("stderr", "")).strip()
-            if stderr:
-                result["stderr"] = f"{stderr}\n{drift_message}"
+                        "tech_debt_hints": [reason],
+                        "attempts_executed": attempt,
+                    }
+                    recovery_actions = _derive_recovery_actions(repo, blocked_result)
+                    recovery_ok, recovery_logs = _execute_recovery_actions(
+                        repo,
+                        recovery_actions,
+                    )
+                    if recovery_logs:
+                        recovery_journal.extend(recovery_logs)
+                        blocked_result["stderr"] = (
+                            f"{blocked_result['stderr']}\n" + "\n".join(recovery_logs)
+                        )
+                    blocked_result["recovery_actions"] = recovery_actions
+                    blocked_result["recovery_logs"] = recovery_logs
+                    _save_repo_state(
+                        repo=repo,
+                        briefing_hash=briefing_hash,
+                        payload={
+                            **checkpoint_payload,
+                            "status": "blocked",
+                            "last_error": reason,
+                            "recovery_actions": recovery_actions,
+                            "recovery_logs": recovery_logs,
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                        },
+                    )
+                    can_retry = attempt < max_repo_attempts
+                    if can_retry:
+                        wait_seconds = retry_backoff_seconds * attempt
+                        if not recovery_actions:
+                            recovery_journal.append("no_recovery_action_detected; retrying anyway")
+                        elif not recovery_ok:
+                            recovery_journal.append(
+                                "recovery_actions_failed; retrying with backoff anyway"
+                            )
+                        recovery_journal.append(
+                            f"retry_scheduled_after_worktree_failure={wait_seconds:.1f}s"
+                        )
+                        sleep(wait_seconds)
+                        attempt += 1
+                        continue
+                    last_result = blocked_result
+                    break
+                env["AURAXIS_PROJECT_ROOT"] = str(execution_worktree)
             else:
-                result["stderr"] = drift_message
-            result["task_id"] = resolved_task_id
+                env.pop("AURAXIS_PROJECT_ROOT", None)
 
-        if (
-            result["status"] == "blocked"
-            and execution_worktree is None
-            and auto_rollback_on_block
-        ):
-            _rollback_repo_worktree(repo)
+            try:
+                raw = _stream_subprocess(
+                    repo=repo,
+                    command=[sys.executable, script_path],
+                    env=env,
+                    timeout_seconds=child_timeout_seconds,
+                )
+            finally:
+                if execution_worktree is not None:
+                    _remove_execution_worktree(repo, execution_worktree)
+
+            extracted = _extract_summary_from_output(
+                inferred_task_id,
+                raw["stdout"],
+                raw["stderr"],
+            )
+            status = "done"
+            if raw["timed_out"]:
+                status = "blocked"
+            elif raw["returncode"] != 0:
+                status = "blocked"
+            elif "status: blocked" in raw["stdout"].lower():
+                status = "blocked"
+            elif extracted.get("precommit_status") == "failed":
+                status = "blocked"
+            elif extracted.get("quality_gate_failed"):
+                status = "blocked"
+            elif extracted.get("tool_error_detected"):
+                status = "blocked"
+
+            result = {
+                **raw,
+                **extracted,
+                "status": status,
+                "attempts_executed": attempt,
+            }
+            resolved_task_id = inferred_task_id.upper()
+            reported_task_id = str(result.get("task_id", "")).strip().upper()
+            if reported_task_id and reported_task_id != resolved_task_id:
+                result["status"] = "blocked"
+                drift_message = (
+                    "task_id drift detected: "
+                    f"resolved={resolved_task_id}, reported={reported_task_id}"
+                )
+                hints = list(result.get("tech_debt_hints", []))
+                hints.append(drift_message)
+                result["tech_debt_hints"] = hints[:5]
+                stderr = str(result.get("stderr", "")).strip()
+                if stderr:
+                    result["stderr"] = f"{stderr}\n{drift_message}"
+                else:
+                    result["stderr"] = drift_message
+                result["task_id"] = resolved_task_id
+
+            if result["status"] == "done":
+                if recovery_journal:
+                    result["recovery_logs"] = recovery_journal[-20:]
+                _clear_repo_state(repo, briefing_hash)
+                last_result = result
+                break
+
+            recovery_actions = _derive_recovery_actions(repo, result)
+            recovery_ok, recovery_logs = _execute_recovery_actions(
+                repo,
+                recovery_actions,
+            )
+            if recovery_logs:
+                recovery_journal.extend(recovery_logs)
+                stderr = str(result.get("stderr", "")).strip()
+                if stderr:
+                    result["stderr"] = f"{stderr}\n" + "\n".join(recovery_logs)
+                else:
+                    result["stderr"] = "\n".join(recovery_logs)
+            result["recovery_actions"] = recovery_actions
+            result["recovery_logs"] = recovery_logs
+
+            _save_repo_state(
+                repo=repo,
+                briefing_hash=briefing_hash,
+                payload={
+                    **checkpoint_payload,
+                    "status": "blocked",
+                    "last_error": str(result.get("stderr", "")).strip()[:2000],
+                    "recovery_actions": recovery_actions,
+                    "recovery_logs": recovery_logs,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                },
+            )
+
+            if (
+                result["status"] == "blocked"
+                and execution_worktree is None
+                and auto_rollback_on_block
+            ):
+                _rollback_repo_worktree(repo)
+                recovery_journal.append("auto_rollback_repo_worktree=applied")
+
+            can_retry = attempt < max_repo_attempts
+            if can_retry:
+                wait_seconds = retry_backoff_seconds * attempt
+                if not recovery_actions:
+                    recovery_journal.append("no_recovery_action_detected; retrying anyway")
+                elif not recovery_ok:
+                    recovery_journal.append(
+                        "recovery_actions_failed; retrying with backoff anyway"
+                    )
+                recovery_journal.append(
+                    f"retry_scheduled={attempt + 1}/{max_repo_attempts} after {wait_seconds:.1f}s"
+                )
+                sleep(wait_seconds)
+                attempt += 1
+                continue
+
+            if recovery_journal:
+                result["recovery_logs"] = recovery_journal[-20:]
+            last_result = result
+            break
+
+        if last_result is None:
+            last_result = {
+                "returncode": 1,
+                "timed_out": False,
+                "duration_seconds": 0.0,
+                "stdout": "",
+                "stderr": "orchestrator internal error: empty run result",
+                "task_id": inferred_task_id,
+                "status": "blocked",
+                "commit_hashes": [],
+                "precommit_status": "failed",
+                "tech_debt_hints": ["orchestrator produced no result"],
+                "attempts_executed": attempt,
+            }
+
+        if last_result.get("status") == "done":
+            _clear_repo_state(repo, briefing_hash)
+        else:
+            _save_repo_state(
+                repo=repo,
+                briefing_hash=briefing_hash,
+                payload={
+                    "repo": repo,
+                    "task_id": inferred_task_id,
+                    "briefing_hash": briefing_hash,
+                    "status": "blocked",
+                    "attempt": int(last_result.get("attempts_executed", attempt)),
+                    "max_attempts": max_repo_attempts,
+                    "last_error": str(last_result.get("stderr", "")).strip()[:2000],
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "recovery_logs": recovery_journal[-20:],
+                },
+            )
 
         append_ledger_entry(
             {
                 "repo": repo,
-                "task_id": result["task_id"],
+                "task_id": last_result["task_id"],
                 "briefing_hash": briefing_hash,
                 "execution_mode": execution_mode,
-                "status": result["status"],
-                "returncode": result["returncode"],
-                "timed_out": result["timed_out"],
-                "duration_seconds": result["duration_seconds"],
-                "commit_hashes": result["commit_hashes"],
-                "precommit_status": result["precommit_status"],
-                "quality_gate_evidence": result.get("quality_gate_evidence", "missing"),
-                "branch_guardrail_evidence": result.get(
+                "status": last_result["status"],
+                "returncode": last_result["returncode"],
+                "timed_out": last_result["timed_out"],
+                "duration_seconds": last_result["duration_seconds"],
+                "commit_hashes": last_result["commit_hashes"],
+                "precommit_status": last_result["precommit_status"],
+                "quality_gate_evidence": last_result.get("quality_gate_evidence", "missing"),
+                "branch_guardrail_evidence": last_result.get(
                     "branch_guardrail_evidence",
                     "missing",
                 ),
             },
             repo=repo,
         )
-        return result
+        return last_result
 
     with ThreadPoolExecutor(max_workers=3) as executor:
         future_map = {executor.submit(_run_target, repo): repo for repo in targets}
@@ -1790,6 +2198,7 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> tuple[in
             overall_rc = 1
         print(f"[{repo}] status={result['status']} return_code={result['returncode']}")
         print(f"[{repo}] task_id={result['task_id']} duration={result['duration_seconds']}s")
+        print(f"[{repo}] attempts_executed={result.get('attempts_executed', 1)}")
         print(f"[{repo}] precommit_local={result['precommit_status']}")
         print(
             f"[{repo}] quality_gate_evidence={result.get('quality_gate_evidence', 'missing')}"
@@ -1814,6 +2223,10 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> tuple[in
             print(f"[{repo}] possible_tech_debt:")
             for hint in result["tech_debt_hints"]:
                 print(f"  - {hint}")
+        if result.get("recovery_logs"):
+            print(f"[{repo}] recovery_logs:")
+            for line in list(result["recovery_logs"])[-10:]:
+                print(f"  - {line}")
     print("=== MASTER CONSOLIDATED SUMMARY ===")
     print(f"briefing_hash: {briefing_hash}")
     print(f"policy_fingerprint: {policy_fingerprint}")

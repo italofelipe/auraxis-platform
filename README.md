@@ -106,7 +106,7 @@ Setup inicial do `ai_squad`:
 make squad-setup
 ```
 
-Setup one-shot do runtime local (Node 22 + venv + dependências de api/web/app):
+Setup one-shot do runtime local (Node 25 + venv + dependências de api/web/app):
 
 ```bash
 make runtime-setup

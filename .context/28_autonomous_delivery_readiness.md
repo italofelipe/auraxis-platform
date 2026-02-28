@@ -76,6 +76,6 @@ Pendência recomendada:
 ## 5) Próximo bloco (pré-feature)
 
 1. Concluir PLT1/PLT3/PLT4 runtime para remover os últimos bloqueios de autonomia ampla.
-2. Manter Node local = CI (`22.x`) em app/web para reduzir drift local-vs-pipeline.
+2. Manter Node local = CI (`25.x`) em app/web para reduzir drift local-vs-pipeline.
 3. Rodar bateria de estabilidade (`make next-task`) por múltiplos ciclos e medir taxa de bloqueio.
 4. Com estabilidade comprovada, iniciar backlog de negócio: `B10` e `B11` (API), seguido de fluxos consumidores em web/app.

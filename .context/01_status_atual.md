@@ -46,7 +46,7 @@ Data: 2026-02-27
   - `.gitignore` atualizado em web/app para bloquear artefato `audit.json`;
   - `audit.json` removido do versionamento em `auraxis-web`.
 - Documentacao atualizada:
-  - `.context/quality_gates.md` de web/app agora exige `nvm use 22` para paridade com CI e descreve o fluxo do novo audit gate.
+  - `.context/quality_gates.md` de web/app agora exige `nvm use 25` para paridade com CI e descreve o fluxo do novo audit gate.
 
 ## Atualizacao PLT4.3 + Guardrails v2 + API local resilience (2026-02-28)
 - `auraxis-platform`:
@@ -860,3 +860,39 @@ Principais gaps: Jest setup real (APP2), Vitest config (WEB2), SonarCloud (APP4/
   - ausência de drift para `UNSPECIFIED`;
   - ausência de lixo residual no clone base após bloqueios;
   - convergência de status final com resultado real dos gates.
+
+---
+
+## 2026-02-28 — Baseline Node 25 + resiliência operacional (P0/P1/P2 efetivo)
+
+### O que foi feito
+
+- Padronização de runtime JS/TS para Node `25.x`:
+  - `scripts/ai-next-task.sh` e `scripts/setup-local-runtime.sh` com default `AURAXIS_NODE_MAJOR_REQUIRED=25`;
+  - `auraxis-web` e `auraxis-app` alinhados com `engines.node=25.x`, `.nvmrc=25`, workflows CI/deploy e docs de quality gates;
+  - `auraxis-web` com `Dockerfile` base `node:25-bookworm-slim`.
+- `ai_squad/main.py` recebeu hardening completo de tentativas por repo:
+  - loop multi-attempt (`AURAXIS_REPO_MAX_ATTEMPTS`);
+  - backoff progressivo (`AURAXIS_RETRY_BACKOFF_SECONDS`);
+  - checkpoint por repo/briefing em `tasks_status/.orchestration_state/`;
+  - recuperação automática por contexto de falha (bootstrap runtime API/Web/App);
+  - resumo final e relatório com evidência de `attempts_executed` e `recovery_logs`.
+- Correção de bug no recovery web:
+  - troca de verificação inválida de `corepack` por `shutil.which("corepack")`.
+
+### O que foi validado
+
+- `python3 -m py_compile ai_squad/main.py` passou.
+- `bash -n scripts/ai-next-task.sh scripts/setup-local-runtime.sh` passou.
+- Execução diagnóstica de `ai-next-task` confirmou preflight em Node 25 sem tentativa de downgrade para 22.
+
+### Riscos pendentes
+
+- validação completa de qualidade por repo continua dependente de `worktree clean` antes do run autônomo;
+- retries não corrigem falhas semânticas de implementação (apenas aumentam robustez operacional e auto-reparo de ambiente).
+
+### Próximo passo sugerido
+
+1. Comitar e subir os ajustes de Node 25 em `auraxis-web` e `auraxis-app`.
+2. Rodar `make next-task` em `run` após limpar worktree dos repos-alvo.
+3. Monitorar `tasks_status/ORCH-*-report.md` para taxa de recuperação por tentativa.

@@ -943,6 +943,51 @@ evitáveis por inconsistência de estilo/formatação.
 
 ---
 
+### DEC-052 — Baseline único de Node.js para stacks JS/TS: `25.x`
+
+**Decisão:** padronizar todo runtime JS/TS do ecossistema Auraxis em Node `25.x`
+(web, app e scripts de orquestração de platform).
+
+**Racional:** eliminar drift operacional causado por preflight rígido em Node 22 enquanto
+ambiente local já opera em Node 25, reduzindo bloqueio desnecessário de `make next-task`.
+
+**Alternativas rejeitadas:**
+- manter Node 22 e exigir downgrade local contínuo;
+- remover preflight de versão e aceitar qualquer major (aumenta variância e risco de CI drift).
+
+**Dono:** platform/runtime.
+**Impacto:**
+- `AURAXIS_NODE_MAJOR_REQUIRED` default passa a `25`;
+- `.nvmrc`, `engines`, workflows e Docker web alinhados em `25`;
+- queda de falhas de preflight por mismatch local.
+
+---
+
+### DEC-053 — Retry com checkpoint e recovery automático no orquestrador multi-repo
+
+**Decisão:** tornar `run_multi_repo_orchestration` resiliente com:
+- tentativas múltiplas por repo;
+- checkpoint por repo/briefing;
+- backoff progressivo;
+- recovery automático por assinatura de falha de ambiente;
+- telemetria explícita de tentativas e recovery no relatório final.
+
+**Racional:** reduzir abortos totais por falhas transitórias (runtime ausente, ambiente incompleto),
+melhorar retomada e observabilidade sem exigir intervenção manual imediata.
+
+**Alternativas rejeitadas:**
+- one-shot fail-fast sem retry/checkpoint;
+- retry cego sem recovery contextual;
+- recuperação manual exclusiva pelo operador.
+
+**Dono:** platform/ai-squad.
+**Impacto:**
+- execução autônoma mais robusta em ciclos multi-repo;
+- melhor diagnóstico pós-run via `tasks_status/ORCH-*-report.md`;
+- menor probabilidade de bloqueio total por falha pontual de setup.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |
