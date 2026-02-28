@@ -1,12 +1,20 @@
 # Próximas Prioridades
 
-Atualizado: 2026-02-25
+Atualizado: 2026-02-28
+
+## Sprint A — Autonomia operacional (P0)
+
+Status:
+- ✅ Auto-prepare de repositórios antes do run (`scripts/prepare-repo-for-agent-run.sh` + integração no `ai-next-task.sh`).
+- ✅ Bloqueio hard de `task_id drift` no orquestrador multi-repo.
+- ✅ Health check ampliado para detectar `detached HEAD` e mismatch de Node local vs CI.
+- ✅ Runtime local Node `22.x` padronizado em app/web (paridade com CI).
 
 ## Estado dos blocos de plataforma
 
 1. `PLT2` (stores app + PWA): **45% — DEFERRED**
-2. `PLT3` (versionamento automático multi-repo): **65%**
-3. `PLT4` (feature toggles OSS): **55%**
+2. `PLT3` (versionamento automático multi-repo): **75%**
+3. `PLT4` (feature toggles OSS): **88%**
 4. `PLT5` (deploy mínimo frontends): **60% — DEFERRED (publicação externa)**
 
 ## Entregas concluídas sem ação manual
@@ -17,16 +25,19 @@ Atualizado: 2026-02-25
 
 ## Próximas entregas (sem depender de ação manual)
 
-1. **PLT4.2** — Integração runtime de flags
-- Conectar runtime web/app/api ao provider OSS com fallback local.
+1. **PLT4.2** — Integração runtime de flags ✅
+- Runtime `unleash` + fallback local integrado em web/app/api.
 
-2. **PLT3.1** — Fechar policy de release cut
-- Consolidar política operacional de release (cadência, freeze, hotfix) e checklist de aprovação de PR de release.
+2. **PLT4.3** — Bootstrap central de provider por ambiente
+- Centralizar configuração operacional de provider (env matrix + rollout playbook) para reduzir setup manual por repo.
 
-3. **BLK-BACKEND-FEATURES** — Fechar bloco funcional backend atual
+3. **PLT3.1** — Fechar policy de release cut ✅
+- Política consolidada em `.context/33_release_cut_policy.md` (cadência, freeze, hotfix e checklist de aprovação).
+
+4. **BLK-BACKEND-FEATURES** — Fechar bloco funcional backend atual
 - Concluir backlog funcional ativo do backend antes de retomar publicação externa.
 
-4. **API-local-resilience** — Fechar fricção de ambiente local
+5. **API-local-resilience** — Fechar fricção de ambiente local
 - Normalizar entrypoints Python da `.venv` (shebang legado) para evitar execução inconsistente em máquinas novas.
 
 ## Pendências manuais (DEFERRED para pós-bloco backend)

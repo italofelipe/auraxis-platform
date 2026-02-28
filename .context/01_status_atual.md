@@ -2,6 +2,37 @@
 
 Data: 2026-02-27
 
+## Atualizacao PLT4.2 (2026-02-28 — provider OSS runtime)
+- `auraxis-api`:
+  - `app/utils/feature_flags.py` evoluído para resolver flags via provider `unleash` com cache curto e fallback local.
+  - testes de runtime atualizados em `tests/test_feature_flags_runtime.py` cobrindo snapshot remoto e fallback por falha.
+- `auraxis-web`:
+  - `app/shared/feature-flags/service.ts` evoluído com provider `unleash` (cache + fallback local).
+  - `app/composables/useTools.ts` passou a resolver decisão remota para `web.tools.salary-raise-calculator`.
+- `auraxis-app`:
+  - `shared/feature-flags/service.ts` evoluído com provider `unleash` (cache + fallback local).
+  - `lib/tools-api.ts` e `hooks/queries/use-tools-query.ts` passaram a consumir decisão remota para `app.tools.salary-raise-calculator`.
+
+## Atualizacao Release/CI (2026-02-27 — PLT3.1 + sonar local policy)
+- `PLT3.1` consolidado com policy operacional única de release cut em `.context/33_release_cut_policy.md`:
+  - cadência, freeze, hotfix, gates mínimos e checklist de aprovação de PR de release.
+- `auraxis-api` com ajuste de DX no gate local Sonar:
+  - `scripts/sonar_local_check.sh` agora roda em `advisory` por padrão no loop local;
+  - continua `enforce` em CI (`CI=true`) ou quando forçado com `AURAXIS_ENFORCE_LOCAL_SONAR=true`;
+  - objetivo: eliminar bloqueio de push local por quality gate remoto sem enfraquecer o gate oficial do CI.
+
+## Atualizacao Sprint A (2026-02-27 — autonomia operacional P0)
+- `scripts/ai-next-task.sh` agora executa preparação automática de repositório antes da orquestração (`AURAXIS_AUTO_PREP_REPOS=true` por padrão).
+- Novo script `scripts/prepare-repo-for-agent-run.sh`:
+  - faz `fetch --prune`;
+  - remove estado `detached HEAD` fazendo checkout da branch default remota;
+  - sincroniza `main/master` com `pull --rebase` quando aplicável.
+- `ai_squad/main.py` endurecido com bloqueio explícito de drift:
+  - se o run reportar `task_id` diferente do `task_id` resolvido no preflight, o status final é `blocked` com motivo explícito.
+- `scripts/check-health.sh` ampliado:
+  - alerta para `detached HEAD` por repositório;
+  - alerta de mismatch de major de Node local vs CI (`NODE_VERSION` em workflow).
+
 ## Atualizacao Contratos + PR Governance + Lead Time (2026-02-27)
 - `auraxis-web`:
   - adicionados `contracts:sync` e `contracts:check` com geração tipada OpenAPI em

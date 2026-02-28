@@ -2,6 +2,73 @@
 
 Data: 2026-02-25 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-28 (PLT4.2 runtime unleash em app/web/api)
+
+### O que foi feito
+
+- `auraxis-api`:
+  - provider runtime `unleash` integrado em `app/utils/feature_flags.py` com cache curto e fallback local;
+  - testes de runtime atualizados (`tests/test_feature_flags_runtime.py`);
+  - runbook e TASKS atualizados (`docs/PLT4-feature-flags-hygiene.md`, `TASKS.md`).
+- `auraxis-web`:
+  - provider runtime `unleash` integrado em `app/shared/feature-flags/service.ts`;
+  - `useTools` passou a aplicar decisão remota no flag `web.tools.salary-raise-calculator`;
+  - runbook e tasks atualizados.
+- `auraxis-app`:
+  - provider runtime `unleash` integrado em `shared/feature-flags/service.ts`;
+  - `tools-api`/`use-tools-query` passaram a aplicar decisão remota no flag `app.tools.salary-raise-calculator`;
+  - runbook e tasks atualizados.
+
+### O que foi validado
+
+- web: `pnpm quality-check` ✅
+- app: `npm run quality-check` ✅ (cobertura > 85%)
+- api: `flake8 + pytest tests/test_feature_flags_runtime.py + mypy app/utils/feature_flags.py` ✅
+
+### Riscos pendentes
+
+- falta consolidar bootstrap central único de provider por ambiente (PLT4.3) para reduzir setup manual de env vars por repositório.
+- remoção de código morto por flags ainda depende de rotina operacional dedicada pós-expiração.
+
+### Próximo passo sugerido
+
+1. Mergear as PRs `chore/plt4-oss-provider-integration` (api/web/app).
+2. Implementar PLT4.3 (matriz central de configuração + playbook de rollout por ambiente).
+3. Retomar backlog funcional backend (`B10`, `B11`, `B12`) com frontend já apto a consumir rollout remoto.
+
+## Atualização rápida — 2026-02-27 (PLT3.1 + Sonar local advisory na API)
+
+### O que foi feito
+
+- `auraxis-api`:
+  - `scripts/sonar_local_check.sh` alterado para modo `advisory` local por padrão;
+  - modo `enforce` mantido em CI (`CI=true`) e disponível via override local (`AURAXIS_ENFORCE_LOCAL_SONAR=true`);
+  - documentação atualizada em `docs/CI_CD.md`;
+  - rastreabilidade registrada em `TASKS.md`.
+- `auraxis-platform`:
+  - policy de release cut consolidada em `.context/33_release_cut_policy.md`;
+  - índice/contexto/backlog atualizados (`06_context_index.md`, `01_status_atual.md`, `02_backlog_next.md`);
+  - decision log atualizado com DEC-044 (release cut policy) e DEC-045 (sonar advisory local).
+
+### O que foi validado
+
+- `auraxis-api`:
+  - `bash -n scripts/sonar_local_check.sh` ✅
+  - execução local `SONAR_LOCAL_MODE=advisory` com variáveis ausentes retorna sucesso (não bloqueante) ✅
+  - execução local `SONAR_LOCAL_MODE=enforce` com variáveis ausentes falha (bloqueante) ✅
+  - `pre-commit run sonar-local-check --all-files` ✅
+
+### Riscos pendentes
+
+- em modo local `advisory`, parte das falhas Sonar só será bloqueada no CI (comportamento intencional).
+- ainda não foi integrado provider OSS remoto de feature flags (PLT4 fase final).
+
+### Próximo passo sugerido
+
+1. Mergear PR `chore/api-local-sonar-gate-policy`.
+2. Iniciar PLT4 fase final: integração Unleash/OpenFeature por ambiente (app/web/api) com bootstrap padronizado.
+3. Executar `make next-task` em ciclo completo para medir redução real de bloqueios.
+
 ## Atualização rápida — 2026-02-27 (OpenAPI contracts + PR checklist + lead time metrics)
 
 ### O que foi feito

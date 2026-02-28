@@ -1,5 +1,8 @@
 # Release Governance
 
+> Política operacional completa de release cut (cadência, freeze, hotfix, checklist):
+> `33_release_cut_policy.md`
+
 ## Estratégia de ambientes
 - DEV: deploy automático após merge (com smoke).
 - PROD: pipeline preparado automaticamente após DEV, com aprovação manual.

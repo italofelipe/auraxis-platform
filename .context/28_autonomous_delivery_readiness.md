@@ -1,6 +1,6 @@
 # Autonomous Delivery Readiness (API + App + Web)
 
-Data: 2026-02-24
+Data: 2026-02-27
 
 Objetivo: garantir base estável de governança, segurança e instrumentação antes de iniciar blocos de feature com agentes autônomos.
 
@@ -10,7 +10,7 @@ Objetivo: garantir base estável de governança, segurança e instrumentação a
 
 Status:
 - ✅ Branch protection ativo em `main` para `auraxis-api`, `auraxis-app`, `auraxis-web`
-- ✅ Required checks padronizados com `CI Passed` + dependency check por repo
+- ✅ Required checks padronizados por gates reais de cada repo (sem gate sintético `CI Passed`)
 - ✅ Modo solo maintainer aplicado (sem aprovador obrigatório de review)
 - ✅ Force-push/delete bloqueados
 - ✅ PR obrigatório com conversation resolution
@@ -58,15 +58,18 @@ Status:
 - ✅ `WEB9` concluído: Dockerfile + docker-compose + runbook + gate de Docker build no CI
 - ✅ `APP2` e `WEB2` concluídos: clientes HTTP com healthcheck e testes
 - ✅ Templates SDD locais adicionados em `auraxis-app` e `auraxis-web`
+- ✅ Guardrail anti-drift de execução: bloqueio de `task_id` divergente no fim do run
+- ✅ Auto-prepare de repositório antes de run (fetch, saída de detached HEAD, sync de branch base)
 
 Pendência recomendada:
 - [ ] Eliminar branches remotos legados `codex/*` ainda existentes após migração de PRs ativos.
+- [ ] Padronizar runtime local Node para major 22 (paridade CI em app/web).
 
 ---
 
 ## 5) Próximo bloco (pré-feature)
 
-1. Confirmar pipelines verdes em `main` nos 3 repos após hardening final.
-2. Aplicar branch protection as-code atualizado (`solo maintainer`) com `scripts/apply-branch-protection.sh`.
-3. Iniciar backlog de negócio: `B10` e `B11` (API), seguido de fluxos consumidores em web/app.
-4. Ativar progressivamente E2E/Lighthouse no web via flags de repo após estabilização do SSR.
+1. Concluir PLT1/PLT3/PLT4 runtime para remover os últimos bloqueios de autonomia ampla.
+2. Padronizar Node local = CI (`22.x`) em app/web para reduzir drift local-vs-pipeline.
+3. Rodar bateria de estabilidade (`make next-task`) por múltiplos ciclos e medir taxa de bloqueio.
+4. Com estabilidade comprovada, iniciar backlog de negócio: `B10` e `B11` (API), seguido de fluxos consumidores em web/app.
