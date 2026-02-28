@@ -16,7 +16,7 @@ FLAG_BOOTSTRAP_PROVIDER="${AURAXIS_FEATURE_FLAGS_PROVIDER:-}"
 SKIP_LLM_PREFLIGHT="${AURAXIS_SKIP_LLM_PREFLIGHT:-false}"
 SKIP_NODE_PREFLIGHT="${AURAXIS_SKIP_NODE_PREFLIGHT:-false}"
 AUTO_USE_NVM="${AURAXIS_AUTO_USE_NVM:-true}"
-NODE_MAJOR_REQUIRED="${AURAXIS_NODE_MAJOR_REQUIRED:-22}"
+NODE_MAJOR_REQUIRED="${AURAXIS_NODE_MAJOR_REQUIRED:-25}"
 ENV_FILES=("${SQUAD_DIR}/.env" "${PLATFORM_ROOT}/.env")
 
 if [[ ! -d "${SQUAD_DIR}" ]]; then
@@ -132,14 +132,14 @@ if [[ "${AUTO_PREP}" == "true" ]]; then
   "${PREP_SCRIPT}" "${TARGET_REPO}"
 fi
 
-requires_node_22="false"
+requires_node_runtime="false"
 case "${TARGET_REPO}" in
   all|auraxis-all|auraxis-web|auraxis-app)
-    requires_node_22="true"
+    requires_node_runtime="true"
     ;;
 esac
 
-if [[ "${requires_node_22}" == "true" && "${SKIP_NODE_PREFLIGHT}" != "true" ]]; then
+if [[ "${requires_node_runtime}" == "true" && "${SKIP_NODE_PREFLIGHT}" != "true" ]]; then
   if ! command -v node >/dev/null 2>&1; then
     if [[ "${AUTO_USE_NVM}" == "true" ]] && source_nvm; then
       nvm install "${NODE_MAJOR_REQUIRED}" >/dev/null
