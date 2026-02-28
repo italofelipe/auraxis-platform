@@ -2,6 +2,17 @@
 
 Data: 2026-02-27
 
+## Atualizacao Taskboard Hygiene (2026-02-28)
+- Taskboards normalizados para execução autônoma com **apenas 1 task ativa por repo**:
+  - `auraxis-api`: `B11` em `In Progress` (demais itens estratégicos `PLT/J/X` reclassificados para `Todo` sem perder rastreabilidade de progresso).
+  - `auraxis-web`: `WEB3` em `In Progress` (itens concluídos reclassificados para `Done` e demais para `Todo`).
+  - `auraxis-app`: `APP3` em `In Progress` (itens concluídos reclassificados para `Done` e demais para `Todo`).
+- Regra operacional explícita adicionada nos três taskboards: manter somente 1 `In Progress` por vez para evitar drift do orquestrador.
+- Branches de higiene publicadas:
+  - `auraxis-api`: `chore/api-taskboard-hygiene` (`8a0f8d1`)
+  - `auraxis-web`: `chore/web-taskboard-hygiene` (`1cfb44d`)
+  - `auraxis-app`: `chore/app-taskboard-hygiene` (`8907427`)
+
 ## Atualizacao Autonomy Hardening (2026-02-28)
 - `auraxis-web` e `auraxis-app`:
   - `dependency-review.yml` migrado para modo estrito (sem fallback de compatibilidade);
