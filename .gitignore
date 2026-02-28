@@ -27,6 +27,7 @@ tasks_status/
 
 # ai_squad local runtime artifacts
 ai_squad/.env
+!ai_squad/.env.example
 ai_squad/.venv/
 ai_squad/__pycache__/
 ai_squad/logs/tool_audit.log

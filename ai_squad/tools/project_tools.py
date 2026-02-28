@@ -1078,24 +1078,106 @@ class RunRepoQualityGatesTool(BaseTool):
                 project_python = "python3" if shutil.which("python3") else "python"
             command = [project_python, "-m", "pytest", "--tb=short", "-q"]
 
+        auto_repair_enabled = (
+            os.getenv("AURAXIS_AUTO_QUALITY_REPAIR", "true").strip().lower() == "true"
+        )
+        retry_max_raw = os.getenv("AURAXIS_QUALITY_RETRY_MAX", "3").strip()
+        try:
+            retry_max_value = int(retry_max_raw)
+        except ValueError:
+            retry_max_value = 3
+        retry_max = max(
+            1,
+            retry_max_value,
+        )
+        attempt = 1
         result = safe_subprocess(
             command,
             timeout=600,
             cwd=str(PROJECT_ROOT),
         )
+        attempts_log = [
+            (
+                attempt,
+                command,
+                result,
+                "initial-quality-check",
+            )
+        ]
+
+        while (
+            repo_name in ("auraxis-web", "auraxis-app")
+            and auto_repair_enabled
+            and result["returncode"] != 0
+            and attempt < retry_max
+        ):
+            attempt += 1
+            repair_commands: list[list[str]] = []
+            if repo_name == "auraxis-web":
+                repair_commands = [
+                    ["pnpm", "lint", "--fix"],
+                    ["pnpm", "exec", "prettier", "--write", "app"],
+                ]
+            elif repo_name == "auraxis-app":
+                repair_commands = [
+                    ["npm", "run", "lint", "--", "--fix"],
+                ]
+
+            for repair_command in repair_commands:
+                repair_result = safe_subprocess(
+                    repair_command,
+                    timeout=600,
+                    cwd=str(PROJECT_ROOT),
+                )
+                attempts_log.append(
+                    (
+                        attempt,
+                        repair_command,
+                        repair_result,
+                        "auto-repair",
+                    )
+                )
+
+            result = safe_subprocess(
+                command,
+                timeout=600,
+                cwd=str(PROJECT_ROOT),
+            )
+            attempts_log.append(
+                (
+                    attempt,
+                    command,
+                    result,
+                    "post-repair-quality-check",
+                )
+            )
+
         if repo_name in ("auraxis-web", "auraxis-app"):
             os.environ["AURAXIS_LAST_FRONTEND_QUALITY_STATUS"] = (
                 "pass" if result["returncode"] == 0 else "fail"
             )
-        output = (
-            f"COMMAND: {' '.join(command)}\n"
-            f"RETURN_CODE: {result['returncode']}\n"
-            f"STDOUT:\n{result['stdout']}\n"
-            f"STDERR:\n{result['stderr']}"
-        )
+
+        chunks: list[str] = []
+        for index, (attempt_no, executed_command, command_result, phase) in enumerate(
+            attempts_log,
+            start=1,
+        ):
+            chunks.append(
+                f"ATTEMPT_LOG_{index}: phase={phase}, attempt={attempt_no}\n"
+                f"COMMAND: {' '.join(executed_command)}\n"
+                f"RETURN_CODE: {command_result['returncode']}\n"
+                f"STDOUT:\n{command_result['stdout']}\n"
+                f"STDERR:\n{command_result['stderr']}"
+            )
+        output = "\n\n".join(chunks)
         audit_log(
             "run_repo_quality_gates",
-            {"repo": repo_name, "command": command},
+            {
+                "repo": repo_name,
+                "command": command,
+                "attempts": len(attempts_log),
+                "auto_repair": auto_repair_enabled,
+            },
             output[:200],
             status="OK" if result["returncode"] == 0 else "ERROR",
         )
@@ -1262,6 +1344,175 @@ def _update_checklist_task_line(line: str, task_id: str, status: str) -> tuple[s
     return f"{match.group(1)}{marker}{match.group(3)}", True
 
 
+def _file_contains(path: Path, pattern: str) -> bool:
+    if not path.exists() or not path.is_file():
+        return False
+    try:
+        return re.search(pattern, path.read_text(encoding="utf-8"), re.MULTILINE) is not None
+    except UnicodeDecodeError:
+        return False
+
+
+def _validate_done_task_evidence(task_id: str) -> str | None:
+    normalized_task_id = task_id.strip().upper()
+
+    if TARGET_REPO_NAME == "auraxis-web" and normalized_task_id == "WEB3":
+        required_files = (
+            PROJECT_ROOT / "app/layouts/default.vue",
+            PROJECT_ROOT / "app/pages/login.vue",
+            PROJECT_ROOT / "app/middleware/authenticated.ts",
+            PROJECT_ROOT / "app/middleware/guest-only.ts",
+            PROJECT_ROOT / "app/composables/useAuth/index.ts",
+        )
+        missing_files = [
+            str(path.relative_to(PROJECT_ROOT))
+            for path in required_files
+            if not path.exists()
+        ]
+        if missing_files:
+            return (
+                "BLOCKED: WEB3 cannot be marked Done. Missing required files: "
+                + ", ".join(missing_files)
+            )
+
+        if _file_contains(PROJECT_ROOT / "app/pages/login.vue", r"<\s*(input|button|label)\b"):
+            return (
+                "BLOCKED: WEB3 cannot be marked Done. "
+                "Raw HTML controls still present in app/pages/login.vue."
+            )
+
+        server_auth_dir = PROJECT_ROOT / "app/server/api/auth"
+        if not server_auth_dir.exists():
+            return (
+                "BLOCKED: WEB3 requires server-side auth handlers with HttpOnly cookie support "
+                "(app/server/api/auth/*)."
+            )
+
+        has_http_only_cookie = False
+        for candidate in server_auth_dir.rglob("*.ts"):
+            if _file_contains(candidate, r"setCookie\s*\(") and _file_contains(
+                candidate, r"httpOnly\s*:\s*true"
+            ):
+                has_http_only_cookie = True
+                break
+        if not has_http_only_cookie:
+            return (
+                "BLOCKED: WEB3 requires setCookie(..., { httpOnly: true }) "
+                "in server auth handlers."
+            )
+        return None
+
+    if TARGET_REPO_NAME == "auraxis-app" and normalized_task_id == "APP3":
+        required_files = (
+            PROJECT_ROOT / "lib/secure-storage.ts",
+            PROJECT_ROOT / "stores/session-store.ts",
+            PROJECT_ROOT / "app/(public)/login.tsx",
+            PROJECT_ROOT / "app/(private)/_layout.tsx",
+        )
+        missing_files = [
+            str(path.relative_to(PROJECT_ROOT))
+            for path in required_files
+            if not path.exists()
+        ]
+        if missing_files:
+            return (
+                "BLOCKED: APP3 cannot be marked Done. Missing required files: "
+                + ", ".join(missing_files)
+            )
+
+        secure_storage_path = PROJECT_ROOT / "lib/secure-storage.ts"
+        if not (
+            _file_contains(secure_storage_path, r"SecureStore\.setItemAsync")
+            and _file_contains(secure_storage_path, r"SecureStore\.deleteItemAsync")
+        ):
+            return (
+                "BLOCKED: APP3 requires secure token persistence/cleanup via expo-secure-store."
+            )
+
+        session_store_path = PROJECT_ROOT / "stores/session-store.ts"
+        if not (
+            _file_contains(session_store_path, r"signIn\s*:")
+            and _file_contains(session_store_path, r"signOut\s*:")
+            and _file_contains(session_store_path, r"clearStoredSession")
+        ):
+            return (
+                "BLOCKED: APP3 requires signIn/signOut actions and storage cleanup in session store."
+            )
+        return None
+
+    if TARGET_REPO_NAME == "auraxis-api" and normalized_task_id == "B11":
+        required_paths = (
+            PROJECT_ROOT / "app/models/user.py",
+            PROJECT_ROOT / "app/schemas/user_schemas.py",
+            PROJECT_ROOT / "migrations/versions/20240614_add_investor_profile_suggestion_fields.py",
+        )
+        missing_paths = [
+            str(path.relative_to(PROJECT_ROOT))
+            for path in required_paths
+            if not path.exists()
+        ]
+        if missing_paths:
+            return (
+                "BLOCKED: B11 cannot be marked Done. Missing required files: "
+                + ", ".join(missing_paths)
+            )
+
+        user_model_path = PROJECT_ROOT / "app/models/user.py"
+        required_model_fields = (
+            r"investor_profile_suggested",
+            r"profile_quiz_score",
+            r"taxonomy_version",
+        )
+        if any(not _file_contains(user_model_path, field) for field in required_model_fields):
+            return "BLOCKED: B11 requires all profile suggestion fields in app/models/user.py."
+
+        schema_path = PROJECT_ROOT / "app/schemas/user_schemas.py"
+        try:
+            compile(schema_path.read_text(encoding="utf-8"), str(schema_path), "exec")
+        except SyntaxError as exc:
+            return f"BLOCKED: B11 schema has syntax error: {exc}."
+
+        test_has_field_coverage = False
+        for test_file in (PROJECT_ROOT / "tests").rglob("test_*.py"):
+            if _file_contains(
+                test_file,
+                r"(investor_profile_suggested|profile_quiz_score|taxonomy_version)",
+            ):
+                test_has_field_coverage = True
+                break
+        if not test_has_field_coverage:
+            return (
+                "BLOCKED: B11 requires at least one automated test asserting "
+                "investor profile suggestion fields."
+            )
+        return None
+
+    return None
+
+
+def _commit_has_functional_changes(commit_hash: str) -> tuple[bool, str]:
+    if not commit_hash:
+        return False, "commit hash is empty"
+
+    result = safe_subprocess(
+        ["git", "show", "--name-only", "--pretty=format:", commit_hash],
+        timeout=30,
+        cwd=str(PROJECT_ROOT),
+    )
+    if result["returncode"] != 0:
+        return False, result["stderr"] or "unable to inspect commit"
+
+    files = [line.strip() for line in result["stdout"].splitlines() if line.strip()]
+    if not files:
+        return False, "commit has no changed files"
+
+    functional_files = [f for f in files if f not in _TASKBOARD_ONLY_FILES]
+    if not functional_files:
+        return False, "commit changes only taskboard metadata files"
+
+    return True, ", ".join(functional_files[:5])
+
+
 class UpdateTaskStatusTool(BaseTool):
     name: str = "update_task_status"
     description: str = (
@@ -1289,6 +1540,7 @@ class UpdateTaskStatusTool(BaseTool):
 
         expected_task_id = os.getenv("AURAXIS_RESOLVED_TASK_ID", "").strip().upper()
         normalized_task_id = (task_id or "").strip().upper()
+        normalized_status = (status or "").strip().lower()
         if expected_task_id and normalized_task_id != expected_task_id:
             msg = (
                 f"BLOCKED: task_id drift detected. "
@@ -1301,6 +1553,45 @@ class UpdateTaskStatusTool(BaseTool):
                 status="ERROR",
             )
             return msg
+
+        if normalized_status in _DONE_STATUS_VALUES:
+            if not commit_hash.strip():
+                msg = (
+                    "BLOCKED: status=Done requires commit_hash for traceability. "
+                    "Commit first, then update task status with the hash."
+                )
+                audit_log(
+                    "update_task_status",
+                    {"task_id": task_id, "status": status},
+                    msg,
+                    status="ERROR",
+                )
+                return msg
+
+            if _FUNCTIONAL_TASK_PREFIX_RE.match(normalized_task_id):
+                has_changes, detail = _commit_has_functional_changes(commit_hash.strip())
+                if not has_changes:
+                    msg = (
+                        "BLOCKED: Done requires functional code evidence. "
+                        f"Commit '{commit_hash}' is not sufficient ({detail})."
+                    )
+                    audit_log(
+                        "update_task_status",
+                        {"task_id": task_id, "status": status, "commit": commit_hash},
+                        msg,
+                        status="ERROR",
+                    )
+                    return msg
+
+                evidence_error = _validate_done_task_evidence(normalized_task_id)
+                if evidence_error:
+                    audit_log(
+                        "update_task_status",
+                        {"task_id": task_id, "status": status, "commit": commit_hash},
+                        evidence_error,
+                        status="ERROR",
+                    )
+                    return evidence_error
 
         tasks_path = _resolve_tasks_file()
         if not tasks_path.exists():
@@ -1407,6 +1698,20 @@ _FRONTEND_SOURCE_EXTENSIONS = {
 
 _FRONTEND_TS_ONLY_BLOCKED_EXTENSIONS = {".js", ".jsx"}
 
+_WEB_FORBIDDEN_ROOT_SOURCE_PREFIXES = (
+    "components/",
+    "composables/",
+    "layouts/",
+    "middleware/",
+    "pages/",
+    "plugins/",
+    "stores/",
+    "shared/",
+    "types/",
+    "utils/",
+    "services/",
+)
+
 _WEB_RAW_HTML_TAG_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"<\s*p\b", re.IGNORECASE),
     re.compile(r"<\s*input\b", re.IGNORECASE),
@@ -1425,6 +1730,10 @@ _MISSING_RETURN_TYPE_ARROW_RE = re.compile(
 _MISSING_RETURN_TYPE_ARROW_SINGLE_ARG_RE = re.compile(
     r"^\s*(?:export\s+)?const\s+[A-Za-z_]\w*\s*=\s*(?:async\s+)?[A-Za-z_]\w*\s*=>"
 )
+
+_DONE_STATUS_VALUES = {"done", "completed"}
+_FUNCTIONAL_TASK_PREFIX_RE = re.compile(r"^(APP|WEB|B)\d+$")
+_TASKBOARD_ONLY_FILES = {"tasks.md", "TASKS.md"}
 
 _WEB_TOKEN_POLICY_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\bfont-size\s*:\s*[0-9.]+(?:px|rem|em)\b", re.IGNORECASE),
@@ -1500,6 +1809,21 @@ def _is_frontend_source_path(path: str) -> bool:
     else:
         return False
     return normalized.startswith(prefixes)
+
+
+def _detect_frontend_web_root_path_violation(path: str) -> str | None:
+    if TARGET_REPO_NAME != "auraxis-web":
+        return None
+    normalized = path.replace("\\", "/").strip().lower()
+    if normalized.startswith("app/"):
+        return None
+    if normalized.startswith(_WEB_FORBIDDEN_ROOT_SOURCE_PREFIXES):
+        return (
+            "BLOCKED: auraxis-web source files must live under `app/` "
+            "(ex.: `app/composables`, `app/layouts`, `app/middleware`). "
+            f"Invalid path: '{path}'."
+        )
+    return None
 
 
 def _has_jsdoc_block(lines: list[str], line_index: int) -> bool:
@@ -1696,6 +2020,16 @@ class WriteFileTool(BaseTool):
                 status="BLOCKED",
             )
             return msg
+
+        web_root_path_msg = _detect_frontend_web_root_path_violation(path)
+        if web_root_path_msg:
+            audit_log(
+                "write_file_content",
+                {"path": path},
+                web_root_path_msg,
+                status="BLOCKED",
+            )
+            return web_root_path_msg
 
         language_policy_msg = _detect_frontend_language_policy_violation(path, content)
         if language_policy_msg:

@@ -49,7 +49,11 @@ BRIEFING="Execute a tarefa" make next-task
     ```
 
 2.  **Configuração da API:**
-    Crie um arquivo `.env` dentro de `ai_squad/` e adicione sua chave:
+    Configure sua credencial em um destes locais:
+    - `ai_squad/.env` (preferencial para o squad);
+    - `.env` na raiz de `auraxis-platform` (fallback automático).
+
+    Exemplo:
     ```bash
     OPENAI_API_KEY=sk-xxxx...
     ```
@@ -97,12 +101,17 @@ Com isso, o gestor dispara execução para `auraxis-api`, `auraxis-web` e `aurax
   - branch precisa conter o `task_id` resolvido;
   - `update_task_status` deve usar o mesmo `task_id` do preflight;
   - fingerprint de política global (`07_steering_global.md`, `08_agent_contract.md`, `product.md`) é validado no start.
+  - no modo `all`, cada repo roda em worktree efêmero a partir de `origin/<default>`.
+  - status `Done` exige `commit_hash` e evidência funcional mínima (não apenas `tasks.md`).
   - commit só é permitido após gates aprovados:
     - frontend: `run_repo_quality_gates()` precisa retornar PASS;
     - backend: `run_backend_tests()` e `run_integration_tests(full_crud)` precisam retornar PASS.
 - Override explícito (somente quando necessário):
   - `AURAXIS_ALLOW_DIRTY_WORKTREE=true` permite execução com repo sujo.
   - `AURAXIS_FORCE_RERUN=true` ignora skip idempotente do ledger.
+  - `AURAXIS_USE_WORKTREE_EXECUTION=false` desativa isolamento por worktree (não recomendado).
+  - `AURAXIS_AUTO_ROLLBACK_ON_BLOCK=false` desativa rollback automático em bloqueio (não recomendado).
+  - `AURAXIS_AUTO_QUALITY_REPAIR=false` desativa tentativa automática de lint fix antes de novo gate.
 
 ## TOON (token optimization)
 

@@ -33,6 +33,30 @@ Data: 2026-02-25 (Remediação de maturidade agentic)
 2. Após merge, rodar `make next-task` e confirmar seleção determinística de `B11`, `WEB3` e `APP3` sem drift.
 3. Se a seleção permanecer estável por 2 ciclos, promover a regra de higiene para checklist padrão de kickoff.
 
+## Atualização rápida — 2026-02-28 (DX: preflight LLM com fallback em `.env` da plataforma)
+
+### O que foi feito
+
+- `scripts/ai-next-task.sh` atualizado para resolver `OPENAI_API_KEY`/`OLLAMA_BASE_URL` em ordem:
+  1. variáveis já exportadas no shell;
+  2. `ai_squad/.env`;
+  3. `.env` da raiz de `auraxis-platform`.
+- `ai_squad/.env.example` adicionado como template de setup.
+- `ai_squad/README.md` atualizado com instrução de fallback automático para `.env` raiz.
+
+### O que foi validado
+
+- execução real de `./scripts/ai-next-task.sh all "Execute a tarefa" plan` avançou além do preflight (iniciou etapa de prepare), comprovando correção do erro `LLM preflight failed`.
+
+### Riscos pendentes
+
+- o comando completo ainda pode bloquear em outras etapas de qualidade/task drift, mas não mais por ausência de leitura de credencial quando a chave já existir no `.env` da plataforma.
+
+### Próximo passo sugerido
+
+1. Reexecutar `make next-task` no estado atual.
+2. Se ocorrer novo bloqueio, tratar por etapa (prepare/gates/task drift), sem regressão de credencial.
+
 ## Atualização rápida — 2026-02-28 (autonomy hardening: commit pós-gates + dependency review estrito)
 
 ### O que foi feito
@@ -1545,3 +1569,37 @@ git checkout -b feat/web2-vitest-config
 1. Executar lote de remediação de lint por domínio (web composables/utils e app rotas/componentes).
 2. Fechar subetapa 4 de `WEB22` e `APP20` com commits pequenos e reversíveis.
 3. Após zerar lint, atacar migração de UI/tokens no escopo de `WEB21`/`APP21`.
+
+## 2026-02-28 — P0/P1/P2: post-mortem remediation do ai_squad
+
+### O que foi feito
+- Endurecido `ai_squad/main.py` para execução paralela em worktree efêmero por repo (`origin/<default>`), com limpeza automática ao final.
+- Adicionado rollback automático quando execução finaliza `blocked` sem isolamento por worktree.
+- Refinada derivação de status final para usar último estado por tool crítica e reduzir falso `blocked`.
+- Endurecido `update_task_status` no tool layer:
+  - `Done` sem `commit_hash` agora bloqueia;
+  - tasks funcionais exigem evidência além de `tasks.md/TASKS.md`;
+  - validações específicas adicionadas para `WEB3`, `APP3` e `B11`.
+- Adicionado auto-repair no `run_repo_quality_gates` para frontend, com retentativa configurável.
+- Bloqueada escrita de source web fora de `app/` no `WriteFileTool`.
+- `scripts/prepare-repo-for-agent-run.sh` agora normaliza para branch default e sincroniza com `origin` antes do dispatch.
+- Documentação atualizada em:
+  - `.context/07_steering_global.md`
+  - `.context/08_agent_contract.md`
+  - `.context/20_decision_log.md`
+  - `.context/01_status_atual.md`
+  - `ai_squad/README.md`
+
+### O que foi validado
+- `python3 -m py_compile ai_squad/main.py ai_squad/tools/project_tools.py` passou.
+- `bash -n scripts/prepare-repo-for-agent-run.sh` passou.
+
+### Riscos pendentes
+- Falta validação fim-a-fim com `make next-task` em ambiente LLM ativo para confirmar redução real de bloqueios em corrida.
+- Regras específicas de evidência (`WEB3`/`APP3`/`B11`) podem requerer manutenção quando esses fluxos evoluírem.
+
+### Próximo passo
+1. Rodar `make next-task` com `AURAXIS_TARGET_REPO=all` e inspecionar:
+  - `tasks_status/ORCH-*.md`;
+  - logs de quality gate por repo;
+  - ausência de artefatos residuais no clone base após falha.

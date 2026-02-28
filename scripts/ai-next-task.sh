@@ -14,32 +14,54 @@ FLAG_BOOTSTRAP="${AURAXIS_FEATURE_FLAGS_BOOTSTRAP:-true}"
 FLAG_BOOTSTRAP_ENV="${AURAXIS_FEATURE_FLAGS_ENV:-development}"
 FLAG_BOOTSTRAP_PROVIDER="${AURAXIS_FEATURE_FLAGS_PROVIDER:-}"
 SKIP_LLM_PREFLIGHT="${AURAXIS_SKIP_LLM_PREFLIGHT:-false}"
+ENV_FILES=("${SQUAD_DIR}/.env" "${PLATFORM_ROOT}/.env")
 
 if [[ ! -d "${SQUAD_DIR}" ]]; then
   echo "ai_squad directory not found at: ${SQUAD_DIR}" >&2
   exit 1
 fi
 
-has_nonempty_env_value() {
-  local env_file="$1"
-  local key="$2"
-  [[ -f "${env_file}" ]] || return 1
-  local value
-  value="$(grep -E "^${key}=" "${env_file}" 2>/dev/null | tail -n 1 | cut -d '=' -f2- || true)"
-  [[ -n "${value}" ]]
+resolve_env_value() {
+  local key="$1"
+  local raw=""
+
+  if [[ -n "${!key:-}" ]]; then
+    echo "${!key}"
+    return 0
+  fi
+
+  for env_file in "${ENV_FILES[@]}"; do
+    if [[ -f "${env_file}" ]]; then
+      raw="$(grep -E "^${key}=" "${env_file}" 2>/dev/null | tail -n 1 | cut -d '=' -f2- || true)"
+      if [[ -n "${raw}" ]]; then
+        raw="${raw%\"}"
+        raw="${raw#\"}"
+        raw="${raw%\'}"
+        raw="${raw#\'}"
+        echo "${raw}"
+        return 0
+      fi
+    fi
+  done
+
+  return 1
 }
 
 if [[ "${SKIP_LLM_PREFLIGHT}" != "true" ]]; then
   has_openai="false"
   has_ollama="false"
-  if [[ -n "${OPENAI_API_KEY:-}" ]] || has_nonempty_env_value "${SQUAD_DIR}/.env" "OPENAI_API_KEY"; then
+  resolved_openai="$(resolve_env_value "OPENAI_API_KEY" || true)"
+  resolved_ollama="$(resolve_env_value "OLLAMA_BASE_URL" || true)"
+  if [[ -n "${resolved_openai}" ]]; then
+    export OPENAI_API_KEY="${resolved_openai}"
     has_openai="true"
   fi
-  if [[ -n "${OLLAMA_BASE_URL:-}" ]] || has_nonempty_env_value "${SQUAD_DIR}/.env" "OLLAMA_BASE_URL"; then
+  if [[ -n "${resolved_ollama}" ]]; then
+    export OLLAMA_BASE_URL="${resolved_ollama}"
     has_ollama="true"
   fi
   if [[ "${has_openai}" != "true" && "${has_ollama}" != "true" ]]; then
-    echo "[ai-next-task] LLM preflight failed: configure OPENAI_API_KEY or OLLAMA_BASE_URL in ${SQUAD_DIR}/.env (or env vars)." >&2
+    echo "[ai-next-task] LLM preflight failed: configure OPENAI_API_KEY or OLLAMA_BASE_URL in ${SQUAD_DIR}/.env, ${PLATFORM_ROOT}/.env, or env vars." >&2
     echo "[ai-next-task] Set AURAXIS_SKIP_LLM_PREFLIGHT=true only for diagnostics." >&2
     exit 1
   fi

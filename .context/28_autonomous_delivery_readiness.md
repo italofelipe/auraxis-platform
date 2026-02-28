@@ -64,6 +64,7 @@ Status:
   - frontend só comita após `run_repo_quality_gates()` com status `pass`;
   - backend só comita após `run_backend_tests()` e `run_integration_tests(full_crud)` com status `pass`.
 - ✅ `ai-next-task` com preflight de credencial LLM (`OPENAI_API_KEY` ou `OLLAMA_BASE_URL`).
+- ✅ `ai-next-task` com fallback automático de credencial em `.env` da plataforma (além de `ai_squad/.env`).
 - ✅ Taskboard hygiene aplicada: somente 1 `In Progress` por repo (`B11`/API, `WEB3`/Web, `APP3`/App).
 
 Pendência recomendada:

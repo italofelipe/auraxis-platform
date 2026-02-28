@@ -25,6 +25,8 @@ Entregar o produto Auraxis com previsibilidade, segurança e qualidade, usando f
 - Bootstrap de feature flags por ambiente deve usar o script central `scripts/bootstrap-feature-flag-provider.sh` (PLT4.3), evitando configuração ad-hoc por repo.
 - Execução autônoma só inicia com `task_id` resolvido (nunca `UNSPECIFIED`) e worktree limpo.
 - Se houver drift de contexto (fingerprint de política), execução deve falhar em preflight.
+- Execução autônoma multi-repo deve usar worktree efêmero por child (baseado em `origin/<default>`) para impedir escrita direta no clone base.
+- Preparação de repositório antes do run deve normalizar para branch default (`main`/`master`) e sincronizar com `origin` antes de qualquer dispatch.
 
 ### Qualidade — não negociável em nenhum repo
 - **Testes não são opcionais.** Toda lógica nova tem teste antes de merge.

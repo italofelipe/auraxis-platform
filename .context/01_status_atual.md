@@ -13,6 +13,13 @@ Data: 2026-02-27
   - `auraxis-web`: `chore/web-taskboard-hygiene` (`1cfb44d`)
   - `auraxis-app`: `chore/app-taskboard-hygiene` (`8907427`)
 
+## Atualizacao DX do orquestrador (2026-02-28)
+- `scripts/ai-next-task.sh` agora resolve credenciais LLM automaticamente a partir de:
+  - `ai_squad/.env` (preferencial) e
+  - `.env` da raiz da plataforma (fallback),
+  além de variáveis de ambiente já exportadas no shell.
+- `ai_squad/.env.example` adicionado para bootstrap rápido e previsível de setup local.
+
 ## Atualizacao Autonomy Hardening (2026-02-28)
 - `auraxis-web` e `auraxis-app`:
   - `dependency-review.yml` migrado para modo estrito (sem fallback de compatibilidade);
@@ -815,3 +822,41 @@ Principais gaps: Jest setup real (APP2), Vitest config (WEB2), SonarCloud (APP4/
 
 - Queda de drift de estilo/arquitetura em entregas dos agentes de frontend.
 - Menos ciclos de retrabalho por inconsistência de padrão.
+
+---
+
+## 2026-02-28 — Hardening P0/P1/P2 do orquestrador (anti-bloqueio + anti-contaminação)
+
+### O que foi feito
+
+- `ai_squad/main.py`:
+  - modo paralelo (`all`) passou a criar worktree efêmero por repo a partir de `origin/<default>`;
+  - worktree efêmero é removido ao final do child run;
+  - fallback de rollback automático em execução sem worktree quando status final é `blocked`;
+  - classificação de status final agora considera último estado por ferramenta crítica (evita falso bloqueio por erro intermediário já recuperado).
+- `ai_squad/tools/project_tools.py`:
+  - `run_repo_quality_gates` ganhou auto-repair com retentativa (`AURAXIS_AUTO_QUALITY_REPAIR`, `AURAXIS_QUALITY_RETRY_MAX`);
+  - `update_task_status` endurecido para `Done`: exige `commit_hash` e evidência funcional;
+  - validações específicas adicionadas para tarefas críticas (`WEB3`, `APP3`, `B11`);
+  - `WriteFileTool` bloqueia escrita de source web fora de `app/` (ex.: `composables/`, `layouts/`, `middleware/` na raiz).
+- `scripts/prepare-repo-for-agent-run.sh`:
+  - normalização obrigatória para branch default antes do run;
+  - sincronização explícita com `origin/<default>`;
+  - bloqueio quando não é possível trocar branch por worktree sujo.
+
+### O que foi validado
+
+- sintaxe Python validada em `ai_squad/main.py` e `ai_squad/tools/project_tools.py` com `python3 -m py_compile`;
+- sintaxe shell validada em `scripts/prepare-repo-for-agent-run.sh` com `bash -n`.
+
+### Riscos pendentes
+
+- validação fim-a-fim de `make next-task` em cenário real ainda depende de nova rodada com LLM habilitado;
+- validações específicas de `Done` podem exigir ajuste fino se houver mudança estrutural futura nas tasks monitoradas.
+
+### Próximo passo sugerido
+
+1. Rodar `make next-task` com ambiente padrão e confirmar:
+  - ausência de drift para `UNSPECIFIED`;
+  - ausência de lixo residual no clone base após bloqueios;
+  - convergência de status final com resultado real dos gates.

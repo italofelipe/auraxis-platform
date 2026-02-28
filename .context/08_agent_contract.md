@@ -36,6 +36,8 @@ Para trabalho em produto (web, app, api), também ler:
 - Repo alvo deve iniciar com worktree limpo (sem staged/unstaged/untracked) para evitar contaminação de escopo.
 - Branch criada pelo agente deve conter o `task_id` ativo no nome (`feat/WEB3-...`, `fix/APP4-...`, etc.).
 - Se houver drift entre fingerprint de políticas globais (steering/contract/product) e o snapshot da execução, o run deve bloquear e pedir rerun sincronizado.
+- Em execução paralela, o child deve rodar em worktree efêmero a partir de `origin/<default>` para evitar contaminação do repo base.
+- Se o run bloquear fora de worktree efêmero, rollback automático (`reset --hard` + `clean -fd`) é obrigatório.
 
 ---
 
@@ -80,6 +82,10 @@ Para trabalho em produto (web, app, api), também ler:
   - frontend: `git commit` é bloqueado sem `run_repo_quality_gates()` em PASS;
   - backend: `git commit` é bloqueado sem `run_backend_tests()` + `run_integration_tests(full_crud)` em PASS.
 - Em fluxos autônomos: não marcar `Done` sem `update_task_status` válido para o mesmo `task_id` do preflight.
+- `Done` exige evidência mínima:
+  - `commit_hash` obrigatório;
+  - task funcional (`APP*`/`WEB*`/`B*`) com alteração além de `tasks.md`/`TASKS.md`;
+  - checks específicos da task (quando definidos no tool layer) precisam passar.
 - Verificar checklist de segurança:
   - [ ] Nenhum secret ou token hardcoded
   - [ ] Nenhum `console.log` com dados de usuário
