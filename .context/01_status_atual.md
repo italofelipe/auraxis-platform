@@ -13,6 +13,13 @@ Data: 2026-02-27
   - `auraxis-web`: `chore/web-taskboard-hygiene` (`1cfb44d`)
   - `auraxis-app`: `chore/app-taskboard-hygiene` (`8907427`)
 
+## Atualizacao DX do orquestrador (2026-02-28)
+- `scripts/ai-next-task.sh` agora resolve credenciais LLM automaticamente a partir de:
+  - `ai_squad/.env` (preferencial) e
+  - `.env` da raiz da plataforma (fallback),
+  além de variáveis de ambiente já exportadas no shell.
+- `ai_squad/.env.example` adicionado para bootstrap rápido e previsível de setup local.
+
 ## Atualizacao Autonomy Hardening (2026-02-28)
 - `auraxis-web` e `auraxis-app`:
   - `dependency-review.yml` migrado para modo estrito (sem fallback de compatibilidade);

@@ -49,7 +49,11 @@ BRIEFING="Execute a tarefa" make next-task
     ```
 
 2.  **Configuração da API:**
-    Crie um arquivo `.env` dentro de `ai_squad/` e adicione sua chave:
+    Configure sua credencial em um destes locais:
+    - `ai_squad/.env` (preferencial para o squad);
+    - `.env` na raiz de `auraxis-platform` (fallback automático).
+
+    Exemplo:
     ```bash
     OPENAI_API_KEY=sk-xxxx...
     ```

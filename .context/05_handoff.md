@@ -33,6 +33,30 @@ Data: 2026-02-25 (Remediação de maturidade agentic)
 2. Após merge, rodar `make next-task` e confirmar seleção determinística de `B11`, `WEB3` e `APP3` sem drift.
 3. Se a seleção permanecer estável por 2 ciclos, promover a regra de higiene para checklist padrão de kickoff.
 
+## Atualização rápida — 2026-02-28 (DX: preflight LLM com fallback em `.env` da plataforma)
+
+### O que foi feito
+
+- `scripts/ai-next-task.sh` atualizado para resolver `OPENAI_API_KEY`/`OLLAMA_BASE_URL` em ordem:
+  1. variáveis já exportadas no shell;
+  2. `ai_squad/.env`;
+  3. `.env` da raiz de `auraxis-platform`.
+- `ai_squad/.env.example` adicionado como template de setup.
+- `ai_squad/README.md` atualizado com instrução de fallback automático para `.env` raiz.
+
+### O que foi validado
+
+- execução real de `./scripts/ai-next-task.sh all "Execute a tarefa" plan` avançou além do preflight (iniciou etapa de prepare), comprovando correção do erro `LLM preflight failed`.
+
+### Riscos pendentes
+
+- o comando completo ainda pode bloquear em outras etapas de qualidade/task drift, mas não mais por ausência de leitura de credencial quando a chave já existir no `.env` da plataforma.
+
+### Próximo passo sugerido
+
+1. Reexecutar `make next-task` no estado atual.
+2. Se ocorrer novo bloqueio, tratar por etapa (prepare/gates/task drift), sem regressão de credencial.
+
 ## Atualização rápida — 2026-02-28 (autonomy hardening: commit pós-gates + dependency review estrito)
 
 ### O que foi feito
