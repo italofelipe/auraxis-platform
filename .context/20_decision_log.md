@@ -755,6 +755,48 @@ preflight e `task_id` reportado ao final.
 
 ---
 
+### DEC-044 — Política única de release cut multi-repo (PLT3.1)
+
+**Decisão:** consolidar uma policy operacional única de release para `auraxis-api`,
+`auraxis-web` e `auraxis-app`, cobrindo cadência, freeze, fluxo de hotfix e checklist
+de aprovação em `.context/33_release_cut_policy.md`.
+
+**Racional:** reduzir divergência de execução entre repositórios, dar previsibilidade para
+os agentes e diminuir decisões ad-hoc em janelas de release.
+
+**Alternativas rejeitadas:**
+- manter políticas por repositório sem padronização global;
+- depender apenas de convenção verbal no prompt;
+- liberar release sem checklist mínimo unificado.
+
+**Dono:** platform/governança.
+**Impacto:**
+- PLT3.1 sai de pendente e passa a guideline canônico de execução;
+- agentes passam a ter referência explícita para freeze/hotfix/release cut.
+
+---
+
+### DEC-045 — Sonar local da API em modo advisory por padrão
+
+**Decisão:** no `auraxis-api`, o hook `sonar-local-check` passa a operar em modo
+`advisory` por padrão no loop local, mantendo modo `enforce` em CI e em override explícito
+(`AURAXIS_ENFORCE_LOCAL_SONAR=true`).
+
+**Racional:** evitar bloqueio de push local por indisponibilidade/estado de quality gate remoto,
+preservando o gate oficial bloqueante no pipeline de CI.
+
+**Alternativas rejeitadas:**
+- remover o hook Sonar local;
+- manter modo estrito local e aceitar bloqueios recorrentes por condição remota;
+- tornar Sonar opcional também no CI.
+
+**Dono:** backend + platform.
+**Impacto:**
+- melhora de DX no desenvolvimento local da API;
+- governança de qualidade permanece estrita no CI.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

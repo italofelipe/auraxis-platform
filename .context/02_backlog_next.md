@@ -13,7 +13,7 @@ Status:
 ## Estado dos blocos de plataforma
 
 1. `PLT2` (stores app + PWA): **45% — DEFERRED**
-2. `PLT3` (versionamento automático multi-repo): **65%**
+2. `PLT3` (versionamento automático multi-repo): **75%**
 3. `PLT4` (feature toggles OSS): **55%**
 4. `PLT5` (deploy mínimo frontends): **60% — DEFERRED (publicação externa)**
 
@@ -28,8 +28,8 @@ Status:
 1. **PLT4.2** — Integração runtime de flags
 - Conectar runtime web/app/api ao provider OSS com fallback local.
 
-2. **PLT3.1** — Fechar policy de release cut
-- Consolidar política operacional de release (cadência, freeze, hotfix) e checklist de aprovação de PR de release.
+2. **PLT3.1** — Fechar policy de release cut ✅
+- Política consolidada em `.context/33_release_cut_policy.md` (cadência, freeze, hotfix e checklist de aprovação).
 
 3. **BLK-BACKEND-FEATURES** — Fechar bloco funcional backend atual
 - Concluir backlog funcional ativo do backend antes de retomar publicação externa.

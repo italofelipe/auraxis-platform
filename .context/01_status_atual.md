@@ -2,6 +2,14 @@
 
 Data: 2026-02-27
 
+## Atualizacao Release/CI (2026-02-27 — PLT3.1 + sonar local policy)
+- `PLT3.1` consolidado com policy operacional única de release cut em `.context/33_release_cut_policy.md`:
+  - cadência, freeze, hotfix, gates mínimos e checklist de aprovação de PR de release.
+- `auraxis-api` com ajuste de DX no gate local Sonar:
+  - `scripts/sonar_local_check.sh` agora roda em `advisory` por padrão no loop local;
+  - continua `enforce` em CI (`CI=true`) ou quando forçado com `AURAXIS_ENFORCE_LOCAL_SONAR=true`;
+  - objetivo: eliminar bloqueio de push local por quality gate remoto sem enfraquecer o gate oficial do CI.
+
 ## Atualizacao Sprint A (2026-02-27 — autonomia operacional P0)
 - `scripts/ai-next-task.sh` agora executa preparação automática de repositório antes da orquestração (`AURAXIS_AUTO_PREP_REPOS=true` por padrão).
 - Novo script `scripts/prepare-repo-for-agent-run.sh`:
