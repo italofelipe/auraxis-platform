@@ -90,7 +90,34 @@ def _resolve_project_root() -> Path:
 
 
 PROJECT_ROOT: Path = _resolve_project_root()
-TARGET_REPO_NAME: str = PROJECT_ROOT.name
+
+
+def _resolve_target_repo_name(project_root: Path) -> str:
+    """Resolve canonical target repository name for guardrails.
+
+    Priority:
+    1. `AURAXIS_TARGET_REPO` when already a concrete repo.
+    2. Project root folder name when canonical.
+    3. Worktree folder prefixes (`auraxis-web-<timestamp>` etc).
+    4. Safe fallback (`auraxis-api`).
+    """
+    env_target = os.getenv("AURAXIS_TARGET_REPO", "").strip().lower()
+    canonical = ("auraxis-api", "auraxis-web", "auraxis-app")
+    if env_target in canonical:
+        return env_target
+
+    folder_name = project_root.name.lower()
+    if folder_name in canonical:
+        return folder_name
+
+    for repo_name in canonical:
+        if folder_name.startswith(f"{repo_name}-"):
+            return repo_name
+
+    return "auraxis-api"
+
+
+TARGET_REPO_NAME: str = _resolve_target_repo_name(PROJECT_ROOT)
 
 def _build_writable_dirs(project_root: Path, repo_name: str) -> list[Path]:
     """Return writable directory allowlist per target repository."""

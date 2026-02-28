@@ -1066,7 +1066,7 @@ class RunRepoQualityGatesTool(BaseTool):
     )
 
     def _run(self, query: str = None) -> str:
-        repo_name = PROJECT_ROOT.name
+        repo_name = TARGET_REPO_NAME
         command: list[str]
         if repo_name == "auraxis-web":
             command = ["pnpm", "quality-check"]
