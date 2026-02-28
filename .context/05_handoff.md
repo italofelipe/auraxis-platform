@@ -1002,6 +1002,39 @@ Data: 2026-02-25 (Remediação de maturidade agentic)
 
 1. Executar `X4` (Ruff advisory) no `auraxis-api` mantendo handoff por bloco.
 
+## Atualização rápida — 2026-02-28 (PLT4.3 + guardrails v2 + API local resilience)
+
+### O que foi feito
+- Bootstrap central de feature flags por ambiente adicionado em
+  `scripts/bootstrap-feature-flag-provider.sh`.
+- `scripts/ai-next-task.sh` atualizado para injetar bootstrap automaticamente
+  (`AURAXIS_FEATURE_FLAGS_BOOTSTRAP=true` por padrão).
+- `ai_squad` endurecido:
+  - commits bloqueados quando a branch atual não contém o `task_id` resolvido;
+  - execução backend de testes migrada para `python -m pytest` (resiliência local);
+  - resumo multi-repo com evidência explícita de quality gate e guardrail de branch.
+- Runtime de flags alinhado para fallback canônico `AURAXIS_*` em:
+  - `repos/auraxis-web/app/shared/feature-flags/service.ts`;
+  - `repos/auraxis-app/shared/feature-flags/service.ts`;
+  - `repos/auraxis-api/app/utils/feature_flags.py`.
+- `scripts/export-openapi-snapshot.sh` com fallback robusto para `python3/python`.
+- `repos/auraxis-api/scripts/sonar_local_check.sh` normalizado para `.venv/bin/python`.
+
+### O que foi validado
+- Testes unitários de feature flags atualizados em web/app/api para fallback canônico.
+- Guardrails de branch/task validados por inspeção estática em `ai_squad/tools/project_tools.py`.
+- Bootstrap script validado via emissão de env (`shell`/`env`) e integração no fluxo `ai-next-task`.
+
+### Riscos pendentes
+- Rotina formal contínua de remoção de código morto após expiração de flags ainda pendente
+  (último gap de PLT4).
+- Ambientes remotos de `unleash` em staging/prod dependem de URL/token reais do operador.
+
+### Próximo passo sugerido
+1. Executar uma rodada controlada de `make next-task` em modo `all` para validar
+   o novo resumo de evidências e os bloqueios de branch/task em cenário real.
+2. Fechar item final de PLT4: playbook automatizado de cleanup de flags expiradas.
+
 ---
 
 ## O que foi feito (rodada atual)

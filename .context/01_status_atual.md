@@ -2,6 +2,23 @@
 
 Data: 2026-02-27
 
+## Atualizacao PLT4.3 + Guardrails v2 + API local resilience (2026-02-28)
+- `auraxis-platform`:
+  - novo bootstrap central de provider por ambiente em `scripts/bootstrap-feature-flag-provider.sh`;
+  - integração automática no fluxo `scripts/ai-next-task.sh` (`AURAXIS_FEATURE_FLAGS_BOOTSTRAP=true` por padrão);
+  - runbook consolidado em `.context/34_feature_flag_provider_bootstrap.md`;
+  - `ai_squad/main.py` com resumo consolidado exibindo evidência explícita de quality gate e guardrail de branch;
+  - `ai_squad/tools/project_tools.py` endurecido para:
+    - executar backend tests com `python -m pytest` (sem depender de shebang da `.venv/bin/pytest`);
+    - bloquear commit quando branch atual não contém `task_id` resolvido.
+- `auraxis-api`:
+  - `app/utils/feature_flags.py` com fallback de namespace canônico (`AURAXIS_RUNTIME_ENV`, URL/proxy, token fallback);
+  - `scripts/sonar_local_check.sh` ajustado para usar `.venv/bin/python` genérico (fallback `python3`);
+  - teste adicional em `tests/test_feature_flags_runtime.py` cobrindo fallback de `AURAXIS_RUNTIME_ENV`.
+- `auraxis-web` e `auraxis-app`:
+  - serviços de feature flags atualizados para fallback `AURAXIS_*` além de `NUXT_PUBLIC_*`/`EXPO_PUBLIC_*`;
+  - testes atualizados para validar fallback canônico.
+
 ## Atualizacao PLT4.2 (2026-02-28 — provider OSS runtime)
 - `auraxis-api`:
   - `app/utils/feature_flags.py` evoluído para resolver flags via provider `unleash` com cache curto e fallback local.

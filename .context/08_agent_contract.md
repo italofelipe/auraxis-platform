@@ -49,6 +49,7 @@ Para trabalho em produto (web, app, api), também ler:
 - Em tarefas frontend, abrir os assets de `designs/` e confirmar aderencia ao blueprint visual canonico
 - Em tarefas frontend com dependência de backend recém-entregue, ler o `Feature Contract Pack` em `.context/feature_contracts/<TASK_ID>.md` antes de codificar integração.
 - Confirmar `task_id` em execução e rejeitar qualquer troca implícita de task durante o mesmo bloco.
+- Ao executar tarefas com feature flags, aplicar bootstrap de ambiente via `scripts/bootstrap-feature-flag-provider.sh` (ou `scripts/ai-next-task.sh`, que já injeta esse bootstrap automaticamente).
 
 ### Ao escrever código
 - Seguir os padrões definidos em `CODING_STANDARDS.md` do repo

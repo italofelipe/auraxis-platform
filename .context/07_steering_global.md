@@ -22,6 +22,7 @@ Entregar o produto Auraxis com previsibilidade, segurança e qualidade, usando f
 - Toda mudança relevante deve atualizar documentação de contexto.
 - Toda feature com impacto de contrato deve ter teste de regressão.
 - Toda feature backend com impacto de contrato deve publicar `Feature Contract Pack` em `.context/feature_contracts/` para consumo dos frontends.
+- Bootstrap de feature flags por ambiente deve usar o script central `scripts/bootstrap-feature-flag-provider.sh` (PLT4.3), evitando configuração ad-hoc por repo.
 - Execução autônoma só inicia com `task_id` resolvido (nunca `UNSPECIFIED`) e worktree limpo.
 - Se houver drift de contexto (fingerprint de política), execução deve falhar em preflight.
 

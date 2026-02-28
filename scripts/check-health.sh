@@ -81,6 +81,12 @@ check_platform() {
     fi
   done
 
+  if [[ -x "$PLATFORM_ROOT/scripts/bootstrap-feature-flag-provider.sh" ]]; then
+    ok "scripts/bootstrap-feature-flag-provider.sh present/executable"
+  else
+    warn "Missing executable bootstrap script: scripts/bootstrap-feature-flag-provider.sh"
+  fi
+
   # Git status of platform
   cd "$PLATFORM_ROOT"
   UNCOMMITTED=$(git status --porcelain | grep -v "^??" || true)

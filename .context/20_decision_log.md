@@ -819,6 +819,36 @@ quando o provider estiver indisponível.
 
 ---
 
+### DEC-047 — Bootstrap central de provider + guardrails v2 de execução autônoma
+
+**Decisão:** centralizar bootstrap de feature flags por ambiente em script único da
+platform (`scripts/bootstrap-feature-flag-provider.sh`) e endurecer guardrails do
+orquestrador para reduzir drift operacional:
+
+- `ai-next-task.sh` passa a injetar bootstrap automaticamente;
+- frontend (`web`/`app`) passa a aceitar fallback canônico `AURAXIS_*` além dos
+  namespaces próprios (`NUXT_PUBLIC_*`/`EXPO_PUBLIC_*`);
+- `ai_squad` passa a executar testes backend via `python -m pytest` (resiliência a
+  shebangs quebrados em `.venv/bin/pytest`);
+- commit bloqueado quando branch atual não contém o `task_id` resolvido;
+- resumo multi-repo exibe evidência explícita de quality gate e branch guardrail.
+
+**Racional:** reduzir setup manual por execução, eliminar falhas de ambiente local no
+backend e aumentar determinismo dos runs autônomos paralelos.
+
+**Alternativas rejeitadas:**
+- manter bootstrap manual por repositório;
+- manter dependência de executável `pytest` com shebang da venv;
+- aceitar commit em branch sem `task_id` e detectar drift apenas no fim.
+
+**Dono:** platform/ai-squad.
+**Impacto:**
+- PLT4.3 operacionalizado com baixa fricção;
+- redução de falso-negativo por ambiente local Python;
+- melhor observabilidade de status de gate/guardrail em cada repo durante orquestração.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

@@ -14,7 +14,7 @@ Status:
 
 1. `PLT2` (stores app + PWA): **45% — DEFERRED**
 2. `PLT3` (versionamento automático multi-repo): **75%**
-3. `PLT4` (feature toggles OSS): **88%**
+3. `PLT4` (feature toggles OSS): **96%**
 4. `PLT5` (deploy mínimo frontends): **60% — DEFERRED (publicação externa)**
 
 ## Entregas concluídas sem ação manual
@@ -28,8 +28,9 @@ Status:
 1. **PLT4.2** — Integração runtime de flags ✅
 - Runtime `unleash` + fallback local integrado em web/app/api.
 
-2. **PLT4.3** — Bootstrap central de provider por ambiente
-- Centralizar configuração operacional de provider (env matrix + rollout playbook) para reduzir setup manual por repo.
+2. **PLT4.3** — Bootstrap central de provider por ambiente ✅
+- Script central (`scripts/bootstrap-feature-flag-provider.sh`) + runbook (`.context/34_feature_flag_provider_bootstrap.md`).
+- Injeção automática no `scripts/ai-next-task.sh` para runs autônomos sem setup manual.
 
 3. **PLT3.1** — Fechar policy de release cut ✅
 - Política consolidada em `.context/33_release_cut_policy.md` (cadência, freeze, hotfix e checklist de aprovação).
