@@ -15,6 +15,8 @@ FLAG_BOOTSTRAP_ENV="${AURAXIS_FEATURE_FLAGS_ENV:-development}"
 FLAG_BOOTSTRAP_PROVIDER="${AURAXIS_FEATURE_FLAGS_PROVIDER:-}"
 SKIP_LLM_PREFLIGHT="${AURAXIS_SKIP_LLM_PREFLIGHT:-false}"
 SKIP_NODE_PREFLIGHT="${AURAXIS_SKIP_NODE_PREFLIGHT:-false}"
+AUTO_USE_NVM="${AURAXIS_AUTO_USE_NVM:-true}"
+NODE_MAJOR_REQUIRED="${AURAXIS_NODE_MAJOR_REQUIRED:-22}"
 ENV_FILES=("${SQUAD_DIR}/.env" "${PLATFORM_ROOT}/.env")
 
 if [[ ! -d "${SQUAD_DIR}" ]]; then
@@ -44,6 +46,41 @@ resolve_env_value() {
       fi
     fi
   done
+
+  return 1
+}
+
+resolve_node_major() {
+  local version
+  version="$(node -v 2>/dev/null || true)"
+  if [[ -z "$version" ]]; then
+    echo ""
+    return
+  fi
+  version="${version#v}"
+  echo "${version%%.*}"
+}
+
+source_nvm() {
+  if [[ -n "${NVM_DIR:-}" && -s "${NVM_DIR}/nvm.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${NVM_DIR}/nvm.sh"
+    return 0
+  fi
+
+  if [[ -s "${HOME}/.nvm/nvm.sh" ]]; then
+    export NVM_DIR="${HOME}/.nvm"
+    # shellcheck source=/dev/null
+    source "${NVM_DIR}/nvm.sh"
+    return 0
+  fi
+
+  if [[ -s "/opt/homebrew/opt/nvm/nvm.sh" ]]; then
+    export NVM_DIR="${HOME}/.nvm"
+    # shellcheck source=/dev/null
+    source "/opt/homebrew/opt/nvm/nvm.sh"
+    return 0
+  fi
 
   return 1
 }
@@ -104,16 +141,34 @@ esac
 
 if [[ "${requires_node_22}" == "true" && "${SKIP_NODE_PREFLIGHT}" != "true" ]]; then
   if ! command -v node >/dev/null 2>&1; then
+    if [[ "${AUTO_USE_NVM}" == "true" ]] && source_nvm; then
+      nvm install "${NODE_MAJOR_REQUIRED}" >/dev/null
+      nvm use "${NODE_MAJOR_REQUIRED}" >/dev/null
+    fi
+  fi
+
+  if ! command -v node >/dev/null 2>&1; then
     echo "[ai-next-task] Node preflight failed: node runtime is required for auraxis-web/auraxis-app." >&2
-    echo "[ai-next-task] Install/use Node 22.x and rerun." >&2
+    echo "[ai-next-task] Install/use Node ${NODE_MAJOR_REQUIRED}.x and rerun." >&2
     exit 1
   fi
-  node_version="$(node -v 2>/dev/null || true)"
-  node_major="${node_version#v}"
-  node_major="${node_major%%.*}"
-  if [[ "${node_major}" != "22" ]]; then
-    echo "[ai-next-task] Node preflight failed: expected Node 22.x, current ${node_version}." >&2
-    echo "[ai-next-task] Run 'nvm use 22' (or equivalente) e tente novamente." >&2
+
+  node_major="$(resolve_node_major)"
+  if [[ "${node_major}" != "${NODE_MAJOR_REQUIRED}" ]]; then
+    if [[ "${AUTO_USE_NVM}" == "true" ]]; then
+      if source_nvm; then
+        echo "[ai-next-task] Node mismatch detected (current $(node -v)); trying nvm use ${NODE_MAJOR_REQUIRED}..."
+        nvm install "${NODE_MAJOR_REQUIRED}" >/dev/null
+        nvm use "${NODE_MAJOR_REQUIRED}" >/dev/null
+        node_major="$(resolve_node_major)"
+      fi
+    fi
+  fi
+
+  if [[ "${node_major}" != "${NODE_MAJOR_REQUIRED}" ]]; then
+    node_version="$(node -v 2>/dev/null || true)"
+    echo "[ai-next-task] Node preflight failed: expected Node ${NODE_MAJOR_REQUIRED}.x, current ${node_version}." >&2
+    echo "[ai-next-task] Run 'nvm use ${NODE_MAJOR_REQUIRED}' (or equivalente) e tente novamente." >&2
     echo "[ai-next-task] Set AURAXIS_SKIP_NODE_PREFLIGHT=true only for diagnostics." >&2
     exit 1
   fi
