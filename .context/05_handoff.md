@@ -2,6 +2,37 @@
 
 Data: 2026-02-25 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-28 (taskboard hygiene para execução autônoma)
+
+### O que foi feito
+
+- `auraxis-web/tasks.md` normalizado para manter apenas `WEB3` em `In Progress`.
+- `auraxis-app/tasks.md` normalizado para manter apenas `APP3` em `In Progress`.
+- `auraxis-api/TASKS.md` normalizado para manter apenas `B11` em `In Progress`; itens estratégicos `PLT/J/X` saíram de `In Progress` para `Todo`.
+- regra explícita adicionada nos taskboards: somente 1 item em `In Progress` por repositório.
+- branches de ajuste publicadas:
+  - `chore/web-taskboard-hygiene` (`1cfb44d`)
+  - `chore/app-taskboard-hygiene` (`8907427`)
+  - `chore/api-taskboard-hygiene` (`8a0f8d1`)
+
+### O que foi validado
+
+- `auraxis-web`: pre-push executou typecheck + testes com coverage e publicou branch ✅
+- `auraxis-app`: pre-push executou typecheck + testes com coverage e publicou branch ✅
+- `auraxis-api`: pre-commit/pre-push passou (`mypy`, `pip-audit`, `security-evidence`); `sonar-local-check` foi pulado localmente (`SKIP=sonar-local-check`) e permanece bloqueante no CI ✅
+- checagem final de taskboards confirma 1 único `In Progress` por repo (`B11`, `WEB3`, `APP3`) ✅
+
+### Riscos pendentes
+
+- `B11`, `WEB3` e `APP3` seguem ativos e dependem de execução real dos agentes para convergir para `Done`.
+- `TASKS.md` da API mantém itens de plataforma/discovery no mesmo backlog (status `Todo`), exigindo disciplina de priorização por ID durante os próximos ciclos.
+
+### Próximo passo sugerido
+
+1. Abrir/mergear os 3 PRs de taskboard hygiene.
+2. Após merge, rodar `make next-task` e confirmar seleção determinística de `B11`, `WEB3` e `APP3` sem drift.
+3. Se a seleção permanecer estável por 2 ciclos, promover a regra de higiene para checklist padrão de kickoff.
+
 ## Atualização rápida — 2026-02-28 (autonomy hardening: commit pós-gates + dependency review estrito)
 
 ### O que foi feito

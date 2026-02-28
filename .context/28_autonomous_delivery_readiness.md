@@ -64,6 +64,7 @@ Status:
   - frontend só comita após `run_repo_quality_gates()` com status `pass`;
   - backend só comita após `run_backend_tests()` e `run_integration_tests(full_crud)` com status `pass`.
 - ✅ `ai-next-task` com preflight de credencial LLM (`OPENAI_API_KEY` ou `OLLAMA_BASE_URL`).
+- ✅ Taskboard hygiene aplicada: somente 1 `In Progress` por repo (`B11`/API, `WEB3`/Web, `APP3`/App).
 
 Pendência recomendada:
 - [ ] Eliminar branches remotos legados `codex/*` ainda existentes após migração de PRs ativos.
