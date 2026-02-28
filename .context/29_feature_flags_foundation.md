@@ -27,6 +27,24 @@ Contrato mínimo de ambiente:
 - `<STACK>_UNLEASH_*` (app/instance/environment/key/token)
 - cache TTL curto para snapshot remoto
 
+## Bootstrap canônico por ambiente (PLT4.3)
+
+- Script central: `scripts/bootstrap-feature-flag-provider.sh`.
+- Contrato de automação: `scripts/ai-next-task.sh` injeta bootstrap automaticamente
+  (`AURAXIS_FEATURE_FLAGS_BOOTSTRAP=true` por padrão).
+- Matriz default:
+  - `development -> local`
+  - `staging -> unleash`
+  - `production -> unleash`
+- Namespace canônico cross-repo:
+  - `AURAXIS_RUNTIME_ENV`
+  - `AURAXIS_FLAG_PROVIDER`
+  - `AURAXIS_UNLEASH_URL`
+  - `AURAXIS_UNLEASH_ENVIRONMENT`
+  - `AURAXIS_UNLEASH_CACHE_TTL_MS`
+
+Detalhes operacionais: `.context/34_feature_flag_provider_bootstrap.md`.
+
 ## Catálogos canônicos por repositório
 
 - `repos/auraxis-web/config/feature-flags.json`

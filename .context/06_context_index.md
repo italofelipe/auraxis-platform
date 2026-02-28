@@ -41,6 +41,7 @@ Este índice organiza a leitura mínima para qualquer pessoa ou agente retomar o
 | `28_autonomous_delivery_readiness.md` | Antes de iniciar novos blocos de feature com agentes autônomos (baseline de prontidão) |
 | `29_feature_flags_foundation.md` | Ao operar PLT4 (base de governança de feature toggles) |
 | `31_feature_flag_lifecycle.md` | Ao criar/alterar flags em web/app/api |
+| `34_feature_flag_provider_bootstrap.md` | Ao configurar provider de flags por ambiente (PLT4.3) |
 | `33_release_cut_policy.md` | Ao executar release cut, freeze ou hotfix multi-repo |
 | `feature_contracts/README.md` | Antes de integrar frontend com feature backend recém-entregue |
 | `openapi/README.md` | Antes de sincronizar tipos de API no frontend (`contracts:sync`) |

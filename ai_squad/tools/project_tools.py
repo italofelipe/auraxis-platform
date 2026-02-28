@@ -16,6 +16,7 @@ import fnmatch
 import json
 import os
 import re
+import shutil
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -1032,21 +1033,19 @@ class RunTestsTool(BaseTool):
     )
 
     def _run(self, query: str = None) -> str:
-        pytest_path = str(PROJECT_ROOT / ".venv" / "bin" / "pytest")
-        import os
-
-        if not os.path.exists(pytest_path):
-            pytest_path = "pytest"
+        project_python = str(PROJECT_ROOT / ".venv" / "bin" / "python")
+        if not os.path.exists(project_python):
+            project_python = "python3" if shutil.which("python3") else "python"
 
         result = safe_subprocess(
-            [pytest_path, "--tb=short", "-q"],
+            [project_python, "-m", "pytest", "--tb=short", "-q"],
             timeout=300,
             cwd=str(PROJECT_ROOT),
         )
         output = f"STDOUT: {result['stdout']}\nSTDERR: {result['stderr']}"
         audit_log(
             "run_backend_tests",
-            {"pytest_path": pytest_path},
+            {"python_path": project_python},
             output[:200],
             status="OK" if result["returncode"] == 0 else "ERROR",
         )
@@ -1071,12 +1070,10 @@ class RunRepoQualityGatesTool(BaseTool):
         elif repo_name == "auraxis-app":
             command = ["npm", "run", "quality-check"]
         else:
-            pytest_path = str(PROJECT_ROOT / ".venv" / "bin" / "pytest")
-            import os
-
-            if not os.path.exists(pytest_path):
-                pytest_path = "pytest"
-            command = [pytest_path, "--tb=short", "-q"]
+            project_python = str(PROJECT_ROOT / ".venv" / "bin" / "python")
+            if not os.path.exists(project_python):
+                project_python = "python3" if shutil.which("python3") else "python"
+            command = [project_python, "-m", "pytest", "--tb=short", "-q"]
 
         result = safe_subprocess(
             command,
@@ -1828,6 +1825,12 @@ def _git_commit(message: str) -> str:
         return (
             "BLOCKED: Direct commits to 'master'/'main' are not allowed. "
             "Create a feature branch first."
+        )
+    expected_task_id = os.getenv("AURAXIS_RESOLVED_TASK_ID", "").strip().upper()
+    if expected_task_id and expected_task_id not in current_branch.upper():
+        return (
+            "BLOCKED: branch/task drift detected at commit stage. "
+            f"Current branch '{current_branch}' must contain task ID '{expected_task_id}'."
         )
 
     if not message:

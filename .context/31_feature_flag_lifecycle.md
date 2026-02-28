@@ -26,6 +26,7 @@ Atualizado: 2026-02-28
 - App: `scripts/check-feature-flags.cjs` + job `Feature Flags Hygiene` no CI.
 - API: `scripts/check_feature_flags.py` + step `Feature Flags Hygiene` no job `quality`.
 - Runtime OSS (PLT4.2): `unleash` integrado com fallback local em web/app/api.
+- Bootstrap por ambiente (PLT4.3): `scripts/bootstrap-feature-flag-provider.sh` + injeção automática no `scripts/ai-next-task.sh`.
 
 ## Regra de resolução em runtime
 

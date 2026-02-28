@@ -110,6 +110,7 @@ _CHECKLIST_RE = re.compile(r"^\s*-\s*\[(?P<status>[ x~!])\]\s+\*\*(?P<id>[A-Z]+-
 _TABLE_ID_RE = re.compile(r"^[A-Z]+-\d+$|^[A-Z]+\d+$")
 _STATUS_VALUES = {"todo", "in progress", "blocked", "done"}
 _COMMIT_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
+_QUALITY_GATE_RETURN_CODE_RE = re.compile(r"return_code:\s*(-?\d+)", re.IGNORECASE)
 _CRITICAL_AUDIT_TOOLS = {
     "run_repo_quality_gates",
     "run_backend_tests",
@@ -260,10 +261,38 @@ def _extract_summary_from_output(
             break
 
     merged = f"{stdout_text}\n{stderr_text}"
+    quality_gate_evidence = "missing"
+    branch_guardrail_evidence = "missing"
     hash_candidates: list[str] = []
     for line in merged.splitlines():
         stripped = line.strip()
         lowered = stripped.lower()
+        if "tool=run_repo_quality_gates" in lowered:
+            status_match = re.search(
+                r"tool=run_repo_quality_gates\s*\|\s*status=([a-z]+)",
+                stripped,
+                re.IGNORECASE,
+            )
+            return_code_match = _QUALITY_GATE_RETURN_CODE_RE.search(stripped)
+            status_label = (
+                status_match.group(1).upper() if status_match is not None else "UNKNOWN"
+            )
+            return_code_label = (
+                return_code_match.group(1)
+                if return_code_match is not None
+                else "unknown"
+            )
+            quality_gate_evidence = (
+                f"status={status_label}, return_code={return_code_label}"
+            )
+        if "tool=git_operations" in lowered:
+            if "branch/task drift detected" in lowered:
+                branch_guardrail_evidence = "branch_task_drift_blocked"
+            elif (
+                "command': 'create_branch'" in lowered
+                or 'command": "create_branch"' in lowered
+            ) and "status=ok" in lowered:
+                branch_guardrail_evidence = "create_branch_ok"
         if (
             "commit" in lowered
             or "committed" in lowered
@@ -317,6 +346,8 @@ def _extract_summary_from_output(
         "commit_hashes": commit_hashes,
         "precommit_status": precommit_status,
         "quality_gate_failed": quality_gate_failed,
+        "quality_gate_evidence": quality_gate_evidence,
+        "branch_guardrail_evidence": branch_guardrail_evidence,
         "tool_error_detected": tool_error_detected,
         "tech_debt_hints": tech_debt_hints,
     }
@@ -1273,12 +1304,17 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
                 "task_id": result["task_id"],
                 "briefing_hash": briefing_hash,
                 "execution_mode": execution_mode,
-                "status": status,
+                "status": result["status"],
                 "returncode": result["returncode"],
                 "timed_out": result["timed_out"],
                 "duration_seconds": result["duration_seconds"],
                 "commit_hashes": result["commit_hashes"],
                 "precommit_status": result["precommit_status"],
+                "quality_gate_evidence": result.get("quality_gate_evidence", "missing"),
+                "branch_guardrail_evidence": result.get(
+                    "branch_guardrail_evidence",
+                    "missing",
+                ),
             },
             repo=repo,
         )
@@ -1335,6 +1371,13 @@ def run_multi_repo_orchestration(briefing: str, execution_mode: str) -> int:
         print(f"[{repo}] status={result['status']} return_code={result['returncode']}")
         print(f"[{repo}] task_id={result['task_id']} duration={result['duration_seconds']}s")
         print(f"[{repo}] precommit_local={result['precommit_status']}")
+        print(
+            f"[{repo}] quality_gate_evidence={result.get('quality_gate_evidence', 'missing')}"
+        )
+        print(
+            f"[{repo}] branch_guardrail_evidence="
+            f"{result.get('branch_guardrail_evidence', 'missing')}"
+        )
         if result.get("timed_out"):
             print(f"[{repo}] timeout=true ({child_timeout_seconds}s)")
         if result.get("commit_hashes"):

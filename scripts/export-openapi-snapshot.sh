@@ -13,9 +13,15 @@ if [[ ! -d "$API_DIR" ]]; then
 fi
 
 if [[ ! -x "$API_PYTHON" ]]; then
-  echo "[openapi-export] Python executable not found: $API_PYTHON" >&2
-  echo "[openapi-export] Run setup in auraxis-api (.venv) or set AURAXIS_API_PYTHON." >&2
-  exit 1
+  if command -v python3 >/dev/null 2>&1; then
+    API_PYTHON="python3"
+  elif command -v python >/dev/null 2>&1; then
+    API_PYTHON="python"
+  else
+    echo "[openapi-export] Python executable not found: $API_PYTHON" >&2
+    echo "[openapi-export] Run setup in auraxis-api (.venv) or set AURAXIS_API_PYTHON." >&2
+    exit 1
+  fi
 fi
 
 mkdir -p "$(dirname "$OUTPUT_PATH")"
