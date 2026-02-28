@@ -849,6 +849,29 @@ backend e aumentar determinismo dos runs autônomos paralelos.
 
 ---
 
+### DEC-048 — Audit gate frontend sem artefato versionado no workspace
+
+**Decisão:** alterar os scripts de audit gate de `auraxis-web` e `auraxis-app` para
+persistirem o JSON bruto em arquivo temporário do sistema por padrão, em vez de `audit.json`
+na raiz do repositório.
+
+**Racional:** o artefato local estava sujando o worktree e gerando ruído operacional
+entre execuções locais e de agentes.
+
+**Alternativas rejeitadas:**
+- manter `audit.json` versionado no web;
+- manter `audit.json` local e depender de limpeza manual;
+- remover totalmente a persistência do JSON (perde debuggabilidade).
+
+**Dono:** frontend + platform.
+**Impacto:**
+- `scripts/ci-audit-gate` agora usa path temporário por padrão;
+- debug explícito continua possível com `AURAXIS_AUDIT_OUTPUT_PATH`;
+- `.gitignore` de web/app passa a bloquear `audit.json`;
+- `audit.json` removido do versionamento no web.
+
+---
+
 ## Decisões pendentes
 
 | ID | Tema | Bloqueador | Prazo estimado |

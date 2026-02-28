@@ -2,6 +2,40 @@
 
 Data: 2026-02-25 (Remediação de maturidade agentic)
 
+## Atualização rápida — 2026-02-28 (stabilization pós-merge + hygiene de audit gate)
+
+### O que foi feito
+
+- baseline local de qualidade executado nos 3 repositórios:
+  - web: `pnpm quality-check` + `node scripts/ci-audit-gate.cjs`;
+  - app: `npm run quality-check` + `node scripts/ci-audit-gate.js`;
+  - api: `bash scripts/run_ci_quality_local.sh` (docker mode).
+- corrigido drift de artefato local dos frontends:
+  - `scripts/ci-audit-gate` em web/app não gravam mais `audit.json` na raiz por padrão;
+  - suporte de debug explícito por env var `AURAXIS_AUDIT_OUTPUT_PATH`;
+  - `audit.json` bloqueado por `.gitignore` em web/app;
+  - `audit.json` removido do versionamento em `auraxis-web`.
+- documentação de gates atualizada em web/app para reforçar:
+  - paridade de runtime com `nvm use 22`;
+  - uso operacional do novo audit gate.
+
+### O que foi validado
+
+- `auraxis-web`: suite local completa de gates críticos ✅
+- `auraxis-app`: suite local completa de gates críticos ✅
+- `auraxis-api`: pipeline de quality local equivalente ao CI (docker python3.11) ✅
+
+### Riscos pendentes
+
+- `auraxis-api` local ainda está `ahead 3` em `master` (estado local não publicado), exigindo decisão explícita antes de usar esse commit como referência de submodule.
+- parity local em frontend depende de runtime Node 22; em Node diferente pode haver warning de engines.
+
+### Próximo passo sugerido
+
+1. Decidir saneamento do `ahead 3` local da API (`push` controlado ou descarte explícito).
+2. Rodar `make next-task` após estado final de submodules e confirmar run sem drift.
+3. Se os gates seguirem estáveis por 2 ciclos, promover este procedimento para checklist fixo de início de sprint.
+
 ## Atualização rápida — 2026-02-28 (PLT4.2 runtime unleash em app/web/api)
 
 ### O que foi feito
