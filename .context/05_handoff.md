@@ -1603,3 +1603,25 @@ git checkout -b feat/web2-vitest-config
   - `tasks_status/ORCH-*.md`;
   - logs de quality gate por repo;
   - ausência de artefatos residuais no clone base após falha.
+
+## 2026-02-28 — Hotfix worktree/preflight no modo paralelo
+
+### O que foi feito
+- Corrigido mapeamento canônico de repo no `tool_security`:
+  - `TARGET_REPO_NAME` não usa mais `PROJECT_ROOT.name` diretamente;
+  - agora prioriza `AURAXIS_TARGET_REPO` canônico e faz fallback por prefixo de worktree
+    (`auraxis-web-<timestamp>`, `auraxis-app-<timestamp>`, `auraxis-api-<timestamp>`).
+- Corrigido `run_repo_quality_gates` para usar `TARGET_REPO_NAME` (canônico), evitando
+  seleção errada de comando quando o run estiver em worktree efêmero.
+- Corrigido warning de depreciação em timestamp de worktree:
+  - `datetime.utcnow()` -> `datetime.now(timezone.utc)`.
+
+### O que foi validado
+- `python3 -m py_compile ai_squad/main.py ai_squad/tools/tool_security.py ai_squad/tools/project_tools.py` passou.
+
+### Risco pendente
+- Necessário rerun de `make next-task` para confirmar eliminação do preflight blocker em todos os repos.
+
+### Próximo passo
+1. Rodar `make next-task` novamente e validar ausência do erro:
+   `repository path not found: /.../repos/auraxis-<repo>-<timestamp>`.

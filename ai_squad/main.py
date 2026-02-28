@@ -44,7 +44,7 @@ import subprocess
 import sys
 import threading
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from time import monotonic
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -289,7 +289,7 @@ def _create_execution_worktree(repo: str) -> tuple[Path | None, str]:
 
     default_branch = _resolve_default_branch(repo_root)
     ref = f"origin/{default_branch}"
-    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S%f")
     worktree_root = PLATFORM_ROOT / ".tmp" / "agent-worktrees"
     worktree_root.mkdir(parents=True, exist_ok=True)
     worktree_path = worktree_root / f"{repo}-{timestamp}"
